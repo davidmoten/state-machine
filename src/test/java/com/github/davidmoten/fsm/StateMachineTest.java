@@ -22,7 +22,7 @@ public class StateMachineTest {
     public void test() {
         StateMachine m = StateMachine.create("Ship");
 
-        // create states
+        // create states (wiht the event used to transition to it)
         State<Void> neverOutside = m.state("Never Outside", Created.class);
         State<Out> outside = m.state("Outside", Out.class);
         State<In> insideNotRisky = m.state("Inside Not Risky", In.class);
@@ -62,7 +62,13 @@ public class StateMachineTest {
             }
         };
         ShipStateMachine m = new ShipStateMachine(ship, shipBehaviour);
-        m = m.event(Created.instance()).event(new In(1.0f, 2.0f)).event(new Out(1.0f, 3.0f));
+        m = m
+                //
+                .event(Created.instance())
+                //
+                .event(new In(1.0f, 2.0f))
+                //
+                .event(new Out(1.0f, 3.0f));
         assertEquals(Arrays.asList(2, 1), list);
     }
 
