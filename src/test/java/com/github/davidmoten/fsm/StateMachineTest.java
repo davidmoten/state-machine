@@ -37,9 +37,12 @@ public class StateMachineTest {
 
         m.generateClasses(new File("target/generated-sources/java"),
                 "com.github.davidmoten.fsm.generated");
-        File file = new File(
-                "target/generated-sources/java/com/github/davidmoten/fsm/generated/ShipStateMachine.java");
-        System.out.println(new String(Files.readAllBytes(file.toPath())));
+        System.out.println(new String(Files.readAllBytes(new File(
+                "target/generated-sources/java/com/github/davidmoten/fsm/generated/ShipStateMachine.java")
+                        .toPath())));
+        System.out.println(new String(Files.readAllBytes(new File(
+                "target/generated-sources/java/com/github/davidmoten/fsm/generated/ShipBehaviour.java")
+                        .toPath())));
 
     }
 

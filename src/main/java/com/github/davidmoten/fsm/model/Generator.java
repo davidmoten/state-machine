@@ -39,6 +39,10 @@ public class Generator<T> {
         return Util.toClassSimpleName(cls.getSimpleName()) + "Behaviour";
     }
 
+    private File behaviourClassFile() {
+        return new File(packageDirectory(), behaviourClassSimpleName() + ".java");
+    }
+
     private String stateConstant(State<?> state) {
         return Util.toJavaConstantIdentifier(state.name());
     }
@@ -80,6 +84,36 @@ public class Generator<T> {
     }
 
     public void generate() {
+        generateStateMachine();
+        generateBehaviourInterface();
+    }
+
+    private void generateBehaviourInterface() {
+        behaviourClassFile().getParentFile().mkdirs();
+        try (PrintStream out = new PrintStream(behaviourClassFile())) {
+            out.format("package %s;\n", pkg);
+            out.println("<IMPORTS>");
+            out.println();
+            Indent indent = new Indent();
+            out.format("public final class %s {\n", behaviourClassSimpleName());
+            out.println();
+            indent.right();
+            machine.transitions().stream().flatMap(t -> Stream.of(t.from(), t.to())).distinct()
+                    .forEach(state -> {
+                        out.format("%s%s %s(%s %s, %s event);\n", indent, classSimpleName(),
+                                onEntryMethodName(state), classSimpleName(), instanceName(),
+                                imports.add(state.eventClass()));
+                        out.println();
+                    });
+            indent.left();
+
+            out.format("}\n");
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void generateStateMachine() {
         stateMachineClassFile().getParentFile().mkdirs();
         try (PrintStream out = new PrintStream(stateMachineClassFile())) {
             out.format("package %s;\n", pkg);
