@@ -43,12 +43,16 @@ public class StateMachineTest {
 		System.out.println(new String(Files.readAllBytes(
 				new File("target/generated-sources/java/com/github/davidmoten/fsm/generated/ShipBehaviour.java")
 						.toPath())));
+		System.out.println(new String(Files.readAllBytes(
+				new File("target/generated-sources/java/com/github/davidmoten/fsm/generated/ShipBehaviourBase.java")
+						.toPath())));
+
 
 	}
 
 	@Test
 	public void testRuntime() {
-		Ship ship = new Ship("12345", "6789", 35.0f, 141.3f);
+		final Ship ship = new Ship("12345", "6789", 35.0f, 141.3f);
 		List<Integer> list = new ArrayList<>();
 		ShipBehaviour shipBehaviour = new ShipBehaviour() {
 
@@ -59,9 +63,9 @@ public class StateMachineTest {
 			}
 
 			@Override
-			public Ship onEntry_NeverOutside(Ship ship, Create created) {
+			public Ship onEntry_NeverOutside(Create created) {
 				list.add(2);
-				return new Ship(ship.imo(), ship.mmsi(), 0, 0);
+				return ship;
 			}
 
 			@Override
@@ -71,15 +75,8 @@ public class StateMachineTest {
 			}
 
 			@Override
-			public Ship onEntry_Initial(Ship ship, EventVoid event) {
-				list.add(4);
-				return ship;
-			}
-
-			@Override
 			public Ship onEntry_InsideRisky(Ship ship, Risky event) {
-				// TODO Auto-generated method stub
-				return null;
+				return ship;
 			}
 		};
 		ShipStateMachine m = ShipStateMachine.create(ship, shipBehaviour);

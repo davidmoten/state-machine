@@ -40,13 +40,25 @@ public class Generator<T> {
 	private String behaviourClassSimpleName() {
 		return Util.toClassSimpleName(cls.getSimpleName()) + "Behaviour";
 	}
+	
+	private String behaviourBaseClassSimpleName() {
+		return Util.toClassSimpleName(cls.getSimpleName()) + "BehaviourBase";
+	}
 
 	private String behaviourClassName() {
 		return pkg + "." + behaviourClassSimpleName();
 	}
+	
+	private String behaviourBaseClassName() {
+		return pkg + "." + behaviourBaseClassSimpleName();
+	}
 
 	private File behaviourClassFile() {
 		return new File(packageDirectory(), behaviourClassSimpleName() + ".java");
+	}
+	
+	private File behaviourBaseClassFile() {
+		return new File(packageDirectory(), behaviourBaseClassSimpleName() + ".java");
 	}
 
 	private String stateConstant(State<?> state) {
@@ -88,6 +100,7 @@ public class Generator<T> {
 	public void generate() {
 		generateStateMachine();
 		generateBehaviourInterface();
+		generateBehaviourBase();
 	}
 
 	private Stream<State<? extends Object>> states() {
@@ -107,10 +120,10 @@ public class Generator<T> {
 			out.format("public interface %s {\n", behaviourClassSimpleName());
 			out.println();
 			indent.right();
-			states().forEach(state -> {
+			states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
 				if (state.isInitial()) {
 					out.format("%s%s %s(%s event);\n", indent, imports.add(cls), onEntryMethodName(state),
-							 imports.add(state.eventClass()));
+							imports.add(state.eventClass()));
 				} else {
 					out.format("%s%s %s(%s %s, %s event);\n", indent, imports.add(cls), onEntryMethodName(state),
 							imports.add(cls), instanceName(), imports.add(state.eventClass()));
@@ -121,6 +134,41 @@ public class Generator<T> {
 			out.format("}\n");
 		}
 		try (PrintStream out = new PrintStream(behaviourClassFile())) {
+			out.print(new String(bytes.toByteArray()).replace("<IMPORTS>", imports.importsAsString()));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private void generateBehaviourBase() {
+		behaviourBaseClassFile().getParentFile().mkdirs();
+		Imports imports = new Imports();
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		try (PrintStream out = new PrintStream(bytes)) {
+			out.format("package %s;\n", pkg);
+			out.println();
+			out.println("<IMPORTS>");
+			out.println();
+			Indent indent = new Indent();
+			out.format("public class %s {\n", behaviourBaseClassSimpleName());
+			out.println();
+			indent.right();
+			states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
+				if (state.isInitial()) {
+					out.format("%s%s %s(%s event) {\n", indent, imports.add(cls), onEntryMethodName(state),
+							imports.add(state.eventClass()));
+				} else {
+					out.format("%s%s %s(%s %s, %s event) {\n", indent, imports.add(cls), onEntryMethodName(state),
+							imports.add(cls), instanceName(), imports.add(state.eventClass()));
+				}
+				out.format("%sreturn %s;\n", indent.right(), instanceName());
+				out.format("%s}\n", indent.left());
+				out.println();
+			});
+			indent.left();
+			out.format("}\n");
+		}
+		try (PrintStream out = new PrintStream(behaviourBaseClassFile())) {
 			out.print(new String(bytes.toByteArray()).replace("<IMPORTS>", imports.importsAsString()));
 		} catch (IOException e) {
 			throw new RuntimeException(e);

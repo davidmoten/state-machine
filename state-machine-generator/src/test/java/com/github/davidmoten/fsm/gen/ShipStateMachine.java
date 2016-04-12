@@ -56,7 +56,7 @@ public final class ShipStateMachine {
         Preconditions.checkNotNull(event);
         if (state == State.INITIAL && event instanceof Create) {
             State nextState = State.NEVER_OUTSIDE;
-            Ship nextObject = behaviour.onEntry_NeverOutside(ship, (Create) event);
+            Ship nextObject = behaviour.onEntry_NeverOutside((Create) event);
             return new ShipStateMachine(nextObject, behaviour, nextState);
         } else if (state == State.NEVER_OUTSIDE && event instanceof Out) {
             State nextState = State.OUTSIDE;
