@@ -3,6 +3,7 @@ package com.github.davidmoten.fsm.model;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.stream.Stream;
 
 import com.github.davidmoten.guavamini.Preconditions;
 
@@ -74,6 +75,10 @@ public class Generator<T> {
         return Util.lowerFirst(classSimpleName());
     }
 
+    private String onEntryMethodName(State<?> state) {
+        return "onEntry_" + Util.upperFirst(Util.toJavaIdentifier(state.name()));
+    }
+
     public void generate() {
         stateMachineClassFile().getParentFile().mkdirs();
         try (PrintStream out = new PrintStream(stateMachineClassFile())) {
@@ -108,8 +113,18 @@ public class Generator<T> {
             out.format("%s}\n", indent.left());
             out.println();
 
-            out.format("%sprivate %s event(%s<?> event) {\n", indent, stateMachineClassSimpleName(),
-                    imports.add(Event.class));
+            Stream.concat(Stream.of(Created.class),
+                    machine.transitions().stream().map(t -> t.to().eventClass())).distinct()
+                    .forEach(eventClass -> {
+                        out.format("%spublic %s event(%s event) {\n", indent,
+                                stateMachineClassSimpleName(), imports.add(eventClass));
+                        out.format("%sreturn _event(event);\n", indent.right());
+                        out.format("%s}\n", indent.left());
+                        out.println();
+                    });
+
+            out.format("%sprivate %s _event(%s<?> event) {\n", indent,
+                    stateMachineClassSimpleName(), imports.add(Event.class));
             out.format("%s%s.checkNotNull(event);\n", indent.right(),
                     imports.add(Preconditions.class));
 
@@ -125,6 +140,10 @@ public class Generator<T> {
                         stateConstant(t.from()), imports.add(t.to().eventClass()));
                 out.format("%sState nextState = State.%s;\n", indent.right(),
                         stateConstant(t.to()));
+                out.format("%s%s nextObject = behaviour.%s(%s, (%s) event);\n", indent,
+                        classSimpleName(), onEntryMethodName(t.to()), instanceName(),
+                        imports.add(t.to().eventClass()));
+                out.format("%sreturn create(nextObject, behaviour, nextState);\n", indent);
                 indent.left();
             }
             out.format("%s}\n", indent);

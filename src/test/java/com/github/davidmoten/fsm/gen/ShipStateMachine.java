@@ -1,6 +1,7 @@
 package com.github.davidmoten.fsm.gen;
 
 import com.github.davidmoten.fsm.Ship;
+import com.github.davidmoten.fsm.StateMachineTest.In;
 import com.github.davidmoten.fsm.StateMachineTest.Out;
 import com.github.davidmoten.fsm.model.Created;
 import com.github.davidmoten.fsm.model.Event;
@@ -29,7 +30,15 @@ public class ShipStateMachine {
         CREATED, NEVER_OUTSIDE, OUTSIDE, INSIDE_NOT_RISKY;
     }
 
-    public synchronized ShipStateMachine event(Event<?> event) {
+    public ShipStateMachine event(Created event) {
+        return _event(event);
+    }
+
+    public ShipStateMachine event(Out event) {
+        return _event(event);
+    }
+
+    private ShipStateMachine _event(Event<?> event) {
         Preconditions.checkNotNull(event);
         if (state == State.CREATED && event instanceof Created) {
             State nextState = State.NEVER_OUTSIDE;
@@ -42,6 +51,10 @@ public class ShipStateMachine {
         } else {
             return this;
         }
+    }
+
+    public ShipStateMachine event(In event) {
+        return _event(event);
     }
 
 }
