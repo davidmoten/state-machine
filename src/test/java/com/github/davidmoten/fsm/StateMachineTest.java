@@ -17,6 +17,7 @@ import com.github.davidmoten.fsm.model.State;
 import com.github.davidmoten.fsm.model.StateMachine;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.Event;
+import com.github.davidmoten.fsm.runtime.EventVoid;
 
 public class StateMachineTest {
 
@@ -67,6 +68,18 @@ public class StateMachineTest {
 			public Ship onEntry_InsideNotRisky(Ship ship, In in) {
 				list.add(3);
 				return new Ship(ship.imo(), ship.mmsi(), in.lat, in.lon);
+			}
+
+			@Override
+			public Ship onEntry_Initial(Ship ship, EventVoid event) {
+				list.add(4);
+				return ship;
+			}
+
+			@Override
+			public Ship onEntry_InsideRisky(Ship ship, Risky event) {
+				// TODO Auto-generated method stub
+				return null;
 			}
 		};
 		ShipStateMachine m = ShipStateMachine.create(ship, shipBehaviour);
