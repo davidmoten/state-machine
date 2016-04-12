@@ -1,5 +1,7 @@
 package com.github.davidmoten.fsm.model;
 
+import java.io.File;
+
 public class State<T> {
 
     private final String name;
@@ -24,8 +26,18 @@ public class State<T> {
         return m;
     }
 
-    public void to(State<?> other) {
+    public <R> State<R> to(State<R> other) {
         m.addTransition(this, other);
+        return other;
     }
+    
+    public State<T> initial() {
+    	m.addInitialTransition(this);
+    	return this;
+    }
+
+	public void generateClasses(File directory, String pkg) {
+		m.generateClasses(directory, pkg);
+	}
 
 }

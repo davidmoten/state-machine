@@ -10,9 +10,4 @@ public class Create implements Event<Void> {
         return instance;
     }
 
-    @Override
-    public Void value() {
-        return null;
-    }
-
 }

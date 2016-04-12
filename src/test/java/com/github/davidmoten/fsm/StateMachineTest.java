@@ -20,110 +20,95 @@ import com.github.davidmoten.fsm.runtime.Create;
 
 public class StateMachineTest {
 
-    @Test
-    public void test() throws IOException {
-        StateMachine<Ship> m = StateMachine.create(Ship.class);
+	@Test
+	public void test() throws IOException {
+		File directory = new File("target/generated-sources/java");
+		String pkg = "com.github.davidmoten.fsm.generated";
 
-        // create states (wiht the event used to transition to it)
-        State<Void> neverOutside = m.state("Never Outside", Create.class);
-        State<Out> outside = m.state("Outside", Out.class);
-        State<In> insideNotRisky = m.state("Inside Not Risky", In.class);
-        State<Risky> insideRisky = m.state("Inside Risky", Risky.class);
+		StateMachine<Ship> m = StateMachine.create(Ship.class);
 
-        // create transitions
-        m.addInitialTransition(neverOutside);
-        neverOutside.to(outside);
-        outside.to(insideNotRisky);
-        insideNotRisky.to(insideRisky);
+		// create states (with the event used to transition to it)
+		State<Void> neverOutside = m.state("Never Outside", Create.class);
+		State<Out> outside = m.state("Outside", Out.class);
+		State<In> insideNotRisky = m.state("Inside Not Risky", In.class);
+		State<Risky> insideRisky = m.state("Inside Risky", Risky.class);
 
-        m.generateClasses(new File("target/generated-sources/java"),
-                "com.github.davidmoten.fsm.generated");
-        System.out.println(new String(Files.readAllBytes(new File(
-                "target/generated-sources/java/com/github/davidmoten/fsm/generated/ShipStateMachine.java")
-                        .toPath())));
-        System.out.println(new String(Files.readAllBytes(new File(
-                "target/generated-sources/java/com/github/davidmoten/fsm/generated/ShipBehaviour.java")
-                        .toPath())));
+		// create transitions and generate classes
+		neverOutside.initial().to(outside).to(insideNotRisky).to(insideRisky).generateClasses(directory, pkg);
 
-    }
+		System.out.println(new String(Files.readAllBytes(
+				new File("target/generated-sources/java/com/github/davidmoten/fsm/generated/ShipStateMachine.java")
+						.toPath())));
+		System.out.println(new String(Files.readAllBytes(
+				new File("target/generated-sources/java/com/github/davidmoten/fsm/generated/ShipBehaviour.java")
+						.toPath())));
 
-    @Test
-    public void testRuntime() {
-        Ship ship = new Ship("12345", "6789", 35.0f, 141.3f);
-        List<Integer> list = new ArrayList<>();
-        ShipBehaviour shipBehaviour = new ShipBehaviour() {
+	}
 
-            @Override
-            public Ship onEntry_Outside(Ship ship, Out out) {
-                list.add(1);
-                return new Ship(ship.imo(), ship.mmsi(), out.lat, out.lon);
-            }
+	@Test
+	public void testRuntime() {
+		Ship ship = new Ship("12345", "6789", 35.0f, 141.3f);
+		List<Integer> list = new ArrayList<>();
+		ShipBehaviour shipBehaviour = new ShipBehaviour() {
 
-            @Override
-            public Ship onEntry_NeverOutside(Ship ship, Create created) {
-                list.add(2);
-                return new Ship(ship.imo(), ship.mmsi(), 0, 0);
-            }
+			@Override
+			public Ship onEntry_Outside(Ship ship, Out out) {
+				list.add(1);
+				return new Ship(ship.imo(), ship.mmsi(), out.lat, out.lon);
+			}
 
-            @Override
-            public Ship onEntry_InsideNotRisky(Ship ship, In in) {
-                list.add(3);
-                return new Ship(ship.imo(), ship.mmsi(), in.lat, in.lon);
-            }
-        };
-        ShipStateMachine m = ShipStateMachine.create(ship, shipBehaviour);
-        m = m
-                //
-                .event(Create.instance())
-                //
-                .event(new In(1.0f, 2.0f))
-                //
-                .event(new Out(1.0f, 3.0f));
-        assertEquals(Arrays.asList(2, 1), list);
-    }
+			@Override
+			public Ship onEntry_NeverOutside(Ship ship, Create created) {
+				list.add(2);
+				return new Ship(ship.imo(), ship.mmsi(), 0, 0);
+			}
 
-    public static class In implements Event<In> {
-        public final float lat;
-        public final float lon;
+			@Override
+			public Ship onEntry_InsideNotRisky(Ship ship, In in) {
+				list.add(3);
+				return new Ship(ship.imo(), ship.mmsi(), in.lat, in.lon);
+			}
+		};
+		ShipStateMachine m = ShipStateMachine.create(ship, shipBehaviour);
+		m = m
+				//
+				.event(Create.instance())
+				//
+				.event(new In(1.0f, 2.0f))
+				//
+				.event(new Out(1.0f, 3.0f));
+		assertEquals(Arrays.asList(2, 1), list);
+	}
 
-        public In(float lat, float lon) {
-            this.lat = lat;
-            this.lon = lon;
-        }
+	public static class In implements Event<In> {
+		public final float lat;
+		public final float lon;
 
-        @Override
-        public In value() {
-            return this;
-        }
-    }
+		public In(float lat, float lon) {
+			this.lat = lat;
+			this.lon = lon;
+		}
 
-    public static class Out implements Event<Out> {
-        public final float lat;
-        public final float lon;
+	}
 
-        public Out(float lat, float lon) {
-            this.lat = lat;
-            this.lon = lon;
-        }
+	public static class Out implements Event<Out> {
+		public final float lat;
+		public final float lon;
 
-        @Override
-        public Out value() {
-            return this;
-        }
-    }
+		public Out(float lat, float lon) {
+			this.lat = lat;
+			this.lon = lon;
+		}
 
-    public static class Risky implements Event<Risky> {
-        public final String message;
+	}
 
-        public Risky(String message) {
-            this.message = message;
-        }
+	public static class Risky implements Event<Risky> {
+		public final String message;
 
-        @Override
-        public Risky value() {
-            return this;
-        }
+		public Risky(String message) {
+			this.message = message;
+		}
 
-    }
+	}
 
 }
