@@ -3,8 +3,10 @@ package com.github.davidmoten.fsm.model;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.github.davidmoten.fsm.runtime.Created;
 import com.github.davidmoten.guavamini.Preconditions;
 
 public class Generator<T> {
@@ -12,7 +14,6 @@ public class Generator<T> {
     private final Class<T> cls;
     private final File directory;
     private final String pkg;
-    private final Imports imports = new Imports();
     private final StateMachine<T> machine;
 
     public Generator(StateMachine<T> machine, File directory, String pkg) {
@@ -88,8 +89,13 @@ public class Generator<T> {
         generateBehaviourInterface();
     }
 
+    private Stream<State<? extends Object>> states() {
+        return machine.transitions().stream().flatMap(t -> Stream.of(t.from(), t.to())).distinct();
+    }
+
     private void generateBehaviourInterface() {
         behaviourClassFile().getParentFile().mkdirs();
+        Imports imports = new Imports();
         try (PrintStream out = new PrintStream(behaviourClassFile())) {
             out.format("package %s;\n", pkg);
             out.println("<IMPORTS>");
@@ -98,13 +104,12 @@ public class Generator<T> {
             out.format("public final class %s {\n", behaviourClassSimpleName());
             out.println();
             indent.right();
-            machine.transitions().stream().flatMap(t -> Stream.of(t.from(), t.to())).distinct()
-                    .forEach(state -> {
-                        out.format("%s%s %s(%s %s, %s event);\n", indent, classSimpleName(),
-                                onEntryMethodName(state), classSimpleName(), instanceName(),
-                                imports.add(state.eventClass()));
-                        out.println();
-                    });
+            states().forEach(state -> {
+                out.format("%s%s %s(%s %s, %s event);\n", indent, classSimpleName(),
+                        onEntryMethodName(state), classSimpleName(), instanceName(),
+                        imports.add(state.eventClass()));
+                out.println();
+            });
             indent.left();
 
             out.format("}\n");
@@ -114,6 +119,7 @@ public class Generator<T> {
     }
 
     private void generateStateMachine() {
+        Imports imports = new Imports();
         stateMachineClassFile().getParentFile().mkdirs();
         try (PrintStream out = new PrintStream(stateMachineClassFile())) {
             out.format("package %s;\n", pkg);
@@ -145,6 +151,15 @@ public class Generator<T> {
             out.format("%sreturn new %s(%s, behaviour, State.CREATED);\n", indent.right(),
                     stateMachineClassSimpleName(), instanceName());
             out.format("%s}\n", indent.left());
+            out.println();
+
+            out.format("%sprivate static enum State {\n", indent);
+            indent.right();
+            String states = states().map(state -> stateConstant(state))
+                    .collect(Collectors.joining(",\n" + indent));
+            out.format("%s%s;\n", indent, states);
+            indent.left();
+            out.format("%s}\n", indent);
             out.println();
 
             Stream.concat(Stream.of(Created.class),

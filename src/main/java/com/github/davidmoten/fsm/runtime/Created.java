@@ -1,4 +1,6 @@
-package com.github.davidmoten.fsm.model;
+package com.github.davidmoten.fsm.runtime;
+
+import com.github.davidmoten.fsm.model.Event;
 
 public class Created implements Event<Void> {
 
