@@ -31,8 +31,13 @@ public class StateMachine {
     }
 
     public void generateClasses(File directory, String pkg) {
-        // generate code that creates a singleton state machine runtime from a
-        // class
+        // generate state machine wrapper `ShipStateMachine` for an object that
+        // accepts events, implements transitions and runs onEntry procedures
+        // constructor should have object as parameter and another parameter
+        // which implements the generate behaviour interface for the object
+        // class `ShipBehaviour` which is passed to
+
+        // generate ShipStateMachine and ShipBehaviour
     }
 
 }
