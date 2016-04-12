@@ -40,7 +40,7 @@ public class Generator<T> {
 	private String behaviourClassSimpleName() {
 		return Util.toClassSimpleName(cls.getSimpleName()) + "Behaviour";
 	}
-	
+
 	private String behaviourBaseClassSimpleName() {
 		return Util.toClassSimpleName(cls.getSimpleName()) + "BehaviourBase";
 	}
@@ -48,7 +48,7 @@ public class Generator<T> {
 	private String behaviourClassName() {
 		return pkg + "." + behaviourClassSimpleName();
 	}
-	
+
 	private String behaviourBaseClassName() {
 		return pkg + "." + behaviourBaseClassSimpleName();
 	}
@@ -56,7 +56,7 @@ public class Generator<T> {
 	private File behaviourClassFile() {
 		return new File(packageDirectory(), behaviourClassSimpleName() + ".java");
 	}
-	
+
 	private File behaviourBaseClassFile() {
 		return new File(packageDirectory(), behaviourBaseClassSimpleName() + ".java");
 	}
@@ -139,7 +139,7 @@ public class Generator<T> {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	private void generateBehaviourBase() {
 		behaviourBaseClassFile().getParentFile().mkdirs();
 		Imports imports = new Imports();
@@ -150,20 +150,20 @@ public class Generator<T> {
 			out.println("<IMPORTS>");
 			out.println();
 			Indent indent = new Indent();
-			out.format("public class %s {\n", behaviourBaseClassSimpleName());
+			out.format("public abstract class %s implements %s {\n", behaviourBaseClassSimpleName(),
+					imports.add(behaviourClassName()));
 			out.println();
 			indent.right();
 			states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
-				if (state.isInitial()) {
-					out.format("%s%s %s(%s event) {\n", indent, imports.add(cls), onEntryMethodName(state),
+				if (!state.isInitial()) {
+					out.format("%s@%s\n", indent, imports.add(Override.class));
+					out.format("%spublic %s %s(%s %s, %s event) {\n", indent, imports.add(cls),
+							onEntryMethodName(state), imports.add(cls), instanceName(),
 							imports.add(state.eventClass()));
-				} else {
-					out.format("%s%s %s(%s %s, %s event) {\n", indent, imports.add(cls), onEntryMethodName(state),
-							imports.add(cls), instanceName(), imports.add(state.eventClass()));
+					out.format("%sreturn %s;\n", indent.right(), instanceName());
+					out.format("%s}\n", indent.left());
+					out.println();
 				}
-				out.format("%sreturn %s;\n", indent.right(), instanceName());
-				out.format("%s}\n", indent.left());
-				out.println();
 			});
 			indent.left();
 			out.format("}\n");

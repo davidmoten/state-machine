@@ -11,13 +11,13 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.github.davidmoten.fsm.gen.ShipBehaviour;
-import com.github.davidmoten.fsm.gen.ShipStateMachine;
+import com.github.davidmoten.fsm.generated.ShipBehaviour;
+import com.github.davidmoten.fsm.generated.ShipBehaviourBase;
+import com.github.davidmoten.fsm.generated.ShipStateMachine;
 import com.github.davidmoten.fsm.model.State;
 import com.github.davidmoten.fsm.model.StateMachine;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.Event;
-import com.github.davidmoten.fsm.runtime.EventVoid;
 
 public class StateMachineTest {
 
@@ -54,7 +54,7 @@ public class StateMachineTest {
 	public void testRuntime() {
 		final Ship ship = new Ship("12345", "6789", 35.0f, 141.3f);
 		List<Integer> list = new ArrayList<>();
-		ShipBehaviour shipBehaviour = new ShipBehaviour() {
+		ShipBehaviour shipBehaviour = new ShipBehaviourBase() {
 
 			@Override
 			public Ship onEntry_Outside(Ship ship, Out out) {
@@ -74,10 +74,6 @@ public class StateMachineTest {
 				return new Ship(ship.imo(), ship.mmsi(), in.lat, in.lon);
 			}
 
-			@Override
-			public Ship onEntry_InsideRisky(Ship ship, Risky event) {
-				return ship;
-			}
 		};
 		ShipStateMachine m = ShipStateMachine.create(ship, shipBehaviour);
 		m = m

@@ -1,4 +1,4 @@
-package com.github.davidmoten.fsm.gen;
+package com.github.davidmoten.fsm.generated;
 
 import com.github.davidmoten.fsm.StateMachineTest.In;
 import com.github.davidmoten.fsm.runtime.Create;
