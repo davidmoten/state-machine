@@ -3,6 +3,8 @@ package com.github.davidmoten.fsm;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,8 +21,8 @@ import com.github.davidmoten.fsm.model.StateMachine;
 public class StateMachineTest {
 
     @Test
-    public void test() {
-        StateMachine m = StateMachine.create("Ship");
+    public void test() throws IOException {
+        StateMachine<Ship> m = StateMachine.create(Ship.class);
 
         // create states (wiht the event used to transition to it)
         State<Void> neverOutside = m.state("Never Outside", Created.class);
@@ -35,6 +37,10 @@ public class StateMachineTest {
 
         m.generateClasses(new File("target/generated-sources/java"),
                 "com.github.davidmoten.fsm.generated");
+        File file = new File(
+                "target/generated-sources/java/com/github/davidmoten/fsm/generated/ShipStateMachine.java");
+        System.out.println(new String(Files.readAllBytes(file.toPath())));
+
     }
 
     @Test
@@ -61,7 +67,7 @@ public class StateMachineTest {
                 return new Ship(ship.imo(), ship.mmsi(), in.lat, in.lon);
             }
         };
-        ShipStateMachine m = new ShipStateMachine(ship, shipBehaviour);
+        ShipStateMachine m = ShipStateMachine.create(ship, shipBehaviour);
         m = m
                 //
                 .event(Created.instance())
