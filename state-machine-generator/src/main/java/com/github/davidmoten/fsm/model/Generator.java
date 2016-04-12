@@ -108,8 +108,13 @@ public class Generator<T> {
 			out.println();
 			indent.right();
 			states().forEach(state -> {
-				out.format("%s%s %s(%s %s, %s event);\n", indent, imports.add(cls), onEntryMethodName(state),
-						imports.add(cls), instanceName(), imports.add(state.eventClass()));
+				if (state.isInitial()) {
+					out.format("%s%s %s(%s event);\n", indent, imports.add(cls), onEntryMethodName(state),
+							 imports.add(state.eventClass()));
+				} else {
+					out.format("%s%s %s(%s %s, %s event);\n", indent, imports.add(cls), onEntryMethodName(state),
+							imports.add(cls), instanceName(), imports.add(state.eventClass()));
+				}
 				out.println();
 			});
 			indent.left();
@@ -145,7 +150,8 @@ public class Generator<T> {
 					imports.add(Preconditions.class), instanceName(), instanceName());
 			out.format("%s%s.checkNotNull(behaviour, \"behaviour cannot be null\");\n", indent,
 					imports.add(Preconditions.class));
-			out.format("%s%s.checkNotNull(state, \"state cannot be null\");\n", indent, imports.add(Preconditions.class));
+			out.format("%s%s.checkNotNull(state, \"state cannot be null\");\n", indent,
+					imports.add(Preconditions.class));
 			out.format("%sthis.%s = %s;\n", indent, instanceName(), instanceName());
 			out.format("%sthis.behaviour = behaviour;\n", indent);
 			out.format("%sthis.state = state;\n", indent);
@@ -190,8 +196,13 @@ public class Generator<T> {
 				out.format("if (state == State.%s && event instanceof %s) {\n", stateConstant(t.from()),
 						imports.add(t.to().eventClass()));
 				out.format("%sState nextState = State.%s;\n", indent.right(), stateConstant(t.to()));
-				out.format("%s%s nextObject = behaviour.%s(%s, (%s) event);\n", indent, imports.add(cls),
-						onEntryMethodName(t.to()), instanceName(), imports.add(t.to().eventClass()));
+				if (t.from().name().equals("Initial")) {
+					out.format("%s%s nextObject = behaviour.%s((%s) event);\n", indent, imports.add(cls),
+							onEntryMethodName(t.to()), imports.add(t.to().eventClass()));
+				} else {
+					out.format("%s%s nextObject = behaviour.%s(%s, (%s) event);\n", indent, imports.add(cls),
+							onEntryMethodName(t.to()), instanceName(), imports.add(t.to().eventClass()));
+				}
 				out.format("%sreturn new %s(nextObject, behaviour, nextState);\n", indent,
 						stateMachineClassSimpleName());
 				indent.left();

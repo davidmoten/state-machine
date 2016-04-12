@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.EventVoid;
+import com.github.davidmoten.guavamini.Preconditions;
 
 public class StateMachine<T> {
 
@@ -27,6 +28,10 @@ public class StateMachine<T> {
     }
 
     public <R> State<R> state(String name, Class<? extends Event<R>> eventClass) {
+    	Preconditions.checkNotNull(name);
+    	if (name.equals("Initial")) {
+    		name = name.concat("_1");
+    	}
         return new State<R>(this, name, eventClass);
     }
 
@@ -35,7 +40,7 @@ public class StateMachine<T> {
         return this;
     }
     
-    public <S> StateMachine<T> addInitialTransition(State<S> other) {
+    <S> StateMachine<T> addInitialTransition(State<S> other) {
     	transitions.add(new Transition<Void, S>(initialState, other));
     	return this;
     }
