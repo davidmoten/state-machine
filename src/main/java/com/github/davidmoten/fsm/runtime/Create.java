@@ -2,11 +2,11 @@ package com.github.davidmoten.fsm.runtime;
 
 import com.github.davidmoten.fsm.model.Event;
 
-public class Created implements Event<Void> {
+public class Create implements Event<Void> {
 
-    private static final Created instance = new Created();
+    private static final Create instance = new Create();
 
-    public static Created instance() {
+    public static Create instance() {
         return instance;
     }
 

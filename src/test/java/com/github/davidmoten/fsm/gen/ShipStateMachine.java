@@ -4,7 +4,7 @@ import com.github.davidmoten.fsm.Ship;
 import com.github.davidmoten.fsm.StateMachineTest.In;
 import com.github.davidmoten.fsm.StateMachineTest.Out;
 import com.github.davidmoten.fsm.model.Event;
-import com.github.davidmoten.fsm.runtime.Created;
+import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.guavamini.Preconditions;
 
 public class ShipStateMachine {
@@ -30,7 +30,7 @@ public class ShipStateMachine {
         CREATED, NEVER_OUTSIDE, OUTSIDE, INSIDE_NOT_RISKY;
     }
 
-    public ShipStateMachine event(Created event) {
+    public ShipStateMachine event(Create event) {
         return _event(event);
     }
 
@@ -40,9 +40,9 @@ public class ShipStateMachine {
 
     private ShipStateMachine _event(Event<?> event) {
         Preconditions.checkNotNull(event);
-        if (state == State.CREATED && event instanceof Created) {
+        if (state == State.CREATED && event instanceof Create) {
             State nextState = State.NEVER_OUTSIDE;
-            Ship nextObject = behaviour.onEntry_NeverOutside(ship, (Created) event);
+            Ship nextObject = behaviour.onEntry_NeverOutside(ship, (Create) event);
             return new ShipStateMachine(nextObject, behaviour, nextState);
         } else if (state == State.NEVER_OUTSIDE && event instanceof Out) {
             State nextState = State.OUTSIDE;

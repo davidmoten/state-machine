@@ -4,9 +4,9 @@ public class State<T> {
 
     private final String name;
     private final Class<? extends Event<T>> eventClass;
-    private final StateMachine m;
+    private final StateMachine<?> m;
 
-    public State(StateMachine m, String name, Class<? extends Event<T>> eventClass) {
+    public State(StateMachine<?> m, String name, Class<? extends Event<T>> eventClass) {
         this.m = m;
         this.name = name;
         this.eventClass = eventClass;
@@ -20,7 +20,7 @@ public class State<T> {
         return name;
     }
 
-    public StateMachine stateMachine() {
+    public StateMachine<?> stateMachine() {
         return m;
     }
 

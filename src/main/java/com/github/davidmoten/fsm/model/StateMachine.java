@@ -4,13 +4,17 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.davidmoten.fsm.runtime.EventVoid;
+
 public class StateMachine<T> {
 
     private final Class<T> cls;
     private final List<Transition<?, ?>> transitions = new ArrayList<>();
+    private final State<Void> initialState ;
 
     private StateMachine(Class<T> cls) {
         this.cls = cls;
+        this.initialState = new State<Void>(this, "Initial",EventVoid.class);
     }
 
     public static <T> StateMachine<T> create(Class<T> cls) {
@@ -28,6 +32,11 @@ public class StateMachine<T> {
     public <R, S> StateMachine<T> addTransition(State<R> state, State<S> other) {
         transitions.add(new Transition<R, S>(state, other));
         return this;
+    }
+    
+    public <S> StateMachine<T> addInitialTransition(State<S> other) {
+    	transitions.add(new Transition<Void, S>(initialState, other));
+    	return this;
     }
 
     public void generateClasses(File directory, String pkg) {
