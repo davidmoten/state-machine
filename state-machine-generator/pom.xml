@@ -6,11 +6,10 @@
 
     <parent>
         <groupId>com.github.davidmoten</groupId>
-        <artifactId>sonatype-parent</artifactId>
-        <version>0.1</version>
+        <artifactId>state-machine-parent</artifactId>
+        <version>0.1-SNAPSHOT</version>
     </parent>
     <artifactId>state-machine</artifactId>
-    <version>0.1-SNAPSHOT</version>
     <name>${project.artifactId}</name>
     <description>RxJava utilities</description>
     <packaging>jar</packaging>
