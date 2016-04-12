@@ -13,10 +13,10 @@ import org.junit.Test;
 
 import com.github.davidmoten.fsm.gen.ShipBehaviour;
 import com.github.davidmoten.fsm.gen.ShipStateMachine;
-import com.github.davidmoten.fsm.model.Event;
 import com.github.davidmoten.fsm.model.State;
 import com.github.davidmoten.fsm.model.StateMachine;
 import com.github.davidmoten.fsm.runtime.Create;
+import com.github.davidmoten.fsm.runtime.Event;
 
 public class StateMachineTest {
 

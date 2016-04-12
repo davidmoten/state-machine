@@ -2,6 +2,8 @@ package com.github.davidmoten.fsm.model;
 
 import java.io.File;
 
+import com.github.davidmoten.fsm.runtime.Event;
+
 public class State<T> {
 
     private final String name;

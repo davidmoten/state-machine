@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.davidmoten.fsm.runtime.Create;
+import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.guavamini.Preconditions;
 
 public class Generator<T> {
@@ -141,9 +142,11 @@ public class Generator<T> {
 			out.println();
 			out.format("%sprivate %s(%s %s, %s behaviour, State state) {\n", indent, stateMachineClassSimpleName(),
 					imports.add(cls), instanceName(), imports.add(behaviourClassName()));
-			out.format("%s%s.checkNotNull(%s);\n", indent.right(), imports.add(Preconditions.class), instanceName());
-			out.format("%s%s.checkNotNull(behaviour);\n", indent, imports.add(Preconditions.class));
-			out.format("%s%s.checkNotNull(state);\n", indent, imports.add(Preconditions.class));
+			out.format("%s%s.checkNotNull(%s, \"%s cannot be null\");\n", indent.right(),
+					imports.add(Preconditions.class), instanceName(), instanceName());
+			out.format("%s%s.checkNotNull(behaviour, \"behaviour cannot be null\");\n", indent,
+					imports.add(Preconditions.class));
+			out.format("%s%s.checkNotNull(state, \"state cannot be null\");\n", indent, imports.add(Preconditions.class));
 			out.format("%sthis.%s = %s;\n", indent, instanceName(), instanceName());
 			out.format("%sthis.behaviour = behaviour;\n", indent);
 			out.format("%sthis.state = state;\n", indent);
@@ -195,7 +198,7 @@ public class Generator<T> {
 				indent.left();
 			}
 			out.format("%s}\n", indent);
-			out.format("%sreturn this;\n",indent);
+			out.format("%sreturn this;\n", indent);
 			out.format("%s}\n", indent.left());
 			out.format("}");
 		}
