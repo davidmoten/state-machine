@@ -7,7 +7,6 @@ import java.io.PrintStream;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.guavamini.Preconditions;
 
@@ -234,7 +233,8 @@ public final class Generator<T> {
             out.format("%s}\n", indent);
             out.println();
 
-            Stream.concat(Stream.of(Create.class),
+            Stream.concat(
+                    states().filter(state -> state.isInitial()).map(state -> state.eventClass()),
                     machine.transitions().stream().map(t -> t.to().eventClass())).distinct()
                     .forEach(eventClass -> {
                         out.format("%spublic %s event(%s event) {\n", indent,
