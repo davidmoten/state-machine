@@ -42,9 +42,9 @@ Generating code
 
 From the above state machine definition for a microwave we generate these classes:
 
-*`MicrowaveStateMachine` - throw events at this to see transitions
-*`MicrowaveBehaviour` - interface to capture onEntry procedures
-*`MicrowaveBehaviourBase` - a do-nothing implentation of `MicrowaveBehaviour` that is convenient for inheriting
+* `MicrowaveStateMachine` - throw events at this to see transitions
+* `MicrowaveBehaviour` - interface to capture onEntry procedures
+* `MicrowaveBehaviourBase` - a do-nothing implentation of `MicrowaveBehaviour` that is convenient for inheriting
 
 The cleanest implementation of this generation is using maven artifacts.
 
