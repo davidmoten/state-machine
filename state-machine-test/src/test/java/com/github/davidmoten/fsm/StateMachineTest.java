@@ -2,9 +2,6 @@ package com.github.davidmoten.fsm;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,46 +10,13 @@ import org.junit.Test;
 
 import com.github.davidmoten.fsm.example.In;
 import com.github.davidmoten.fsm.example.Out;
-import com.github.davidmoten.fsm.example.Risky;
 import com.github.davidmoten.fsm.example.Ship;
 import com.github.davidmoten.fsm.example.generated.ShipBehaviour;
 import com.github.davidmoten.fsm.example.generated.ShipBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.ShipStateMachine;
-import com.github.davidmoten.fsm.model.State;
-import com.github.davidmoten.fsm.model.StateMachine;
 import com.github.davidmoten.fsm.runtime.Create;
 
 public class StateMachineTest {
-
-    @Test
-    public void test() throws IOException {
-        File directory = new File("target/test-gen/java");
-        String pkg = "com.github.davidmoten.fsm.generated";
-
-        StateMachine<Ship> m = StateMachine.create(Ship.class);
-
-        // create states (with the event used to transition to it)
-        State<Void> neverOutside = m.state("Never Outside", Create.class);
-        State<Out> outside = m.state("Outside", Out.class);
-        State<In> insideNotRisky = m.state("Inside Not Risky", In.class);
-        State<Risky> insideRisky = m.state("Inside Risky", Risky.class);
-
-        // create transitions and generate classes
-        neverOutside.initial().to(outside).to(insideNotRisky).to(insideRisky)
-                .generateClasses(directory, pkg);
-
-        String pkgPath = pkg.replace(".", File.separator) + File.separator;
-        File stateMachineFile = new File(directory, pkgPath + "ShipStateMachine.java");
-        println(stateMachineFile);
-        File behaviourFile = new File(directory, pkgPath + "ShipBehaviour.java");
-        println(behaviourFile);
-        File behaviourBaseFile = new File(directory, pkgPath + "ShipBehaviourBase.java");
-        println(behaviourBaseFile);
-    }
-
-    private static void println(File file) throws IOException {
-        System.out.println(new String(Files.readAllBytes(file.toPath())));
-    }
 
     @Test
     public void testRuntime() {
