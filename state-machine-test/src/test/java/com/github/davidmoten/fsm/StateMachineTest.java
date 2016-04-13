@@ -11,15 +11,21 @@ import org.junit.Test;
 import com.github.davidmoten.fsm.example.In;
 import com.github.davidmoten.fsm.example.Out;
 import com.github.davidmoten.fsm.example.Ship;
+import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviour;
+import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviourBase;
+import com.github.davidmoten.fsm.example.generated.MicrowaveStateMachine;
 import com.github.davidmoten.fsm.example.generated.ShipBehaviour;
 import com.github.davidmoten.fsm.example.generated.ShipBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.ShipStateMachine;
+import com.github.davidmoten.fsm.example2.ButtonPressed;
+import com.github.davidmoten.fsm.example2.DoorOpened;
+import com.github.davidmoten.fsm.example2.Microwave;
 import com.github.davidmoten.fsm.runtime.Create;
 
 public class StateMachineTest {
 
     @Test
-    public void testRuntime() {
+    public void testShipRuntime() {
         final Ship ship = new Ship("12345", "6789", 35.0f, 141.3f);
         List<Integer> list = new ArrayList<>();
         ShipBehaviour shipBehaviour = new ShipBehaviourBase() {
@@ -52,6 +58,16 @@ public class StateMachineTest {
                 .event(new Out(1.0f, 3.0f));
 
         assertEquals(Arrays.asList(2, 1), list);
+    }
+
+    @Test
+    public void testMicrowaveRuntime() {
+        Microwave microwave = new Microwave();
+        MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
+        };
+        MicrowaveStateMachine m = MicrowaveStateMachine.create(microwave, behaviour,
+                MicrowaveStateMachine.State.READY_TO_COOK);
+        m.event(new ButtonPressed()).event(new DoorOpened());
     }
 
 }

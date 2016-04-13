@@ -224,7 +224,7 @@ public final class Generator<T> {
                     stateMachineClassSimpleName(), instanceName());
             out.format("%s}\n", indent.left());
             out.println();
-            out.format("%sprivate static enum State {\n", indent);
+            out.format("%spublic static enum State {\n", indent);
             indent.right();
             String states = Stream
                     .concat(Stream.of("INITIAL"), states().map(state -> stateConstant(state)))
