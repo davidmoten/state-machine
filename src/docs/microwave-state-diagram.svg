@@ -14,7 +14,10 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="microwave-state-diagram.svg">
+   sodipodi:docname="microwave-state-diagram.svg"
+   inkscape:export-filename="/home/dxm/Development/ide/eclipse/workspace/state-machine/src/docs/microwave-state-diagram.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs4">
     <marker
@@ -66,12 +69,13 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:none;stroke:#000000;stroke-width:0.90100348;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:#ffffe0;stroke:#000000;stroke-width:0.90100347999999997;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;fill-opacity:1"
        id="rect2985"
        width="163.15919"
        height="79.20269"
        x="275.77652"
-       y="203.1423" />
+       y="203.1423"
+       ry="18.182745" />
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
@@ -85,12 +89,13 @@
          y="244.28076"
          style="font-size:16px">Ready to Cook</tspan></text>
     <rect
-       style="fill:none;stroke:#000000;stroke-width:0.76309013;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:#ffffe0;stroke:#000000;stroke-width:0.76309013000000003;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;fill-opacity:1"
        id="rect2985-1"
        width="116.83009"
        height="79.340607"
        x="522.42267"
-       y="202.50894" />
+       y="202.50894"
+       ry="18.182745" />
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
@@ -111,12 +116,13 @@
        x="535.38086"
        y="234.09801" />
     <rect
-       style="fill:none;stroke:#000000;stroke-width:0.90100348;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:#ffffe0;stroke:#000000;stroke-width:0.90100347999999997;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;fill-opacity:1"
        id="rect2985-0"
        width="163.15919"
        height="79.20269"
        x="490.16675"
-       y="359.71497" />
+       y="359.71497"
+       ry="16.162441" />
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
@@ -137,31 +143,33 @@
        x="522.24884"
        y="390.22495" />
     <rect
-       style="fill:none;stroke:#000000;stroke-width:0.90100348;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:#ffffe0;stroke:#000000;stroke-width:0.90100347999999997;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;fill-opacity:1"
        id="rect2985-12"
        width="163.15919"
        height="79.20269"
        x="49.740234"
-       y="203.52713" />
+       y="203.52713"
+       ry="18.182745" />
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-       x="82.968872"
+       x="88.968872"
        y="244.66557"
        id="text3755-7"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3757-4"
-         x="82.968872"
+         x="88.968872"
          y="244.66557"
          style="font-size:16px">Door Open</tspan></text>
     <rect
-       style="fill:none;stroke:#000000;stroke-width:0.9335947;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:#ffffe0;stroke:#000000;stroke-width:0.93359470000000000;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;fill-opacity:1"
        id="rect2985-5"
        width="175.24843"
        height="79.170097"
        x="487.37595"
-       y="46.243896" />
+       y="46.243896"
+       ry="19.192898" />
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
