@@ -17,7 +17,7 @@
 
         <dependency>
             <groupId>com.github.davidmoten</groupId>
-            <artifactId>state-machine-model</artifactId>
+            <artifactId>state-machine-generator</artifactId>
             <version>${project.parent.version}</version>
             <optional>true</optional>
         </dependency>
