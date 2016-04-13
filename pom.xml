@@ -79,8 +79,9 @@
     <modules>
         <module>state-machine-runtime</module>
         <module>state-machine-model</module>
-        <module>state-machine-generator</module>
         <module>state-machine-maven-plugin</module>
+        <module>state-machine-test-definition</module>
+        <module>state-machine-test</module>
     </modules>
 
 
