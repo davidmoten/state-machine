@@ -93,6 +93,11 @@ public final class Generator<T> {
         return "onEntry_" + Util.upperFirst(Util.toJavaIdentifier(state.name()));
     }
 
+    private boolean hasCreationTransition() {
+        return machine.transitions().stream().filter(t -> t.from().isInitial()).findAny()
+                .isPresent();
+    }
+
     public void generate() {
         generateStateMachine();
         System.out.println("generated " + stateMachineClassFile());
@@ -151,10 +156,10 @@ public final class Generator<T> {
             out.println("<IMPORTS>");
             out.println();
             Indent indent = new Indent();
-            boolean hasInitial = machine.transitions().stream().filter(t -> t.from().isInitial())
-                    .findAny().isPresent();
-            out.format("public %sclass %s implements %s {\n", hasInitial ? "abstract " : "",
-                    behaviourBaseClassSimpleName(), imports.add(behaviourClassName()));
+
+            out.format("public %sclass %s implements %s {\n",
+                    hasCreationTransition() ? "abstract " : "", behaviourBaseClassSimpleName(),
+                    imports.add(behaviourClassName()));
             out.println();
             indent.right();
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
@@ -219,17 +224,18 @@ public final class Generator<T> {
                     stateMachineClassSimpleName(), instanceName());
             out.format("%s}\n", indent.left());
             out.println();
-            out.format("%spublic static %s create(%s behaviour) {\n", indent,
-                    stateMachineClassSimpleName(), imports.add(behaviourClassName()));
-            out.format("%sreturn new %s(null, behaviour, State.INITIAL);\n", indent.right(),
-                    stateMachineClassSimpleName(), instanceName());
-            out.format("%s}\n", indent.left());
-            out.println();
+            if (hasCreationTransition()) {
+                out.format("%spublic static %s create(%s behaviour) {\n", indent,
+                        stateMachineClassSimpleName(), imports.add(behaviourClassName()));
+                out.format("%sreturn new %s(null, behaviour, State.INITIAL);\n", indent.right(),
+                        stateMachineClassSimpleName(), instanceName());
+                out.format("%s}\n", indent.left());
+                out.println();
+            }
             out.format("%spublic static enum State {\n", indent);
             indent.right();
-            String states = Stream
-                    .concat(Stream.of("INITIAL"), states().map(state -> stateConstant(state)))
-                    .distinct().collect(Collectors.joining(",\n" + indent));
+            String states = states().map(state -> stateConstant(state)).distinct()
+                    .collect(Collectors.joining(",\n" + indent));
             out.format("%s%s;\n", indent, states);
             indent.left();
             out.format("%s}\n", indent);
