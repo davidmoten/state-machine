@@ -226,8 +226,9 @@ public final class Generator<T> {
             out.println();
             out.format("%sprivate static enum State {\n", indent);
             indent.right();
-            String states = states().map(state -> stateConstant(state))
-                    .collect(Collectors.joining(",\n" + indent));
+            String states = Stream
+                    .concat(Stream.of("INITIAL"), states().map(state -> stateConstant(state)))
+                    .distinct().collect(Collectors.joining(",\n" + indent));
             out.format("%s%s;\n", indent, states);
             indent.left();
             out.format("%s}\n", indent);

@@ -4,6 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
+import com.github.davidmoten.fsm.example2.ButtonPressed;
+import com.github.davidmoten.fsm.example2.DoorClosed;
+import com.github.davidmoten.fsm.example2.DoorOpened;
+import com.github.davidmoten.fsm.example2.Microwave;
+import com.github.davidmoten.fsm.example2.TimerTimesOut;
 import com.github.davidmoten.fsm.model.State;
 import com.github.davidmoten.fsm.model.StateMachine;
 import com.github.davidmoten.fsm.runtime.Create;
@@ -12,8 +17,7 @@ public class StateMachines implements Supplier<List<StateMachine<?>>> {
 
     @Override
     public List<StateMachine<?>> get() {
-        StateMachine<Ship> m = createShipStateMachine();
-        return Arrays.asList(m);
+        return Arrays.asList(createShipStateMachine(), createMicrowaveStateMachine());
 
     }
 
@@ -44,6 +48,20 @@ public class StateMachines implements Supplier<List<StateMachine<?>>> {
                 .to(insideRisky.from(insideRisky).from(insideNotRiskyAlreadyNotified))
                 .to(departed.from(insideNotRisky).from(insideNotRiskyAlreadyNotified))
                 .to(departedToPort).to(notifiedNextPort);
+        return m;
+    }
+
+    private static StateMachine<Microwave> createMicrowaveStateMachine() {
+        StateMachine<Microwave> m = StateMachine.create(Microwave.class);
+        State<DoorClosed> readyToCook = m.state("Ready to Cook", DoorClosed.class);
+        State<DoorOpened> doorOpen = m.state("Door Open", DoorOpened.class);
+        State<ButtonPressed> cooking = m.state("Cooking", ButtonPressed.class);
+        State<DoorOpened> cookingInterruped = m.state("Cooking Interrupted", DoorOpened.class);
+        State<TimerTimesOut> cookingComplete = m.state("Cooking Complete", TimerTimesOut.class);
+
+        readyToCook.to(cooking).to(cookingInterruped).to(
+                readyToCook.from(doorOpen.from(readyToCook).from(cookingComplete.from(cooking))));
+
         return m;
     }
 
