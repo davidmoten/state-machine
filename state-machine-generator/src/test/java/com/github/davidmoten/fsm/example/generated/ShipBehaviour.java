@@ -1,10 +1,10 @@
-package com.github.davidmoten.fsm.generated;
+package com.github.davidmoten.fsm.example.generated;
 
-import com.github.davidmoten.fsm.StateMachineTest.In;
+import com.github.davidmoten.fsm.example.In;
+import com.github.davidmoten.fsm.example.Out;
+import com.github.davidmoten.fsm.example.Risky;
+import com.github.davidmoten.fsm.example.Ship;
 import com.github.davidmoten.fsm.runtime.Create;
-import com.github.davidmoten.fsm.Ship;
-import com.github.davidmoten.fsm.StateMachineTest.Risky;
-import com.github.davidmoten.fsm.StateMachineTest.Out;
 
 public interface ShipBehaviour {
 
@@ -15,5 +15,4 @@ public interface ShipBehaviour {
     Ship onEntry_InsideNotRisky(Ship ship, In event);
 
     Ship onEntry_InsideRisky(Ship ship, Risky event);
-
 }

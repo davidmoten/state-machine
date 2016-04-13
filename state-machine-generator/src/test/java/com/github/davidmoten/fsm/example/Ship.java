@@ -1,4 +1,4 @@
-package com.github.davidmoten.fsm;
+package com.github.davidmoten.fsm.example;
 
 public class Ship {
 

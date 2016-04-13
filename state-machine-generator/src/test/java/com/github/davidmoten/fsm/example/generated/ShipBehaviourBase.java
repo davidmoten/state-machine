@@ -1,11 +1,12 @@
-package com.github.davidmoten.fsm.generated;
+package com.github.davidmoten.fsm.example.generated;
 
-import com.github.davidmoten.fsm.StateMachineTest.In;
-import com.github.davidmoten.fsm.Ship;
+import com.github.davidmoten.fsm.example.In;
+import com.github.davidmoten.fsm.example.Out;
+import com.github.davidmoten.fsm.example.Risky;
+import com.github.davidmoten.fsm.example.Ship;
+import com.github.davidmoten.fsm.example.generated.ShipBehaviour;
+
 import java.lang.Override;
-import com.github.davidmoten.fsm.StateMachineTest.Risky;
-import com.github.davidmoten.fsm.generated.ShipBehaviour;
-import com.github.davidmoten.fsm.StateMachineTest.Out;
 
 public abstract class ShipBehaviourBase implements ShipBehaviour {
 

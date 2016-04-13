@@ -1,13 +1,13 @@
-package com.github.davidmoten.fsm.generated;
+package com.github.davidmoten.fsm.example.generated;
 
-import com.github.davidmoten.fsm.StateMachineTest.In;
+import com.github.davidmoten.fsm.example.In;
+import com.github.davidmoten.fsm.example.Out;
+import com.github.davidmoten.fsm.example.Risky;
+import com.github.davidmoten.fsm.example.Ship;
+import com.github.davidmoten.fsm.example.generated.ShipBehaviour;
 import com.github.davidmoten.fsm.runtime.Create;
-import com.github.davidmoten.guavamini.Preconditions;
 import com.github.davidmoten.fsm.runtime.Event;
-import com.github.davidmoten.fsm.Ship;
-import com.github.davidmoten.fsm.StateMachineTest.Risky;
-import com.github.davidmoten.fsm.generated.ShipBehaviour;
-import com.github.davidmoten.fsm.StateMachineTest.Out;
+import com.github.davidmoten.guavamini.Preconditions;
 
 public final class ShipStateMachine {
 
@@ -16,7 +16,6 @@ public final class ShipStateMachine {
     private final State state;
 
     private ShipStateMachine(Ship ship, ShipBehaviour behaviour, State state) {
-        Preconditions.checkNotNull(ship, "ship cannot be null");
         Preconditions.checkNotNull(behaviour, "behaviour cannot be null");
         Preconditions.checkNotNull(state, "state cannot be null");
         this.ship = ship;
@@ -24,8 +23,13 @@ public final class ShipStateMachine {
         this.state = state;
     }
 
-    public static ShipStateMachine create(Ship ship, ShipBehaviour behaviour) {
-        return new ShipStateMachine(ship, behaviour, State.INITIAL);
+    public static ShipStateMachine create(Ship ship, ShipBehaviour behaviour, State state) {
+        Preconditions.checkNotNull(ship, "ship cannot be null");
+        return new ShipStateMachine(ship, behaviour, state);
+    }
+
+    public static ShipStateMachine create(ShipBehaviour behaviour) {
+        return new ShipStateMachine(null, behaviour, State.INITIAL);
     }
 
     private static enum State {
