@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="microwave-state-diagram.svg">
+  <defs
+     id="defs4">
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow2Lend"
+       style="overflow:visible;">
+      <path
+         id="path3909"
+         style="fill-rule:evenodd;stroke-width:0.62500000;stroke-linejoin:round;"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         transform="scale(1.1) rotate(180) translate(1,0)" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="261.45782"
+     inkscape:cy="817.47315"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1167"
+     inkscape:window-height="787"
+     inkscape:window-x="2635"
+     inkscape:window-y="102"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.90100348;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2985"
+       width="163.15919"
+       height="79.20269"
+       x="275.77652"
+       y="203.1423" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="299.00516"
+       y="244.28076"
+       id="text3755"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3757"
+         x="299.00516"
+         y="244.28076"
+         style="font-size:16px">Ready to Cook</tspan></text>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.76309013;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2985-1"
+       width="116.83009"
+       height="79.340607"
+       x="522.42267"
+       y="202.50894" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="545.72028"
+       y="247.71635"
+       id="text3755-6"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3757-3"
+         x="545.72028"
+         y="247.71635"
+         style="font-size:16px">Cooking</tspan></text>
+    <rect
+       style="fill:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none"
+       id="rect3783"
+       width="139.40105"
+       height="6.0609155"
+       x="535.38086"
+       y="234.09801" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.90100348;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2985-0"
+       width="163.15919"
+       height="79.20269"
+       x="490.16675"
+       y="359.71497" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="499.39539"
+       y="400.85342"
+       id="text3755-5"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3757-5"
+         x="499.39539"
+         y="400.85342"
+         style="font-size:16px">Cooking Complete</tspan></text>
+    <rect
+       style="fill:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none"
+       id="rect3809"
+       width="102.02541"
+       height="5.0507627"
+       x="522.24884"
+       y="390.22495" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.90100348;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2985-12"
+       width="163.15919"
+       height="79.20269"
+       x="49.740234"
+       y="203.52713" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="82.968872"
+       y="244.66557"
+       id="text3755-7"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3757-4"
+         x="82.968872"
+         y="244.66557"
+         style="font-size:16px">Door Open</tspan></text>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.9335947;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2985-5"
+       width="175.24843"
+       height="79.170097"
+       x="487.37595"
+       y="46.243896" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="494.58826"
+       y="87.366051"
+       id="text3755-70"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3757-6"
+         x="494.58826"
+         y="87.366051"
+         style="font-size:16px">Cooking Interrupted</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow2Lend)"
+       d="m 485.88337,82.615739 c -131.31983,0 -131.31983,0 -131.31983,0 l 0,120.208151"
+       id="path3878"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow2Lend)"
+       d="m 582.85802,202.82389 0,-77.78174"
+       id="path3880"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow2Lend)"
+       d="m 408.10163,201.81374 -1.01015,-22.22336 144.45181,0 0,21.21321"
+       id="path3882"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow2Lend)"
+       d="m 123.23861,200.80359 0,-48.48733 188.89853,1.01016 0,48.48732"
+       id="path4692"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow2Lend)"
+       d="m 357.594,281.61579 -1.01015,72.73098 -229.30463,0 0,-71.72083"
+       id="path5058"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow2Lend)"
+       d="M 488.91383,423.03715 83.842661,422.02699 84.852814,283.6361"
+       id="path5242"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow2Lend)"
+       d="m 545.48237,281.61579 -1.01015,76.77159"
+       id="path5426"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="184.85793"
+       y="145.08276"
+       id="text5610"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5612"
+         x="184.85793"
+         y="145.08276">doorClosed</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="385.79587"
+       y="69.835556"
+       id="text5610-4"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5612-9"
+         x="385.79587"
+         y="69.835556">doorClosed</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="195.9075"
+       y="412.72397"
+       id="text5610-4-6"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="195.9075"
+         y="412.72397"
+         id="tspan5656">doorOpened</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="192.37006"
+       y="342.50504"
+       id="text5610-4-6-3"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="192.37006"
+         y="342.50504"
+         id="tspan5656-5">doorOpened</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="430.62393"
+       y="167.74864"
+       id="text5610-4-6-9"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="430.62393"
+         y="167.74864"
+         id="tspan5656-0">buttonPressed</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="591.11633"
+       y="164.71819"
+       id="text5610-4-6-1"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="591.11633"
+         y="164.71819"
+         id="tspan5656-07">doorOpened</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:10px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="553.5636"
+       y="314.95081"
+       id="text5699"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5701"
+         x="553.5636"
+         y="314.95081"
+         style="font-size:12px">timerTimesOut</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="136.37059"
+       y="48.270554"
+       id="text5703"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5705"
+         x="136.37059"
+         y="48.270554"
+         style="fill:#008000;font-weight:normal;-inkscape-font-specification:Sans Italic;font-style:italic">Event</tspan></text>
+    <path
+       style="fill:none;stroke:#7ebcaa;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:none;fill-opacity:1"
+       d="m 160.61425,55.34162 53.53809,72.73098"
+       id="path5709"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="12.700046"
+       y="108.1769"
+       id="text5703-3"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5705-9"
+         x="12.700046"
+         y="108.1769"
+         style="font-style:italic;font-weight:normal;fill:#008000;-inkscape-font-specification:Sans Italic">State</tspan></text>
+    <path
+       style="fill:none;stroke:#7ebcaa;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:none"
+       d="m 38.794223,115.55923 33.61793,83.82098"
+       id="path5709-6"
+       inkscape:connector-curvature="0"
+       inkscape:transform-center-x="18.211087"
+       inkscape:transform-center-y="9.896876" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="232.91331"
+       y="51.608349"
+       id="text5703-9"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5705-1"
+         x="232.91331"
+         y="51.608349"
+         style="font-style:italic;font-weight:normal;fill:#008000;-inkscape-font-specification:Sans Italic">Transition</tspan></text>
+    <path
+       style="fill:none;stroke:#7ebcaa;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:none"
+       d="m 260.18742,61.709877 21.2132,82.832503"
+       id="path5709-2"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+  </g>
+</svg>
