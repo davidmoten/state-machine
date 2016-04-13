@@ -8,18 +8,18 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.github.davidmoten.fsm.example.In;
-import com.github.davidmoten.fsm.example.Out;
-import com.github.davidmoten.fsm.example.Ship;
 import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviour;
 import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.MicrowaveStateMachine;
 import com.github.davidmoten.fsm.example.generated.ShipBehaviour;
 import com.github.davidmoten.fsm.example.generated.ShipBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.ShipStateMachine;
-import com.github.davidmoten.fsm.example2.ButtonPressed;
-import com.github.davidmoten.fsm.example2.DoorOpened;
-import com.github.davidmoten.fsm.example2.Microwave;
+import com.github.davidmoten.fsm.example.microwave.ButtonPressed;
+import com.github.davidmoten.fsm.example.microwave.DoorOpened;
+import com.github.davidmoten.fsm.example.microwave.Microwave;
+import com.github.davidmoten.fsm.example.ship.In;
+import com.github.davidmoten.fsm.example.ship.Out;
+import com.github.davidmoten.fsm.example.ship.Ship;
 import com.github.davidmoten.fsm.runtime.Create;
 
 public class StateMachineTest {

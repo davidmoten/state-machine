@@ -1,4 +1,4 @@
-package com.github.davidmoten.fsm.example2;
+package com.github.davidmoten.fsm.example.microwave;
 
 import com.github.davidmoten.fsm.runtime.Event;
 

@@ -6,10 +6,10 @@ import java.nio.file.Files;
 
 import org.junit.Test;
 
-import com.github.davidmoten.fsm.example.In;
-import com.github.davidmoten.fsm.example.Out;
-import com.github.davidmoten.fsm.example.Risky;
-import com.github.davidmoten.fsm.example.Ship;
+import com.github.davidmoten.fsm.example.ship.In;
+import com.github.davidmoten.fsm.example.ship.Out;
+import com.github.davidmoten.fsm.example.ship.Risky;
+import com.github.davidmoten.fsm.example.ship.Ship;
 import com.github.davidmoten.fsm.model.State;
 import com.github.davidmoten.fsm.model.StateMachine;
 import com.github.davidmoten.fsm.runtime.Create;
