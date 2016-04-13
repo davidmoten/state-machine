@@ -34,6 +34,11 @@ public final class State<T> {
         return other;
     }
 
+    public <R> State<T> from(State<R> other) {
+        m.addTransition(other, this);
+        return this;
+    }
+
     public State<T> initial() {
         initial = true;
         m.addInitialTransition(this);

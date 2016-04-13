@@ -17,4 +17,9 @@ public final class Transition<A, B> {
         return to;
     }
 
+    @Override
+    public String toString() {
+        return "Transition [" + from.name() + "->" + to.name() + "]";
+    }
+
 }

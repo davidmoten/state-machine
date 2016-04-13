@@ -36,12 +36,22 @@ public final class StateMachine<T> {
     }
 
     public <R, S> StateMachine<T> addTransition(State<R> state, State<S> other) {
-        transitions.add(new Transition<R, S>(state, other));
+        Transition<R, S> transition = new Transition<R, S>(state, other);
+        System.out.println("adding " + transition);
+        for (Transition<?, ?> t : transitions) {
+            if (t.from() == state && t.to() == other) {
+                throw new IllegalArgumentException(
+                        "the transition already exists: " + state.name() + " -> " + other.name());
+            }
+        }
+        transitions.add(transition);
         return this;
     }
 
     <S> StateMachine<T> addInitialTransition(State<S> other) {
-        transitions.add(new Transition<Void, S>(initialState, other));
+        Transition<Void, S> transition = new Transition<Void, S>(initialState, other);
+        System.out.println("adding " + transition);
+        transitions.add(transition);
         return this;
     }
 
