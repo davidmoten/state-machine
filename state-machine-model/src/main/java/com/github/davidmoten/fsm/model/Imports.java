@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Imports {
+final class Imports {
 
     private final Map<String, String> map = new HashMap<>();
 

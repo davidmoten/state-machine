@@ -11,7 +11,7 @@ import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.guavamini.Preconditions;
 
-public class Generator<T> {
+public final class Generator<T> {
 
     private final Class<T> cls;
     private final File directory;

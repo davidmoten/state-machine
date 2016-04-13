@@ -4,12 +4,12 @@ import java.io.File;
 
 import com.github.davidmoten.fsm.runtime.Event;
 
-public class State<T> {
+public final class State<T> {
 
     private final String name;
     private final Class<? extends Event<T>> eventClass;
     private final StateMachine<?> m;
-	private boolean initial;
+    private boolean initial;
 
     public State(StateMachine<?> m, String name, Class<? extends Event<T>> eventClass) {
         this.m = m;
@@ -33,19 +33,19 @@ public class State<T> {
         m.addTransition(this, other);
         return other;
     }
-    
+
     public State<T> initial() {
-    	initial = true;
-    	m.addInitialTransition(this);
-    	return this;
-    }
-    
-    public boolean isInitial() {
-    	return initial;
+        initial = true;
+        m.addInitialTransition(this);
+        return this;
     }
 
-	public void generateClasses(File directory, String pkg) {
-		m.generateClasses(directory, pkg);
-	}
+    public boolean isInitial() {
+        return initial;
+    }
+
+    public void generateClasses(File directory, String pkg) {
+        m.generateClasses(directory, pkg);
+    }
 
 }

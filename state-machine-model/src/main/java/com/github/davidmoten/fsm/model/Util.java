@@ -4,7 +4,11 @@ import java.util.regex.Pattern;
 
 import com.github.davidmoten.guavamini.annotations.VisibleForTesting;
 
-public class Util {
+final class Util {
+
+    private Util() {
+        // prevent instantiation
+    }
 
     public static String lowerFirst(String s) {
         return s.substring(0, 1).toLowerCase() + s.substring(1);
