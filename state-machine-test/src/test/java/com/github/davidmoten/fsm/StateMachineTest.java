@@ -63,8 +63,7 @@ public class StateMachineTest {
     @Test
     public void testMicrowaveRuntime() {
         Microwave microwave = new Microwave();
-        MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
-        };
+        MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
         MicrowaveStateMachine m = MicrowaveStateMachine.create(microwave, behaviour,
                 MicrowaveStateMachine.State.READY_TO_COOK);
         m.event(new ButtonPressed()).event(new DoorOpened());

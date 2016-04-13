@@ -151,8 +151,10 @@ public final class Generator<T> {
             out.println("<IMPORTS>");
             out.println();
             Indent indent = new Indent();
-            out.format("public abstract class %s implements %s {\n", behaviourBaseClassSimpleName(),
-                    imports.add(behaviourClassName()));
+            boolean hasInitial = machine.transitions().stream().filter(t -> t.from().isInitial())
+                    .findAny().isPresent();
+            out.format("public %sclass %s implements %s {\n", hasInitial ? "abstract " : "",
+                    behaviourBaseClassSimpleName(), imports.add(behaviourClassName()));
             out.println();
             indent.right();
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
