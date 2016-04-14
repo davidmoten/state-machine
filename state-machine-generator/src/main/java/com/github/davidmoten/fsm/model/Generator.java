@@ -95,8 +95,7 @@ public final class Generator<T> {
     }
 
     private boolean hasCreationTransition() {
-        return machine.transitions().stream().filter(t -> t.from().isInitial()).findAny()
-                .isPresent();
+        return machine.hasCreationTransition();
     }
 
     public void generate() {

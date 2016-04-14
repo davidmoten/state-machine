@@ -79,9 +79,13 @@ public final class StateMachine<T> {
         out.println("<body>");
         // states
         out.println("<h2>States</h2>");
-        states.stream().forEach(state -> out.println(state.name()));
+        states.stream().map(state -> state.name()).sorted()
+                .forEach(state -> out.println("<p class=\"state\"><b>" + state + "</b></p>"));
 
         // events
+        out.println("<h2>Events</h2>");
+        states.stream().map(state -> state.eventClass().getSimpleName()).distinct().sorted()
+                .forEach(state -> out.println("<p class=\"state\"><b>" + state + "</b></p>"));
 
         // transition table
         // state onEntry template
