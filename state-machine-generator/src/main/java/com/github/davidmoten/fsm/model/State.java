@@ -9,7 +9,7 @@ public final class State<T> {
     private final String name;
     private final Class<? extends Event<T>> eventClass;
     private final StateMachine<?> m;
-    private boolean initial;
+    private boolean isCreationDestination;
 
     public State(StateMachine<?> m, String name, Class<? extends Event<T>> eventClass) {
         this.m = m;
@@ -40,13 +40,17 @@ public final class State<T> {
     }
 
     public State<T> initial() {
-        initial = true;
+        isCreationDestination = true;
         m.addInitialTransition(this);
         return this;
     }
 
+    public boolean isCreationDestination() {
+        return isCreationDestination;
+    }
+
     public boolean isInitial() {
-        return initial;
+        return name().equals("Initial");
     }
 
     public void generateClasses(File directory, String pkg) {

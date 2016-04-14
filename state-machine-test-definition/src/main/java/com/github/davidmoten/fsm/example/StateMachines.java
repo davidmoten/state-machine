@@ -50,7 +50,7 @@ public class StateMachines implements Supplier<List<StateMachine<?>>> {
         neverOutside.initial()
                 //
                 .to(outside.from(notifiedNextPort).from(departedToPortNotRisky.from(departedToPort))
-                        .from(departedToUnknownPort))
+                        .from(departedToUnknownPort.from(departed)))
                 .to(insideNotRisky)
                 .to(insideRisky.from(insideRisky).from(insideNotRiskyAlreadyNotified))
                 .to(departed.from(insideNotRisky).from(insideNotRiskyAlreadyNotified))

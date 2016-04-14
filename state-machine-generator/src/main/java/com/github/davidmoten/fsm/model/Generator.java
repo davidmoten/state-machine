@@ -125,7 +125,7 @@ public final class Generator<T> {
             out.println();
             indent.right();
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
-                if (state.isInitial()) {
+                if (state.isCreationDestination()) {
                     out.format("%s%s %s(%s event);\n", indent, imports.add(cls),
                             onEntryMethodName(state), imports.add(state.eventClass()));
                 } else {
@@ -163,7 +163,7 @@ public final class Generator<T> {
             out.println();
             indent.right();
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
-                if (!state.isInitial()) {
+                if (!state.isCreationDestination()) {
                     out.format("%s@%s\n", indent, imports.add(Override.class));
                     out.format("%spublic %s %s(%s %s, %s event) {\n", indent, imports.add(cls),
                             onEntryMethodName(state), imports.add(cls), instanceName(),
@@ -245,7 +245,7 @@ public final class Generator<T> {
             out.println();
 
             Stream.concat(
-                    states().filter(state -> state.isInitial()).map(state -> state.eventClass()),
+                    states().filter(state -> state.isCreationDestination()).map(state -> state.eventClass()),
                     machine.transitions().stream().map(t -> t.to().eventClass())).distinct()
                     .forEach(eventClass -> {
                         out.format("%spublic %s event(%s event) {\n", indent,

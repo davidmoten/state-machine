@@ -61,6 +61,7 @@ public final class StateMachine<T> {
         System.out.println("adding " + transition);
         transitions.add(transition);
         states.add(initialState);
+        states.add(other);
         return this;
     }
 
@@ -84,8 +85,9 @@ public final class StateMachine<T> {
 
         // events
         out.println("<h2>Events</h2>");
-        states.stream().map(state -> state.eventClass().getSimpleName()).distinct().sorted()
-                .forEach(state -> out.println("<p class=\"state\"><b>" + state + "</b></p>"));
+        states.stream().filter(state -> !state.isInitial())
+                .map(state -> state.eventClass().getSimpleName()).distinct().sorted()
+                .forEach(event -> out.println("<p class=\"event\"><i>" + event + "</i></p>"));
 
         // transition table
         // state onEntry template
@@ -97,7 +99,8 @@ public final class StateMachine<T> {
     }
 
     public boolean hasCreationTransition() {
-        return transitions().stream().filter(t -> t.from().isInitial()).findAny().isPresent();
+        return transitions().stream().filter(t -> t.from().isCreationDestination()).findAny()
+                .isPresent();
     }
 
 }
