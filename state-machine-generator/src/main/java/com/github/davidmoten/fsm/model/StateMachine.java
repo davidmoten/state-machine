@@ -1,8 +1,13 @@
 package com.github.davidmoten.fsm.model;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.EventVoid;
@@ -12,6 +17,7 @@ public final class StateMachine<T> {
 
     private final Class<T> cls;
     private final List<Transition<?, ?>> transitions = new ArrayList<>();
+    private final Set<State<?>> states = new HashSet<State<?>>();
     private final State<Void> initialState;
 
     private StateMachine(Class<T> cls) {
@@ -32,7 +38,9 @@ public final class StateMachine<T> {
         if (name.equals("Initial")) {
             name = name.concat("_1");
         }
-        return new State<R>(this, name, eventClass);
+        State<R> state = new State<R>(this, name, eventClass);
+        states.add(state);
+        return state;
     }
 
     public <R, S> StateMachine<T> addTransition(State<R> state, State<S> other) {
@@ -52,23 +60,40 @@ public final class StateMachine<T> {
         Transition<Void, S> transition = new Transition<Void, S>(initialState, other);
         System.out.println("adding " + transition);
         transitions.add(transition);
+        states.add(initialState);
         return this;
     }
 
     public void generateClasses(File directory, String pkg) {
         new Generator<T>(this, directory, pkg).generate();
-        // generate state machine wrapper `ShipStateMachine` for an object that
-        // accepts events, implements transitions and runs onEntry procedures
-        // constructor should have object as parameter and another parameter
-        // which implements the generate behaviour interface for the object
-        // class `ShipBehaviour` which is passed to
-
-        // generate ShipStateMachine and ShipBehaviour
-
     }
 
     public List<Transition<?, ?>> transitions() {
         return transitions;
+    }
+
+    public String documentationHtml() {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        PrintWriter out = new PrintWriter(bytes);
+        out.println("<html/>");
+        out.println("<body>");
+        // states
+        out.println("<h2>States</h2>");
+        states.stream().forEach(state -> out.println(state.name()));
+
+        // events
+
+        // transition table
+        // state onEntry template
+
+        out.println("</body>");
+        out.println("</html>");
+        out.close();
+        return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    public boolean hasCreationTransition() {
+        return transitions().stream().filter(t -> t.from().isInitial()).findAny().isPresent();
     }
 
 }

@@ -19,7 +19,7 @@ public final class Transition<A, B> {
 
     @Override
     public String toString() {
-        return "Transition [" + from.name() + "->" + to.name() + "]";
+        return "Transition [" + from.name() + " -> " + to.name() + "]";
     }
 
 }

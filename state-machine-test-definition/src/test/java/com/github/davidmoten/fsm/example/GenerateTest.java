@@ -40,6 +40,7 @@ public class GenerateTest {
         println(behaviourFile);
         File behaviourBaseFile = new File(directory, pkgPath + "ShipBehaviourBase.java");
         println(behaviourBaseFile);
+        System.out.println(m.documentationHtml());
     }
 
     private static void println(File file) throws IOException {
