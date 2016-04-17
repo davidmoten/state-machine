@@ -15,6 +15,7 @@ to state diagrams (one Event type for each State)
 Example State Diagram
 ------------------------
 Consider a microwave. If you were going to write the control system for a microwave you'd find it's a natural candidate for a state machine (actually all programming is working with state machines but we are going to work with one quite explicitly).
+
 <img src="src/docs/microwave-state-diagram.png?raw=true" />
 
 The definition looks like this:
