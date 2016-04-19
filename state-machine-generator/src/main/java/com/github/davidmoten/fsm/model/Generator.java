@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.github.davidmoten.fsm.runtime.Context;
 import com.github.davidmoten.fsm.runtime.EntityState;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
@@ -127,11 +128,12 @@ public final class Generator<T> {
 			indent.right();
 			states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
 				if (state.isCreationDestination()) {
-					out.format("%s%s %s(%s event);\n", indent, imports.add(cls), onEntryMethodName(state),
-							imports.add(state.eventClass()));
+					out.format("%s%s %s(%s context, %s event);\n", indent, imports.add(cls), onEntryMethodName(state),
+							imports.add(Context.class), imports.add(state.eventClass()));
 				} else {
-					out.format("%s%s %s(%s %s, %s event);\n", indent, imports.add(cls), onEntryMethodName(state),
-							imports.add(cls), instanceName(), imports.add(state.eventClass()));
+					out.format("%s%s %s(%s context, %s %s, %s event);\n", indent, imports.add(cls),
+							onEntryMethodName(state), imports.add(Context.class), imports.add(cls), instanceName(),
+							imports.add(state.eventClass()));
 				}
 				out.println();
 			});
@@ -163,8 +165,8 @@ public final class Generator<T> {
 			states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
 				if (!state.isCreationDestination()) {
 					out.format("%s@%s\n", indent, imports.add(Override.class));
-					out.format("%spublic %s %s(%s %s, %s event) {\n", indent, imports.add(cls),
-							onEntryMethodName(state), imports.add(cls), instanceName(),
+					out.format("%spublic %s %s(%s context, %s %s, %s event) {\n", indent, imports.add(cls),
+							onEntryMethodName(state), imports.add(Context.class), imports.add(cls), instanceName(),
 							imports.add(state.eventClass()));
 					out.format("%sreturn %s;\n", indent.right(), instanceName());
 					out.format("%s}\n", indent.left());
@@ -252,7 +254,7 @@ public final class Generator<T> {
 			out.format("%spublic %s event(%s<?> event) {\n", indent, stateMachineClassSimpleName(),
 					imports.add(Event.class));
 			out.format("%s%s.checkNotNull(event);\n", indent.right(), imports.add(Preconditions.class));
-
+            out.format("%s%s context = null;\n", indent, imports.add(Context.class));
 			boolean first = true;
 			for (Transition<?, ?> t : machine.transitions()) {
 				if (first) {
@@ -265,10 +267,10 @@ public final class Generator<T> {
 						imports.add(t.to().eventClass()));
 				out.format("%sState nextState = State.%s;\n", indent.right(), stateConstant(t.to()));
 				if (t.from().name().equals("Initial")) {
-					out.format("%s%s nextObject = behaviour.%s((%s) event);\n", indent, imports.add(cls),
+					out.format("%s%s nextObject = behaviour.%s(context, (%s) event);\n", indent, imports.add(cls),
 							onEntryMethodName(t.to()), imports.add(t.to().eventClass()));
 				} else {
-					out.format("%s%s nextObject = behaviour.%s(%s, (%s) event);\n", indent, imports.add(cls),
+					out.format("%s%s nextObject = behaviour.%s(context, %s, (%s) event);\n", indent, imports.add(cls),
 							onEntryMethodName(t.to()), instanceName(), imports.add(t.to().eventClass()));
 				}
 				out.format("%sreturn new %s(nextObject, behaviour, nextState, true);\n", indent,

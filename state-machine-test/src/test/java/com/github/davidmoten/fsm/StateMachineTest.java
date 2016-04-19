@@ -20,6 +20,7 @@ import com.github.davidmoten.fsm.example.microwave.Microwave;
 import com.github.davidmoten.fsm.example.ship.In;
 import com.github.davidmoten.fsm.example.ship.Out;
 import com.github.davidmoten.fsm.example.ship.Ship;
+import com.github.davidmoten.fsm.runtime.Context;
 import com.github.davidmoten.fsm.runtime.Create;
 
 public class StateMachineTest {
@@ -31,19 +32,19 @@ public class StateMachineTest {
         ShipBehaviour shipBehaviour = new ShipBehaviourBase() {
 
             @Override
-            public Ship onEntry_Outside(Ship ship, Out out) {
+            public Ship onEntry_Outside(Context context, Ship ship, Out out) {
                 list.add(1);
                 return new Ship(ship.imo(), ship.mmsi(), out.lat, out.lon);
             }
 
             @Override
-            public Ship onEntry_NeverOutside(Create created) {
+            public Ship onEntry_NeverOutside(Context context, Create created) {
                 list.add(2);
                 return ship;
             }
 
             @Override
-            public Ship onEntry_InsideNotRisky(Ship ship, In in) {
+            public Ship onEntry_InsideNotRisky(Context context, Ship ship, In in) {
                 list.add(3);
                 return new Ship(ship.imo(), ship.mmsi(), in.lat, in.lon);
             }
