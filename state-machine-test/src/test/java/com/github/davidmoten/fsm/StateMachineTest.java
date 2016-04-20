@@ -50,7 +50,7 @@ public class StateMachineTest {
             }
 
         };
-        ShipStateMachine.create(shipBehaviour)
+        ShipStateMachine.create(shipBehaviour, () -> null)
                 //
                 .event(Create.instance())
                 //
@@ -66,7 +66,7 @@ public class StateMachineTest {
         Microwave microwave = new Microwave();
         MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
         MicrowaveStateMachine m = MicrowaveStateMachine.create(microwave, behaviour,
-                MicrowaveStateMachine.State.READY_TO_COOK);
+                MicrowaveStateMachine.State.READY_TO_COOK, () -> null);
         m.event(new ButtonPressed()).event(new DoorOpened());
     }
 

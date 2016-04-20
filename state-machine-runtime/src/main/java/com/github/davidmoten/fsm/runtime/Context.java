@@ -1,8 +1,8 @@
 package com.github.davidmoten.fsm.runtime;
 
-public interface Context<Id> {
+public interface Context {
 	
-	<T> EntityStateMachine<T> get(Class<T> cls, Id id);
+	<T> void event(T object, Event<?> event);
 	
 	void eventToSelf(Event<?> event);
 	

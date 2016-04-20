@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -201,32 +202,41 @@ public final class Generator<T> {
 			out.format("%sprivate final %s behaviour;\n", indent, imports.add(behaviourClassName()));
 			out.format("%sprivate final State state;\n", indent);
 			out.format("%sprivate final boolean transitionOccurred;\n", indent);
+			out.format("%sprivate final %s<%s> contextSupplier;\n", indent, imports.add(Supplier.class),
+					imports.add(Context.class));
 			out.println();
-			out.format("%sprivate %s(%s %s, %s behaviour, State state, boolean transitionOccurred) {\n", indent,
-					stateMachineClassSimpleName(), imports.add(cls), instanceName(), imports.add(behaviourClassName()));
+			out.format(
+					"%sprivate %s(%s %s, %s behaviour, State state, boolean transitionOccurred, %s<%s> contextSupplier) {\n",
+					indent, stateMachineClassSimpleName(), imports.add(cls), instanceName(),
+					imports.add(behaviourClassName()), imports.add(Supplier.class), imports.add(Context.class));
 			out.format("%s%s.checkNotNull(behaviour, \"behaviour cannot be null\");\n", indent.right(),
 					imports.add(Preconditions.class));
 			out.format("%s%s.checkNotNull(state, \"state cannot be null\");\n", indent,
+					imports.add(Preconditions.class));
+			out.format("%s%s.checkNotNull(contextSupplier, \"contextSupplier cannot be null\");\n", indent,
 					imports.add(Preconditions.class));
 			out.format("%sthis.%s = %s;\n", indent, instanceName(), instanceName());
 			out.format("%sthis.behaviour = behaviour;\n", indent);
 			out.format("%sthis.state = state;\n", indent);
 			out.format("%sthis.transitionOccurred = transitionOccurred;\n", indent);
+			out.format("%sthis.contextSupplier = contextSupplier;\n", indent);
 			out.format("%s}\n", indent.left());
 			out.println();
-			out.format("%spublic static %s create(%s %s, %s behaviour, State state) {\n", indent,
-					stateMachineClassSimpleName(), imports.add(cls), instanceName(), imports.add(behaviourClassName()));
+			out.format("%spublic static %s create(%s %s, %s behaviour, State state, %s<%s> contextSupplier) {\n",
+					indent, stateMachineClassSimpleName(), imports.add(cls), instanceName(),
+					imports.add(behaviourClassName()), imports.add(Supplier.class), imports.add(Context.class));
 			indent.right();
 			out.format("%s%s.checkNotNull(%s, \"%s cannot be null\");\n", indent, imports.add(Preconditions.class),
 					instanceName(), instanceName());
-			out.format("%sreturn new %s(%s, behaviour, state, false);\n", indent, stateMachineClassSimpleName(),
+			out.format("%sreturn new %s(%s, behaviour, state, false, contextSupplier);\n", indent, stateMachineClassSimpleName(),
 					instanceName());
 			out.format("%s}\n", indent.left());
 			out.println();
 			if (hasCreationTransition()) {
-				out.format("%spublic static %s create(%s behaviour) {\n", indent, stateMachineClassSimpleName(),
-						imports.add(behaviourClassName()));
-				out.format("%sreturn new %s(null, behaviour, State.INITIAL, false);\n", indent.right(),
+				out.format("%spublic static %s create(%s behaviour, %s<%s> contextSupplier) {\n", indent,
+						stateMachineClassSimpleName(), imports.add(behaviourClassName()), imports.add(Supplier.class),
+						imports.add(Context.class));
+				out.format("%sreturn new %s(null, behaviour, State.INITIAL, false, contextSupplier);\n", indent.right(),
 						stateMachineClassSimpleName(), instanceName());
 				out.format("%s}\n", indent.left());
 				out.println();
@@ -254,7 +264,7 @@ public final class Generator<T> {
 			out.format("%spublic %s event(%s<?> event) {\n", indent, stateMachineClassSimpleName(),
 					imports.add(Event.class));
 			out.format("%s%s.checkNotNull(event);\n", indent.right(), imports.add(Preconditions.class));
-            out.format("%s%s context = null;\n", indent, imports.add(Context.class));
+			out.format("%s%s context = contextSupplier.get();\n", indent, imports.add(Context.class));
 			boolean first = true;
 			for (Transition<?, ?> t : machine.transitions()) {
 				if (first) {
@@ -273,19 +283,19 @@ public final class Generator<T> {
 					out.format("%s%s nextObject = behaviour.%s(context, %s, (%s) event);\n", indent, imports.add(cls),
 							onEntryMethodName(t.to()), instanceName(), imports.add(t.to().eventClass()));
 				}
-				out.format("%sreturn new %s(nextObject, behaviour, nextState, true);\n", indent,
+				out.format("%sreturn new %s(nextObject, behaviour, nextState, true, contextSupplier);\n", indent,
 						stateMachineClassSimpleName());
 				indent.left();
 			}
 			if (!first) {
 				// transitions exist
 				out.format("%s} else {\n", indent);
-				out.format("%sreturn new %s(%s, behaviour, state, false);\n", indent.right(),
+				out.format("%sreturn new %s(%s, behaviour, state, false, contextSupplier);\n", indent.right(),
 						stateMachineClassSimpleName(), instanceName());
 				out.format("%s}\n", indent.left());
 			} else {
-				out.format("%sreturn new %s(%s, behaviour, state, false);\n", indent, stateMachineClassSimpleName(),
-						instanceName());
+				out.format("%sreturn new %s(%s, behaviour, state, false, contextSupplier);\n", indent,
+						stateMachineClassSimpleName(), instanceName());
 			}
 			out.format("%s}\n", indent.left());
 			out.println();
