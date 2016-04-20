@@ -2,8 +2,8 @@ package com.github.davidmoten.fsm.runtime;
 
 public interface Context {
 	
-	<T> void event(T object, Event<?> event);
+	<T> void signal(T object, Event<?> event);
 	
-	void eventToSelf(Event<?> event);
+	void signalToSelf(Event<?> event);
 	
 }
