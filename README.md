@@ -39,7 +39,7 @@ readyToCook
               .from(cookingComplete
                      .from(cooking))));
 ```
-As you can see the definition is very concise. This is largely because of the advisable constraint that any one State can only be arrived at via one Event type. Note that you can still use inheritance of the Event if you wish so that for say a `Position` event you could pass the state machine a `PositionWithSpeed` event or a `SimplePosition event` as long as they both inherit from `Position`.
+As you can see the definition is pretty concise. This is largely because of the advisable constraint that any one State can only be arrived at via one Event type. Note that you can still use inheritance of the Event if you wish so that for say a `Position` event you could pass the state machine a `PositionWithSpeed` event or a `SimplePosition event` as long as they both inherit from `Position`.
 
 `a.to(b)` records that there is a transition from `a -> b` and returns `b`.
 
