@@ -10,6 +10,10 @@ public final class Signal<T, R> {
 		this.event = event;
 	}
 
+	public static <T, R> Signal<T, R> create(T object, Event<R> event) {
+		return new Signal<T,R>(object, event);
+	}
+
 	public T object() {
 		return object;
 	}

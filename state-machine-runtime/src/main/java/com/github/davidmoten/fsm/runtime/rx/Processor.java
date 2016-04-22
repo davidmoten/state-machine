@@ -38,7 +38,7 @@ public class Processor<Id> {
 	public void signal(Signal<?, ?> signal) {
 		subject.onNext(signal);
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	public <T> ObjectState<T> get(Id id) {
 		return (EntityStateMachine<T>) stateMachines.get(id);
