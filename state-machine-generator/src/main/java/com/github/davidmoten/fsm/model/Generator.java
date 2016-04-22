@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.davidmoten.fsm.runtime.Context;
+import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 import com.github.davidmoten.fsm.runtime.EntityState;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
@@ -124,7 +125,7 @@ public final class Generator<T> {
 			out.println("<IMPORTS>");
 			out.println();
 			Indent indent = new Indent();
-			out.format("public interface %s {\n", behaviourClassSimpleName());
+			out.format("public interface %s extends %s<%s>{\n", behaviourClassSimpleName(), imports.add(EntityBehaviour.class), behaviourClassSimpleName());
 			out.println();
 			indent.right();
 			states().filter(state -> !state.name().equals("Initial")).forEach(state -> {

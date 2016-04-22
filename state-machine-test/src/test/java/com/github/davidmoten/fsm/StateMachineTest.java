@@ -22,6 +22,7 @@ import com.github.davidmoten.fsm.example.ship.Out;
 import com.github.davidmoten.fsm.example.ship.Ship;
 import com.github.davidmoten.fsm.runtime.Context;
 import com.github.davidmoten.fsm.runtime.Create;
+import com.github.davidmoten.fsm.runtime.rx.Processor;
 
 public class StateMachineTest {
 
@@ -63,11 +64,22 @@ public class StateMachineTest {
 
     @Test
     public void testMicrowaveRuntime() {
-        Microwave microwave = new Microwave();
+        Microwave microwave = new Microwave("1");
         MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
         MicrowaveStateMachine m = MicrowaveStateMachine.create(microwave, behaviour,
                 MicrowaveStateMachine.State.READY_TO_COOK, () -> null);
         m.event(new ButtonPressed()).event(new DoorOpened());
     }
+    
+//    @Test
+//    public void testMicrowaveProcessor() {
+//        Microwave microwave = new Microwave("2");
+//        MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
+//        MicrowaveStateMachine m = MicrowaveStateMachine.create(microwave, behaviour,
+//                MicrowaveStateMachine.State.READY_TO_COOK, () -> null);
+//        m.event(new ButtonPressed()).event(new DoorOpened());
+//        Processor<String> processor = new Processor<>(x -> ((Microwave) x).id(), String -> 
+//        		);
+//    }
 
 }
