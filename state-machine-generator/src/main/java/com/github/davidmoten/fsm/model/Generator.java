@@ -341,13 +341,19 @@ public final class Generator<T> {
 			out.format("%spublic <R> void signal(R object, %s<?> event) {\n", indent, imports.add(Event.class));
 			out.format("%ssignalsToOther.add(%s.create(object, event));\n", indent.right(), imports.add(Signal.class));
 			out.format("%s}\n", indent.left());
+			out.println();
 
 			// <T> void signal(T object, Event<?> event);
 			out.format("%s@%s\n", indent, imports.add(Override.class));
 			out.format("%spublic <R> void signal(R object, %s<?> event, long delay, %s unit) {\n", indent,
 					imports.add(Event.class), imports.add(TimeUnit.class));
+			out.format("%sif (object == %s) {\n", indent.right(), instanceName());
+			out.format("%ssignalToSelf(event, delay, unit);\n", indent.right());
+			out.format("%s} else {\n", indent.left());
 			out.format("%s%s.create(object, event, delay, unit);\n", indent.right(), imports.add(Signal.class));
 			out.format("%s}\n", indent.left());
+			out.format("%s}\n", indent.left());
+			out.println();
 
 			// <T> void signal(T object, Event<?> event, long duration, TimeUnit
 			// unit);
