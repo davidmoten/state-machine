@@ -11,7 +11,6 @@ import org.junit.Test;
 import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviour;
 import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.MicrowaveStateMachine;
-import com.github.davidmoten.fsm.example.generated.MicrowaveStateMachine.State;
 import com.github.davidmoten.fsm.example.generated.ShipBehaviour;
 import com.github.davidmoten.fsm.example.generated.ShipBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.ShipStateMachine;
@@ -21,9 +20,9 @@ import com.github.davidmoten.fsm.example.microwave.Microwave;
 import com.github.davidmoten.fsm.example.ship.In;
 import com.github.davidmoten.fsm.example.ship.Out;
 import com.github.davidmoten.fsm.example.ship.Ship;
-import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.Signal;
+import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 
 public class StateMachineTest {
