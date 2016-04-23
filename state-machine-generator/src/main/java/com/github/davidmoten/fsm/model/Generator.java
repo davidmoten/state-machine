@@ -8,16 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 import com.github.davidmoten.fsm.runtime.EntityState;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.Signal;
+import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.guavamini.Preconditions;
 
 public final class Generator<T> {
@@ -237,7 +236,7 @@ public final class Generator<T> {
 			out.println();
 			if (hasCreationTransition()) {
 				out.format("%spublic static %s create(%s behaviour) {\n", indent, stateMachineClassSimpleName(),
-						imports.add(behaviourClassName()), imports.add(Supplier.class), imports.add(Signaller.class));
+						imports.add(behaviourClassName()));
 				out.format("%sreturn new %s(null, behaviour, State.INITIAL, false);\n", indent.right(),
 						stateMachineClassSimpleName(), instanceName());
 				out.format("%s}\n", indent.left());
