@@ -8,7 +8,7 @@ public interface EntityStateMachine<T> extends ObjectState<T> {
 
     EntityStateMachine<T> event(Event<?> event);
 
-    List<Signal<T, ?>> signalsToSelf();
+    List<Event<?>> signalsToSelf();
 
     List<Signal<?, ?>> signalsToOther();
 }

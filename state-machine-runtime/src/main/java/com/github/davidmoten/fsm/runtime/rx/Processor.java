@@ -60,16 +60,14 @@ public class Processor<Id> {
 			while ((event = q.pollLast()) != null) {
 				m = m.event(event);
 				subscriber.onNext(m);
-				@SuppressWarnings("unchecked")
-				List<Event<?>> signalsToSelf = ((List<Signal<?, ?>>) (List<?>) m.signalsToSelf()).stream()
-						.map(s -> s.event()).collect(Collectors.toList());
+				List<Event<?>> signalsToSelf =  m.signalsToSelf();
 				for (int i = signalsToSelf.size() - 1; i >= 0; i--) {
 					q.offerLast(signalsToSelf.get(i));
 				}
 				signalsToOther.addAll(m.signalsToOther());
 			}
-			for (Signal<?,?> sig: signalsToOther) {
-				subject.onNext(sig);
+			for (Signal<?,?> signal: signalsToOther) {
+				subject.onNext(signal);
 			}
 			return q;
 		};

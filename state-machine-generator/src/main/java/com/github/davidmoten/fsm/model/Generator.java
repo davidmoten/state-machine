@@ -321,8 +321,8 @@ public final class Generator<T> {
 
 			out.println();
 			// List<Signal<T, ?>> signalsToSelf();
-			out.format("%spublic %s<%s<%s, ?>> signalsToSelf() {\n", indent, imports.add(List.class),
-					imports.add(Signal.class), imports.add(cls));
+			out.format("%spublic %s<%s<?>> signalsToSelf() {\n", indent, imports.add(List.class),
+					imports.add(Event.class));
 			out.format("%sreturn new %s<>();\n", indent.right(), imports.add(ArrayList.class));
 			out.format("%s}\n", indent.left());
 
