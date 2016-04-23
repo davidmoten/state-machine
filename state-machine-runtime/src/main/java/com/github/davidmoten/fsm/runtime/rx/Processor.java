@@ -54,6 +54,9 @@ public class Processor<Id> {
 		Func3<Deque<Event<?>>, Event<?>, Subscriber<EntityStateMachine<?>>, Deque<Event<?>>> transition = (q,
 				ev, subscriber) -> {
 			EntityStateMachine<?> m = stateMachines.get(id);
+			if (m == null) {
+				m = stateMachineCreator.call(id);
+			}
 			q.offerFirst(ev);
 			List<Signal<?,?>> signalsToOther = new ArrayList<>();
 			Event<?> event;
