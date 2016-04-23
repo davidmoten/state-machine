@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -318,7 +319,8 @@ public final class Generator<T> {
 			// List<Event<?>> signalsToSelf();
 			out.format("%spublic %s<%s<?>> signalsToSelf() {\n", indent, imports.add(List.class),
 					imports.add(Event.class));
-			out.format("%sreturn new %s<>();\n", indent.right(), imports.add(ArrayList.class));
+			out.format("%sreturn %s.unmodifiableList(signalsToSelf);\n", indent.right(),
+					imports.add(Collections.class));
 			out.format("%s}\n", indent.left());
 			out.println();
 
