@@ -1,17 +1,27 @@
 package com.github.davidmoten.fsm.runtime;
 
+import java.util.concurrent.TimeUnit;
+
 public final class Signal<T, R> {
 
 	private final T object;
 	private final Event<R> event;
+	private final long delay;
+	private final TimeUnit unit;
 
-	public Signal(T object, Event<R> event) {
+	private Signal(T object, Event<R> event, long delay, TimeUnit unit) {
 		this.object = object;
 		this.event = event;
+		this.delay = delay;
+		this.unit = unit;
 	}
 
 	public static <T, R> Signal<T, R> create(T object, Event<R> event) {
-		return new Signal<T,R>(object, event);
+		return new Signal<T, R>(object, event, 0, TimeUnit.MILLISECONDS);
+	}
+
+	public static <T, R> Signal<T, R> create(T object, Event<R> event, long delay, TimeUnit unit) {
+		return new Signal<T, R>(object, event, delay, unit);
 	}
 
 	public T object() {

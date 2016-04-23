@@ -6,10 +6,10 @@ public interface Signaller {
 
     void signalToSelf(Event<?> event);
     
-    void signalToSelf(Event<?> event, long duration, TimeUnit unit);
+    void signalToSelf(Event<?> event, long delay, TimeUnit unit);
 
 	<T> void signal(T object, Event<?> event);
 	
-	<T> void signal(T object, Event<?> event, long duration, TimeUnit unit);
+	<T> void signal(T object, Event<?> event, long delay, TimeUnit unit);
 
 }
