@@ -31,5 +31,13 @@ public final class Signal<T, R> {
 	public Event<R> event() {
 		return event;
 	}
+	
+	public long delay() {
+		return delay;
+	}
+	
+	public TimeUnit unit() {
+		return unit;
+	}
 
 }
