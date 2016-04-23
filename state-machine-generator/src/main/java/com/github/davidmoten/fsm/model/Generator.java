@@ -327,7 +327,8 @@ public final class Generator<T> {
 			// List<Signal<?, ?>> signalsToOther();
 			out.format("%spublic %s<%s<?, ?>> signalsToOther() {\n", indent, imports.add(List.class),
 					imports.add(Signal.class));
-			out.format("%sreturn new %s<>();\n", indent.right(), imports.add(ArrayList.class));
+			out.format("%sreturn %s.unmodifiableList(signalsToOther);\n", indent.right(),
+					imports.add(Collections.class));
 			out.format("%s}\n", indent.left());
 
 			out.println();
@@ -349,10 +350,11 @@ public final class Generator<T> {
 			out.format("%s@%s\n", indent, imports.add(Override.class));
 			out.format("%spublic <R> void signal(R object, %s<?> event, long delay, %s unit) {\n", indent,
 					imports.add(Event.class), imports.add(TimeUnit.class));
-			out.format("%sif (object == %s) {\n", indent.right(), instanceName());
+			out.format("%s%s.checkNotNull(unit, \"unit cannot be null\");\n", indent.right(), imports.add(Preconditions.class));
+			out.format("%sif (object == %s) {\n", indent, instanceName());
 			out.format("%ssignalToSelf(event, delay, unit);\n", indent.right());
 			out.format("%s} else {\n", indent.left());
-			out.format("%s%s.create(object, event, delay, unit);\n", indent.right(), imports.add(Signal.class));
+			out.format("%ssignalsToOther.add(%s.create(object, event, delay, unit));\n", indent.right(), imports.add(Signal.class));
 			out.format("%s}\n", indent.left());
 			out.format("%s}\n", indent.left());
 			out.println();
@@ -362,8 +364,13 @@ public final class Generator<T> {
 			out.format("%s@%s\n", indent, imports.add(Override.class));
 			out.format("%spublic void signalToSelf(%s<?> event, long delay, %s unit) {\n", indent,
 					imports.add(Event.class), imports.add(TimeUnit.class));
-			out.format("%s%s.create(%s, event, delay, unit);\n", indent.right(), imports.add(Signal.class),
+			out.format("%s%s.checkNotNull(unit, \"unit cannot be null\");\n", indent.right(), imports.add(Preconditions.class));
+			out.format("%sif (delay <= 0) {\n", indent);
+			out.format("%ssignalToSelf(event);\n", indent.right());
+			out.format("%s} else {\n", indent.left());
+			out.format("%ssignalsToOther.add(%s.create(%s, event, delay, unit));\n", indent.right(), imports.add(Signal.class),
 					instanceName());
+			out.format("%s}\n", indent.left());
 			out.format("%s}\n", indent.left());
 			out.println();
 
