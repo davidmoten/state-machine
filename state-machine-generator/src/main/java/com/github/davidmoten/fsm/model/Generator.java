@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -341,6 +342,22 @@ public final class Generator<T> {
 			out.format("%spublic <R> void signal(R object, %s<?> event) {\n", indent, imports.add(Event.class));
 			out.format("%ssignalsToOther.add(%s.create(object, event));\n", indent.right(), imports.add(Signal.class));
 			out.format("%s}\n", indent.left());
+
+			// <T> void signal(T object, Event<?> event);
+			out.format("%s@%s\n", indent, imports.add(Override.class));
+			out.format("%spublic <R> void signal(R object, %s<?> event, long duration, %s unit) {\n", indent,
+					imports.add(Event.class), imports.add(TimeUnit.class));
+			out.format("%sthrow new %s();\n", indent.right(), imports.add(UnsupportedOperationException.class));
+			out.format("%s}\n", indent.left());
+
+			// <T> void signal(T object, Event<?> event, long duration, TimeUnit
+			// unit);
+			out.format("%s@%s\n", indent, imports.add(Override.class));
+			out.format("%spublic void signalToSelf(%s<?> event, long duration, %s unit) {\n", indent,
+					imports.add(Event.class), imports.add(TimeUnit.class));
+			out.format("%sthrow new %s();\n", indent.right(), imports.add(UnsupportedOperationException.class));
+			out.format("%s}\n", indent.left());
+			out.println();
 
 			out.format("%s}", indent.left());
 		}
