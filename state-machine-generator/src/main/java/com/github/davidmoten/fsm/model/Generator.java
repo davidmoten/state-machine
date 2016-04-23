@@ -344,17 +344,18 @@ public final class Generator<T> {
 
 			// <T> void signal(T object, Event<?> event);
 			out.format("%s@%s\n", indent, imports.add(Override.class));
-			out.format("%spublic <R> void signal(R object, %s<?> event, long duration, %s unit) {\n", indent,
+			out.format("%spublic <R> void signal(R object, %s<?> event, long delay, %s unit) {\n", indent,
 					imports.add(Event.class), imports.add(TimeUnit.class));
-			out.format("%sthrow new %s();\n", indent.right(), imports.add(UnsupportedOperationException.class));
+			out.format("%s%s.create(object, event, delay, unit);\n", indent.right(), imports.add(Signal.class));
 			out.format("%s}\n", indent.left());
 
 			// <T> void signal(T object, Event<?> event, long duration, TimeUnit
 			// unit);
 			out.format("%s@%s\n", indent, imports.add(Override.class));
-			out.format("%spublic void signalToSelf(%s<?> event, long duration, %s unit) {\n", indent,
+			out.format("%spublic void signalToSelf(%s<?> event, long delay, %s unit) {\n", indent,
 					imports.add(Event.class), imports.add(TimeUnit.class));
-			out.format("%sthrow new %s();\n", indent.right(), imports.add(UnsupportedOperationException.class));
+			out.format("%s%s.create(%s, event, delay, unit);\n", indent.right(), imports.add(Signal.class),
+					instanceName());
 			out.format("%s}\n", indent.left());
 			out.println();
 
