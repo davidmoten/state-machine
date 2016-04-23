@@ -2,6 +2,8 @@ package com.github.davidmoten.fsm.runtime;
 
 import java.util.concurrent.TimeUnit;
 
+import com.github.davidmoten.util.Preconditions;
+
 public final class Signal<T, R> {
 
 	private final T object;
@@ -10,6 +12,8 @@ public final class Signal<T, R> {
 	private final TimeUnit unit;
 
 	private Signal(T object, Event<R> event, long delay, TimeUnit unit) {
+		Preconditions.checkArgument(delay >= 0, "delay must be non-negative");
+		Preconditions.checkNotNull(unit, "unit cannot be null");
 		this.object = object;
 		this.event = event;
 		this.delay = delay;
@@ -31,11 +35,11 @@ public final class Signal<T, R> {
 	public Event<R> event() {
 		return event;
 	}
-	
+
 	public long delay() {
 		return delay;
 	}
-	
+
 	public TimeUnit unit() {
 		return unit;
 	}
