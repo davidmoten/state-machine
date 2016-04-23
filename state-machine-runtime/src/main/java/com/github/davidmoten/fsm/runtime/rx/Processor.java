@@ -12,7 +12,6 @@ import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.ObjectState;
 import com.github.davidmoten.fsm.runtime.Signal;
-import com.github.davidmoten.rx.Schedulers;
 import com.github.davidmoten.rx.Transformers;
 
 import rx.Observable;
@@ -22,6 +21,7 @@ import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.functions.Func3;
+import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
 public final class Processor<Id> implements Closeable {
