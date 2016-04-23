@@ -21,7 +21,7 @@ import com.github.davidmoten.fsm.example.microwave.Microwave;
 import com.github.davidmoten.fsm.example.ship.In;
 import com.github.davidmoten.fsm.example.ship.Out;
 import com.github.davidmoten.fsm.example.ship.Ship;
-import com.github.davidmoten.fsm.runtime.Context;
+import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
@@ -35,25 +35,25 @@ public class StateMachineTest {
 		ShipBehaviour shipBehaviour = new ShipBehaviourBase() {
 
 			@Override
-			public Ship onEntry_Outside(Context context, Ship ship, Out out) {
+			public Ship onEntry_Outside(Signaller context, Ship ship, Out out) {
 				list.add(1);
 				return new Ship(ship.imo(), ship.mmsi(), out.lat, out.lon);
 			}
 
 			@Override
-			public Ship onEntry_NeverOutside(Context context, Create created) {
+			public Ship onEntry_NeverOutside(Signaller context, Create created) {
 				list.add(2);
 				return ship;
 			}
 
 			@Override
-			public Ship onEntry_InsideNotRisky(Context context, Ship ship, In in) {
+			public Ship onEntry_InsideNotRisky(Signaller context, Ship ship, In in) {
 				list.add(3);
 				return new Ship(ship.imo(), ship.mmsi(), in.lat, in.lon);
 			}
 
 		};
-		ShipStateMachine.create(shipBehaviour, () -> null)
+		ShipStateMachine.create(shipBehaviour)
 				//
 				.event(Create.instance())
 				//
@@ -69,7 +69,7 @@ public class StateMachineTest {
 		Microwave microwave = new Microwave("1");
 		MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
 		MicrowaveStateMachine m = MicrowaveStateMachine.create(microwave, behaviour,
-				MicrowaveStateMachine.State.READY_TO_COOK, () -> null);
+				MicrowaveStateMachine.State.READY_TO_COOK);
 		m.event(new ButtonPressed()).event(new DoorOpened());
 	}
 
@@ -78,7 +78,7 @@ public class StateMachineTest {
 		Microwave microwave = new Microwave("1");
 		MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
 		Processor<String> processor = new Processor<String>(x -> ((Microwave) x).id(), id -> MicrowaveStateMachine
-				.create(new Microwave(id), behaviour, MicrowaveStateMachine.State.READY_TO_COOK, () -> null));
+				.create(new Microwave(id), behaviour, MicrowaveStateMachine.State.READY_TO_COOK));
 		processor.signal(Signal.create(microwave, new DoorOpened()));
 	}
 

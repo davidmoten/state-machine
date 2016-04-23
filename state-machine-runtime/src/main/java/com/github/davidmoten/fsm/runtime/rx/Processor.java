@@ -22,7 +22,7 @@ import rx.functions.Func2;
 import rx.functions.Func3;
 import rx.subjects.PublishSubject;
 
-public class Processor<Id> {
+public final class Processor<Id> {
 
 	private final PublishSubject<Signal<?, ?>> subject;
 	private final Func1<Object, Id> id;
@@ -42,10 +42,7 @@ public class Processor<Id> {
 				//
 				.groupBy(id)
 				//
-				// .flatMap(g -> g.scan(stateMachineCreator.call(g.getKey()),
-				// (m, signal) -> m.event(signal.event()))
-				// .doOnNext(m -> stateMachines.put(g.getKey(), m)));
-				.flatMap(g -> g.flatMap(x -> process(g.getKey(), x.event())));
+				.flatMap(g -> g.map(signal -> signal.event()).flatMap(x -> process(g.getKey(), x)));
 	}
 
 	private Observable<EntityStateMachine<?>> process(Id id, Event<?> x) {

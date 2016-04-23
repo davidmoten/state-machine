@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.davidmoten.fsm.runtime.Context;
+import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 import com.github.davidmoten.fsm.runtime.EntityState;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
@@ -134,11 +134,11 @@ public final class Generator<T> {
 			indent.right();
 			states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
 				if (state.isCreationDestination()) {
-					out.format("%s%s %s(%s context, %s event);\n", indent, imports.add(cls), onEntryMethodName(state),
-							imports.add(Context.class), imports.add(state.eventClass()));
+					out.format("%s%s %s(%s signaller, %s event);\n", indent, imports.add(cls), onEntryMethodName(state),
+							imports.add(Signaller.class), imports.add(state.eventClass()));
 				} else {
-					out.format("%s%s %s(%s context, %s %s, %s event);\n", indent, imports.add(cls),
-							onEntryMethodName(state), imports.add(Context.class), imports.add(cls), instanceName(),
+					out.format("%s%s %s(%s signaller, %s %s, %s event);\n", indent, imports.add(cls),
+							onEntryMethodName(state), imports.add(Signaller.class), imports.add(cls), instanceName(),
 							imports.add(state.eventClass()));
 				}
 				out.println();
@@ -171,8 +171,8 @@ public final class Generator<T> {
 			states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
 				if (!state.isCreationDestination()) {
 					out.format("%s@%s\n", indent, imports.add(Override.class));
-					out.format("%spublic %s %s(%s context, %s %s, %s event) {\n", indent, imports.add(cls),
-							onEntryMethodName(state), imports.add(Context.class), imports.add(cls), instanceName(),
+					out.format("%spublic %s %s(%s signaller, %s %s, %s event) {\n", indent, imports.add(cls),
+							onEntryMethodName(state), imports.add(Signaller.class), imports.add(cls), instanceName(),
 							imports.add(state.eventClass()));
 					out.format("%sreturn %s;\n", indent.right(), instanceName());
 					out.format("%s}\n", indent.left());
@@ -199,49 +199,45 @@ public final class Generator<T> {
 			out.println("<IMPORTS>");
 			out.println();
 			Indent indent = new Indent();
-			out.format("public final class %s implements %s<%s> {\n", stateMachineClassSimpleName(),
-					imports.add(EntityStateMachine.class), imports.add(cls));
+			out.format("public final class %s implements %s<%s>, %s {\n", stateMachineClassSimpleName(),
+					imports.add(EntityStateMachine.class), imports.add(cls), imports.add(Signaller.class));
 			indent.right();
 			out.println();
 			out.format("%sprivate final %s %s;\n", indent, imports.add(cls), instanceName());
 			out.format("%sprivate final %s behaviour;\n", indent, imports.add(behaviourClassName()));
 			out.format("%sprivate final State state;\n", indent);
 			out.format("%sprivate final boolean transitionOccurred;\n", indent);
-			out.format("%sprivate final %s<%s> contextSupplier;\n", indent, imports.add(Supplier.class),
-					imports.add(Context.class));
+			out.format("%sprivate final %s<%s<?>> signalsToSelf = new %s<>();\n", indent, imports.add(List.class),
+					imports.add(Event.class), imports.add(ArrayList.class));
+			out.format("%sprivate final %s<%s<?, ?>> signalsToOther = new %s<>();\n", indent, imports.add(List.class),
+					imports.add(Signal.class), imports.add(ArrayList.class));
+
 			out.println();
-			out.format(
-					"%sprivate %s(%s %s, %s behaviour, State state, boolean transitionOccurred, %s<%s> contextSupplier) {\n",
-					indent, stateMachineClassSimpleName(), imports.add(cls), instanceName(),
-					imports.add(behaviourClassName()), imports.add(Supplier.class), imports.add(Context.class));
+			out.format("%sprivate %s(%s %s, %s behaviour, State state, boolean transitionOccurred) {\n", indent,
+					stateMachineClassSimpleName(), imports.add(cls), instanceName(), imports.add(behaviourClassName()));
 			out.format("%s%s.checkNotNull(behaviour, \"behaviour cannot be null\");\n", indent.right(),
 					imports.add(Preconditions.class));
 			out.format("%s%s.checkNotNull(state, \"state cannot be null\");\n", indent,
-					imports.add(Preconditions.class));
-			out.format("%s%s.checkNotNull(contextSupplier, \"contextSupplier cannot be null\");\n", indent,
 					imports.add(Preconditions.class));
 			out.format("%sthis.%s = %s;\n", indent, instanceName(), instanceName());
 			out.format("%sthis.behaviour = behaviour;\n", indent);
 			out.format("%sthis.state = state;\n", indent);
 			out.format("%sthis.transitionOccurred = transitionOccurred;\n", indent);
-			out.format("%sthis.contextSupplier = contextSupplier;\n", indent);
 			out.format("%s}\n", indent.left());
 			out.println();
-			out.format("%spublic static %s create(%s %s, %s behaviour, State state, %s<%s> contextSupplier) {\n",
-					indent, stateMachineClassSimpleName(), imports.add(cls), instanceName(),
-					imports.add(behaviourClassName()), imports.add(Supplier.class), imports.add(Context.class));
+			out.format("%spublic static %s create(%s %s, %s behaviour, State state) {\n", indent,
+					stateMachineClassSimpleName(), imports.add(cls), instanceName(), imports.add(behaviourClassName()));
 			indent.right();
 			out.format("%s%s.checkNotNull(%s, \"%s cannot be null\");\n", indent, imports.add(Preconditions.class),
 					instanceName(), instanceName());
-			out.format("%sreturn new %s(%s, behaviour, state, false, contextSupplier);\n", indent,
-					stateMachineClassSimpleName(), instanceName());
+			out.format("%sreturn new %s(%s, behaviour, state, false);\n", indent, stateMachineClassSimpleName(),
+					instanceName());
 			out.format("%s}\n", indent.left());
 			out.println();
 			if (hasCreationTransition()) {
-				out.format("%spublic static %s create(%s behaviour, %s<%s> contextSupplier) {\n", indent,
-						stateMachineClassSimpleName(), imports.add(behaviourClassName()), imports.add(Supplier.class),
-						imports.add(Context.class));
-				out.format("%sreturn new %s(null, behaviour, State.INITIAL, false, contextSupplier);\n", indent.right(),
+				out.format("%spublic static %s create(%s behaviour) {\n", indent, stateMachineClassSimpleName(),
+						imports.add(behaviourClassName()), imports.add(Supplier.class), imports.add(Signaller.class));
+				out.format("%sreturn new %s(null, behaviour, State.INITIAL, false);\n", indent.right(),
 						stateMachineClassSimpleName(), instanceName());
 				out.format("%s}\n", indent.left());
 				out.println();
@@ -269,7 +265,6 @@ public final class Generator<T> {
 			out.format("%spublic %s event(%s<?> event) {\n", indent, stateMachineClassSimpleName(),
 					imports.add(Event.class));
 			out.format("%s%s.checkNotNull(event);\n", indent.right(), imports.add(Preconditions.class));
-			out.format("%s%s context = contextSupplier.get();\n", indent, imports.add(Context.class));
 			boolean first = true;
 			for (Transition<?, ?> t : machine.transitions()) {
 				if (first) {
@@ -282,25 +277,25 @@ public final class Generator<T> {
 						imports.add(t.to().eventClass()));
 				out.format("%sState nextState = State.%s;\n", indent.right(), stateConstant(t.to()));
 				if (t.from().name().equals("Initial")) {
-					out.format("%s%s nextObject = behaviour.%s(context, (%s) event);\n", indent, imports.add(cls),
+					out.format("%s%s nextObject = behaviour.%s(this, (%s) event);\n", indent, imports.add(cls),
 							onEntryMethodName(t.to()), imports.add(t.to().eventClass()));
 				} else {
-					out.format("%s%s nextObject = behaviour.%s(context, %s, (%s) event);\n", indent, imports.add(cls),
+					out.format("%s%s nextObject = behaviour.%s(this, %s, (%s) event);\n", indent, imports.add(cls),
 							onEntryMethodName(t.to()), instanceName(), imports.add(t.to().eventClass()));
 				}
-				out.format("%sreturn new %s(nextObject, behaviour, nextState, true, contextSupplier);\n", indent,
+				out.format("%sreturn new %s(nextObject, behaviour, nextState, true);\n", indent,
 						stateMachineClassSimpleName());
 				indent.left();
 			}
 			if (!first) {
 				// transitions exist
 				out.format("%s} else {\n", indent);
-				out.format("%sreturn new %s(%s, behaviour, state, false, contextSupplier);\n", indent.right(),
+				out.format("%sreturn new %s(%s, behaviour, state, false);\n", indent.right(),
 						stateMachineClassSimpleName(), instanceName());
 				out.format("%s}\n", indent.left());
 			} else {
-				out.format("%sreturn new %s(%s, behaviour, state, false, contextSupplier);\n", indent,
-						stateMachineClassSimpleName(), instanceName());
+				out.format("%sreturn new %s(%s, behaviour, state, false);\n", indent, stateMachineClassSimpleName(),
+						instanceName());
 			}
 			out.format("%s}\n", indent.left());
 			out.println();
@@ -320,11 +315,12 @@ public final class Generator<T> {
 			out.format("%s}\n", indent.left());
 
 			out.println();
-			// List<Signal<T, ?>> signalsToSelf();
+			// List<Event<?>> signalsToSelf();
 			out.format("%spublic %s<%s<?>> signalsToSelf() {\n", indent, imports.add(List.class),
 					imports.add(Event.class));
 			out.format("%sreturn new %s<>();\n", indent.right(), imports.add(ArrayList.class));
 			out.format("%s}\n", indent.left());
+			out.println();
 
 			// List<Signal<?, ?>> signalsToOther();
 			out.format("%spublic %s<%s<?, ?>> signalsToOther() {\n", indent, imports.add(List.class),
@@ -332,8 +328,21 @@ public final class Generator<T> {
 			out.format("%sreturn new %s<>();\n", indent.right(), imports.add(ArrayList.class));
 			out.format("%s}\n", indent.left());
 
-			out.format("%s}", indent.left());
+			out.println();
+			// List<Event<?>> signalsToSelf();
+			out.format("%s@%s\n", indent, imports.add(Override.class));
+			out.format("%spublic void signalToSelf(%s<?> event) {\n", indent, imports.add(Event.class));
+			out.format("%ssignalsToSelf.add(event);\n", indent.right(), imports.add(ArrayList.class));
+			out.format("%s}\n", indent.left());
+			out.println();
 
+			// <T> void signal(T object, Event<?> event);
+			out.format("%s@%s\n", indent, imports.add(Override.class));
+			out.format("%spublic <R> void signal(R object, %s<?> event) {\n", indent, imports.add(Event.class));
+			out.format("%ssignalsToOther.add(%s.create(object, event));\n", indent.right(), imports.add(Signal.class));
+			out.format("%s}\n", indent.left());
+
+			out.format("%s}", indent.left());
 		}
 		try (PrintStream out = new PrintStream(stateMachineClassFile())) {
 			out.print(new String(bytes.toByteArray()).replace("<IMPORTS>", imports.importsAsString()));
