@@ -1,5 +1,6 @@
 package com.github.davidmoten.fsm.runtime.rx;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,14 +32,19 @@ public class Processor<Id> {
 				//
 				.groupBy(id)
 				//
-				.flatMap(g -> g.scan(stateMachineCreator.call(g.getKey()), (m, signal) -> m.event(signal.event()))
-						.doOnNext(m -> stateMachines.put(g.getKey(), m)));
+				// .flatMap(g -> g.scan(stateMachineCreator.call(g.getKey()),
+				// (m, signal) -> m.event(signal.event()))
+				// .doOnNext(m -> stateMachines.put(g.getKey(), m)));
+				.flatMap(g -> g.flatMap(x -> Observable.from(getSignals(g.getKey(), x))));
+	}
+
+	private List<EntityStateMachine<?>> getSignals(Id id, Signal<?, ?> x) {
 	}
 
 	public void signal(Signal<?, ?> signal) {
 		subject.onNext(signal);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public <T> ObjectState<T> get(Id id) {
 		return (EntityStateMachine<T>) stateMachines.get(id);
