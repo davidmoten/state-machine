@@ -44,4 +44,8 @@ public final class Signal<T, R> {
 		return unit;
 	}
 
+	public Signal<?, ?> now() {
+		return create(object, event);
+	}
+
 }
