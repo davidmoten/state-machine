@@ -22,7 +22,6 @@ import com.github.davidmoten.fsm.example.ship.Out;
 import com.github.davidmoten.fsm.example.ship.Ship;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
-import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 
