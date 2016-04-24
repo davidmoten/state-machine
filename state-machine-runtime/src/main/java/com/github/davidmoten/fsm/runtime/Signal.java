@@ -48,4 +48,9 @@ public final class Signal<T, R> {
 		return create(object, event);
 	}
 
+	@Override
+	public String toString() {
+		return "Signal [object=" + object + ", event=" + event + ", delay=" + delay + ", unit=" + unit + "]";
+	}
+
 }

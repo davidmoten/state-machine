@@ -31,12 +31,15 @@ public final class Processor<Id> {
 	private final Func1<Id, EntityStateMachine<?>> stateMachineFactory;
 	private final PublishSubject<Signal<?, ?>> subject;
 	private final Map<Id, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
+	private final Scheduler scheduler;
 
 	private Processor(Func1<Object, Id> id, Func1<Id, EntityStateMachine<?>> stateMachineFactory, Scheduler scheduler) {
 		Preconditions.checkNotNull(id);
 		Preconditions.checkNotNull(stateMachineFactory);
+		Preconditions.checkNotNull(scheduler);
 		this.id = id;
 		this.stateMachineFactory = stateMachineFactory;
+		this.scheduler = scheduler;
 		this.subject = PublishSubject.create();
 	}
 
@@ -52,10 +55,12 @@ public final class Processor<Id> {
 
 	public Observable<EntityStateMachine<?>> observable() {
 		return Observable.defer(() -> {
-			Worker worker = Schedulers.computation().createWorker();
+			Worker worker = scheduler.createWorker();
 			return subject
 					//
 					.toSerialized()
+					//
+					.doOnNext(System.out::println)
 					//
 					.doOnUnsubscribe(() -> worker.unsubscribe())
 					//
@@ -74,6 +79,7 @@ public final class Processor<Id> {
 		Func0<Deque<Event<?>>> initialStateFactory = () -> new ArrayDeque<>();
 		Func3<Deque<Event<?>>, Event<?>, Subscriber<EntityStateMachine<?>>, Deque<Event<?>>> transition = (q, ev,
 				subscriber) -> {
+			System.out.println("transition");
 			EntityStateMachine<?> m = stateMachines.get(id);
 			if (m == null) {
 				m = stateMachineFactory.call(id);
