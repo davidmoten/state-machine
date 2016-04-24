@@ -44,7 +44,7 @@ public final class Processor<Id> {
 		return new Processor<Id>(id, stateMachineFactory);
 	}
 
-	public Observable<EntityStateMachine<?>> asObservable() {
+	public Observable<EntityStateMachine<?>> observable() {
 		return Observable.defer(() -> {
 			Worker worker = Schedulers.computation().createWorker();
 			return subject
@@ -76,7 +76,7 @@ public final class Processor<Id> {
 			List<Signal<?, ?>> signalsToOther = new ArrayList<>();
 			Event<?> event;
 			while ((event = q.pollLast()) != null) {
-				//apply signal to object
+				// apply signal to object
 				m = m.signal(event);
 				subscriber.onNext(m);
 				List<Event<?>> signalsToSelf = m.signalsToSelf();
@@ -102,9 +102,17 @@ public final class Processor<Id> {
 		subject.onNext(signal);
 	}
 
+	public <T, R> void signal(T object, Event<R> event) {
+		subject.onNext(Signal.create(object, event));
+	}
+
 	@SuppressWarnings("unchecked")
 	public <T> ObjectState<T> get(Id id) {
 		return (EntityStateMachine<T>) stateMachines.get(id);
+	}
+
+	public void onCompleted() {
+		subject.onCompleted();
 	}
 
 }

@@ -85,8 +85,10 @@ public class StateMachineTest {
 				behaviour, MicrowaveStateMachine.State.READY_TO_COOK);
 		Processor<String> processor = Processor.create(identifier, stateMachineCreator);
 		TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
-		processor.asObservable().subscribe(ts);
-		processor.signal(Signal.create(microwave, new DoorOpened()));
+		processor.observable().subscribe(ts);
+		processor.signal(microwave, new DoorOpened());
+		processor.onCompleted();
+		ts.awaitTerminalEvent();
 		ts.assertNoErrors();
 		ts.assertValueCount(1);
 		System.out.println(ts.getOnNextEvents());
