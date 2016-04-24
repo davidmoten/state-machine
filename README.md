@@ -50,7 +50,7 @@ Generating code
 
 From the above state machine definition for a microwave we generate these classes:
 
-* `MicrowaveStateMachine` - throw events at this to see transitions
+* `MicrowaveStateMachine` - throw events at this to see transitions and to collect signals to self and others emitted during the new state's onEntry behaviour
 * `MicrowaveBehaviour` - interface to capture onEntry procedures
 * `MicrowaveBehaviourBase` - a do-nothing implentation of `MicrowaveBehaviour` that is convenient for inheriting
 
