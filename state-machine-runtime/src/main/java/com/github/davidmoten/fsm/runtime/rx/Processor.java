@@ -70,44 +70,59 @@ public final class Processor<Id> {
 							//
 							.map(signal -> signal.event())
 							//
-							.flatMap(x -> process(g.getKey(), x, worker)));
+							.flatMap(x -> process(g.getKey(), x, worker))
+							//
+							.doOnNext(m -> stateMachines.put(g.getKey(), m)));
 		});
 	}
 
 	private Observable<EntityStateMachine<?>> process(Id id, Event<?> x, Worker worker) {
 
 		Func0<Deque<Event<?>>> initialStateFactory = () -> new ArrayDeque<>();
-		Func3<Deque<Event<?>>, Event<?>, Subscriber<EntityStateMachine<?>>, Deque<Event<?>>> transition = (q, ev,
-				subscriber) -> {
-			System.out.println("transition");
-			EntityStateMachine<?> m = stateMachines.get(id);
-			if (m == null) {
-				m = stateMachineFactory.call(id);
-			}
-			q.offerFirst(ev);
+		Func3<Deque<Event<?>>, Event<?>, Subscriber<EntityStateMachine<?>>, Deque<Event<?>>> transition = (
+				signalsToSelf, ev, subscriber) -> {
+			EntityStateMachine<?> m = getStateMachine(id);
+			signalsToSelf.offerFirst(ev);
 			List<Signal<?, ?>> signalsToOther = new ArrayList<>();
-			Event<?> event;
-			while ((event = q.pollLast()) != null) {
-				// apply signal to object
-				m = m.signal(event);
-				subscriber.onNext(m);
-				List<Event<?>> signalsToSelf = m.signalsToSelf();
-				for (int i = signalsToSelf.size() - 1; i >= 0; i--) {
-					q.offerLast(signalsToSelf.get(i));
-				}
-				signalsToOther.addAll(m.signalsToOther());
-			}
-			for (Signal<?, ?> signal : signalsToOther) {
-				if (signal.delay() == 0) {
-					subject.onNext(signal);
-				} else {
-					worker.schedule(() -> subject.onNext(signal.now()), signal.delay(), signal.unit());
-				}
-			}
-			return q;
+			applySignalsToSelf(signalsToSelf, subscriber, m, signalsToOther);
+			applySignalsToOther(worker, signalsToOther);
+			return signalsToSelf;
 		};
 		Func2<Deque<Event<?>>, Subscriber<EntityStateMachine<?>>, Boolean> completion = (q, sub) -> true;
 		return Observable.just(x).compose(Transformers.stateMachine(initialStateFactory, transition, completion));
+	}
+
+	private EntityStateMachine<?> getStateMachine(Id id) {
+		EntityStateMachine<?> m = stateMachines.get(id);
+		if (m == null) {
+			m = stateMachineFactory.call(id);
+		}
+		return m;
+	}
+
+	private void applySignalsToOther(Worker worker, List<Signal<?, ?>> signalsToOther) {
+		for (Signal<?, ?> signal : signalsToOther) {
+			if (signal.delay() == 0) {
+				subject.onNext(signal);
+			} else {
+				worker.schedule(() -> subject.onNext(signal.now()), signal.delay(), signal.unit());
+			}
+		}
+	}
+
+	private void applySignalsToSelf(Deque<Event<?>> signalsToSelf, Subscriber<EntityStateMachine<?>> subscriber,
+			EntityStateMachine<?> m, List<Signal<?, ?>> signalsToOther) {
+		Event<?> event;
+		while ((event = signalsToSelf.pollLast()) != null) {
+			// apply signal to object
+			m = m.signal(event);
+			subscriber.onNext(m);
+			List<Event<?>> list = m.signalsToSelf();
+			for (int i = list.size() - 1; i >= 0; i--) {
+				signalsToSelf.offerLast(list.get(i));
+			}
+			signalsToOther.addAll(m.signalsToOther());
+		}
 	}
 
 	public void signal(Signal<?, ?> signal) {
