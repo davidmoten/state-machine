@@ -26,6 +26,13 @@
 			<artifactId>state-machine-runtime</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.github.davidmoten</groupId>
+			<artifactId>rxjava-extras</artifactId>
+			<version>0.7.3</version>
+		</dependency>
+		
 
 		<!-- Test Dependencies -->
 
