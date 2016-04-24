@@ -1,6 +1,5 @@
 package com.github.davidmoten.fsm.runtime.rx;
 
-import java.io.Closeable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -13,6 +12,7 @@ import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.ObjectState;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.rx.Transformers;
+import com.github.davidmoten.util.Preconditions;
 
 import rx.Observable;
 import rx.Scheduler.Worker;
@@ -24,45 +24,53 @@ import rx.functions.Func3;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
-public final class Processor<Id> implements Closeable {
+public final class Processor<Id> {
 
-	private final PublishSubject<Signal<?, ?>> subject;
 	private final Func1<Object, Id> id;
-	private final Func1<Id, EntityStateMachine<?>> stateMachineCreator;
+	private final Func1<Id, EntityStateMachine<?>> stateMachineFactory;
+	private final PublishSubject<Signal<?, ?>> subject;
 	private final Map<Id, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
-	private final Worker worker;
 
-	public Processor(Func1<Object, Id> id, Func1<Id, EntityStateMachine<?>> stateMachineCreator) {
-		this.subject = PublishSubject.create();
+	private Processor(Func1<Object, Id> id, Func1<Id, EntityStateMachine<?>> stateMachineFactory) {
+		Preconditions.checkNotNull(id);
+		Preconditions.checkNotNull(stateMachineFactory);
 		this.id = id;
-		this.stateMachineCreator = stateMachineCreator;
-		this.worker = Schedulers.computation().createWorker();
+		this.stateMachineFactory = stateMachineFactory;
+		this.subject = PublishSubject.create();
+	}
+
+	public static <Id> Processor<Id> create(Func1<Object, Id> id,
+			Func1<Id, EntityStateMachine<?>> stateMachineFactory) {
+		return new Processor<Id>(id, stateMachineFactory);
 	}
 
 	public Observable<EntityStateMachine<?>> asObservable() {
-		return subject
-				//
-				.toSerialized()
-				//
-				.doOnUnsubscribe(() -> worker.unsubscribe())
-				//
-				.groupBy(id)
-				//
-				.flatMap(g -> g
-						//
-						.map(signal -> signal.event())
-						//
-						.flatMap(x -> process(g.getKey(), x)));
+		return Observable.defer(() -> {
+			Worker worker = Schedulers.computation().createWorker();
+			return subject
+					//
+					.toSerialized()
+					//
+					.doOnUnsubscribe(() -> worker.unsubscribe())
+					//
+					.groupBy(id)
+					//
+					.flatMap(g -> g
+							//
+							.map(signal -> signal.event())
+							//
+							.flatMap(x -> process(g.getKey(), x, worker)));
+		});
 	}
 
-	private Observable<EntityStateMachine<?>> process(Id id, Event<?> x) {
+	private Observable<EntityStateMachine<?>> process(Id id, Event<?> x, Worker worker) {
 
 		Func0<Deque<Event<?>>> initialStateFactory = () -> new ArrayDeque<>();
 		Func3<Deque<Event<?>>, Event<?>, Subscriber<EntityStateMachine<?>>, Deque<Event<?>>> transition = (q, ev,
 				subscriber) -> {
 			EntityStateMachine<?> m = stateMachines.get(id);
 			if (m == null) {
-				m = stateMachineCreator.call(id);
+				m = stateMachineFactory.call(id);
 			}
 			q.offerFirst(ev);
 			List<Signal<?, ?>> signalsToOther = new ArrayList<>();
@@ -96,11 +104,6 @@ public final class Processor<Id> implements Closeable {
 	@SuppressWarnings("unchecked")
 	public <T> ObjectState<T> get(Id id) {
 		return (EntityStateMachine<T>) stateMachines.get(id);
-	}
-
-	@Override
-	public void close() {
-		worker.unsubscribe();
 	}
 
 }

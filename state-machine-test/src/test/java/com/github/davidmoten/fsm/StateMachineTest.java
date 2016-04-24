@@ -80,12 +80,10 @@ public class StateMachineTest {
 		Microwave microwave = new Microwave("1");
 		MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
 		Func1<Object, String> identifier = x -> ((Microwave) x).id();
-		Func1<String, EntityStateMachine<?>> stateMachineCreator = id -> MicrowaveStateMachine
-				.create(new Microwave(id), behaviour, MicrowaveStateMachine.State.READY_TO_COOK);
-		
-		try (Processor<String> processor = new Processor<String>(identifier, stateMachineCreator)) {
-			processor.signal(Signal.create(microwave, new DoorOpened()));
-		}
+		Func1<String, EntityStateMachine<?>> stateMachineCreator = id -> MicrowaveStateMachine.create(new Microwave(id),
+				behaviour, MicrowaveStateMachine.State.READY_TO_COOK);
+		Processor<String> processor = Processor.create(identifier, stateMachineCreator);
+		processor.signal(Signal.create(microwave, new DoorOpened()));
 	}
 
 }
