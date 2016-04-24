@@ -77,8 +77,8 @@ public class StateMachineTest {
 		Microwave microwave = new Microwave("1");
 		MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
 		try (Processor<String> processor = new Processor<String>(x -> ((Microwave) x).id(), id -> MicrowaveStateMachine
-				.create(new Microwave(id), behaviour, MicrowaveStateMachine.State.READY_TO_COOK))){
-		processor.signal(Signal.create(microwave, new DoorOpened()));
+				.create(new Microwave(id), behaviour, MicrowaveStateMachine.State.READY_TO_COOK))) {
+			processor.signal(Signal.create(microwave, new DoorOpened()));
 		}
 	}
 
