@@ -76,7 +76,8 @@ public final class Processor<Id> {
 			List<Signal<?, ?>> signalsToOther = new ArrayList<>();
 			Event<?> event;
 			while ((event = q.pollLast()) != null) {
-				m = m.event(event);
+				//apply signal to object
+				m = m.signal(event);
 				subscriber.onNext(m);
 				List<Event<?>> signalsToSelf = m.signalsToSelf();
 				for (int i = signalsToSelf.size() - 1; i >= 0; i--) {

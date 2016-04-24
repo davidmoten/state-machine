@@ -6,7 +6,7 @@ public interface EntityStateMachine<T> extends ObjectState<T> {
 
     boolean transitionOccurred();
 
-    EntityStateMachine<T> event(Event<?> event);
+    EntityStateMachine<T> signal(Event<?> event);
 
     List<Event<?>> signalsToSelf();
 

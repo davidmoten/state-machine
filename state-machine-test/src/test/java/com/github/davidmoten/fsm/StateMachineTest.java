@@ -58,11 +58,11 @@ public class StateMachineTest {
 		};
 		ShipStateMachine.create(shipBehaviour)
 				//
-				.event(Create.instance())
+				.signal(Create.instance())
 				//
-				.event(new In(1.0f, 2.0f))
+				.signal(new In(1.0f, 2.0f))
 				//
-				.event(new Out(1.0f, 3.0f));
+				.signal(new Out(1.0f, 3.0f));
 
 		assertEquals(Arrays.asList(2, 1), list);
 	}
@@ -73,7 +73,7 @@ public class StateMachineTest {
 		MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
 		MicrowaveStateMachine m = MicrowaveStateMachine.create(microwave, behaviour,
 				MicrowaveStateMachine.State.READY_TO_COOK);
-		m.event(new ButtonPressed()).event(new DoorOpened());
+		m.signal(new ButtonPressed()).signal(new DoorOpened());
 	}
 
 	@Test

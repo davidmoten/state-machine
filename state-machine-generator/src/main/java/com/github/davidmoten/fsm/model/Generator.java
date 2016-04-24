@@ -255,15 +255,15 @@ public final class Generator<T> {
 
 			Stream.concat(states().filter(state -> state.isCreationDestination()).map(state -> state.eventClass()),
 					machine.transitions().stream().map(t -> t.to().eventClass())).distinct().forEach(eventClass -> {
-						out.format("%spublic %s event(%s event) {\n", indent, stateMachineClassSimpleName(),
+						out.format("%spublic %s signal(%s event) {\n", indent, stateMachineClassSimpleName(),
 								imports.add(eventClass));
-						out.format("%sreturn event((%s<?>) event);\n", indent.right(), imports.add(Event.class));
+						out.format("%sreturn signal((%s<?>) event);\n", indent.right(), imports.add(Event.class));
 						out.format("%s}\n", indent.left());
 						out.println();
 					});
 
 			out.format("%s@%s\n", indent, imports.add(Override.class));
-			out.format("%spublic %s event(%s<?> event) {\n", indent, stateMachineClassSimpleName(),
+			out.format("%spublic %s signal(%s<?> event) {\n", indent, stateMachineClassSimpleName(),
 					imports.add(Event.class));
 			out.format("%s%s.checkNotNull(event);\n", indent.right(), imports.add(Preconditions.class));
 			boolean first = true;
