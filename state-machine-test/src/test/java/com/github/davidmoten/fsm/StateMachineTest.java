@@ -21,9 +21,12 @@ import com.github.davidmoten.fsm.example.ship.In;
 import com.github.davidmoten.fsm.example.ship.Out;
 import com.github.davidmoten.fsm.example.ship.Ship;
 import com.github.davidmoten.fsm.runtime.Create;
+import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
+
+import rx.functions.Func1;
 
 public class StateMachineTest {
 
@@ -76,8 +79,11 @@ public class StateMachineTest {
 	public void testMicrowaveProcessor() {
 		Microwave microwave = new Microwave("1");
 		MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
-		try (Processor<String> processor = new Processor<String>(x -> ((Microwave) x).id(), id -> MicrowaveStateMachine
-				.create(new Microwave(id), behaviour, MicrowaveStateMachine.State.READY_TO_COOK))) {
+		Func1<Object, String> identifier = x -> ((Microwave) x).id();
+		Func1<String, EntityStateMachine<?>> stateMachineCreator = id -> MicrowaveStateMachine
+				.create(new Microwave(id), behaviour, MicrowaveStateMachine.State.READY_TO_COOK);
+		
+		try (Processor<String> processor = new Processor<String>(identifier, stateMachineCreator)) {
 			processor.signal(Signal.create(microwave, new DoorOpened()));
 		}
 	}
