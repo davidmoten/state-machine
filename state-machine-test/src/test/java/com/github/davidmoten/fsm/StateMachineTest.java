@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
@@ -17,6 +18,7 @@ import com.github.davidmoten.fsm.example.generated.ShipStateMachine;
 import com.github.davidmoten.fsm.example.microwave.ButtonPressed;
 import com.github.davidmoten.fsm.example.microwave.DoorOpened;
 import com.github.davidmoten.fsm.example.microwave.Microwave;
+import com.github.davidmoten.fsm.example.microwave.TimerTimesOut;
 import com.github.davidmoten.fsm.example.ship.In;
 import com.github.davidmoten.fsm.example.ship.Out;
 import com.github.davidmoten.fsm.example.ship.Ship;
@@ -76,16 +78,23 @@ public class StateMachineTest {
 	}
 
 	@Test
-	public void testMicrowaveProcessor() {
+	public void testMicrowaveProcessor() throws InterruptedException {
 		Microwave microwave = new Microwave("1");
-		MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
+		MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
+			@Override
+			public Microwave onEntry_Cooking(Signaller signaller, Microwave microwave, ButtonPressed event) {
+				signaller.signalToSelf(new TimerTimesOut(), 500, TimeUnit.MILLISECONDS);
+				return microwave;
+			}
+		};
 		Func1<Object, String> identifier = x -> ((Microwave) x).id();
 		Func1<String, EntityStateMachine<?>> stateMachineCreator = id -> MicrowaveStateMachine.create(new Microwave(id),
 				behaviour, MicrowaveStateMachine.State.READY_TO_COOK);
 		Processor<String> processor = Processor.create(identifier, stateMachineCreator);
 		TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
-		processor.observable().subscribe(ts);
-		processor.signal(microwave, new DoorOpened());
+		processor.observable().doOnNext(m -> m.state()).subscribe(ts);
+		processor.signal(microwave, new ButtonPressed());
+		Thread.sleep(1000);
 		processor.onCompleted();
 		ts.awaitTerminalEvent();
 		ts.assertNoErrors();
