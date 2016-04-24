@@ -53,7 +53,7 @@ public final class Processor<Id> {
 					//
 					.doOnUnsubscribe(() -> worker.unsubscribe())
 					//
-					.groupBy(id)
+					.groupBy(signal -> id.call(signal.object()))
 					//
 					.flatMap(g -> g
 							//

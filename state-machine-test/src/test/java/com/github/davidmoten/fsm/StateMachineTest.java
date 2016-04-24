@@ -27,6 +27,7 @@ import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 
 import rx.functions.Func1;
+import rx.observers.TestSubscriber;
 
 public class StateMachineTest {
 
@@ -83,7 +84,12 @@ public class StateMachineTest {
 		Func1<String, EntityStateMachine<?>> stateMachineCreator = id -> MicrowaveStateMachine.create(new Microwave(id),
 				behaviour, MicrowaveStateMachine.State.READY_TO_COOK);
 		Processor<String> processor = Processor.create(identifier, stateMachineCreator);
+		TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
+		processor.asObservable().subscribe(ts);
 		processor.signal(Signal.create(microwave, new DoorOpened()));
+		ts.assertNoErrors();
+		ts.assertValueCount(1);
+		System.out.println(ts.getOnNextEvents());
 	}
 
 }
