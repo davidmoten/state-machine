@@ -29,6 +29,7 @@ import com.github.davidmoten.fsm.runtime.rx.Processor;
 
 import rx.functions.Func1;
 import rx.observers.TestSubscriber;
+import rx.schedulers.TestScheduler;
 
 public class StateMachineTest {
 
@@ -83,17 +84,19 @@ public class StateMachineTest {
 		MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
 			@Override
 			public Microwave onEntry_Cooking(Signaller signaller, Microwave microwave, ButtonPressed event) {
-				signaller.signalToSelf(new TimerTimesOut(), 500, TimeUnit.MILLISECONDS);
+				signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
 				return microwave;
 			}
 		};
 		Func1<Object, String> identifier = x -> ((Microwave) x).id();
 		Func1<String, EntityStateMachine<?>> stateMachineCreator = id -> MicrowaveStateMachine.create(new Microwave(id),
 				behaviour, MicrowaveStateMachine.State.READY_TO_COOK);
-		Processor<String> processor = Processor.create(identifier, stateMachineCreator);
+		TestScheduler scheduler = new TestScheduler();
+		Processor<String> processor = Processor.create(identifier, stateMachineCreator, scheduler);
 		TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
-		processor.observable().doOnNext(m -> m.state()).subscribe(ts);
+		processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
 		processor.signal(microwave, new ButtonPressed());
+		scheduler.advanceTimeBy(31, TimeUnit.SECONDS);
 		Thread.sleep(1000);
 		processor.onCompleted();
 		ts.awaitTerminalEvent();

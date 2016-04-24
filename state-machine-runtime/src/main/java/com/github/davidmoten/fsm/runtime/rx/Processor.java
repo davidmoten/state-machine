@@ -15,6 +15,7 @@ import com.github.davidmoten.rx.Transformers;
 import com.github.davidmoten.util.Preconditions;
 
 import rx.Observable;
+import rx.Scheduler;
 import rx.Scheduler.Worker;
 import rx.Subscriber;
 import rx.functions.Func0;
@@ -31,7 +32,7 @@ public final class Processor<Id> {
 	private final PublishSubject<Signal<?, ?>> subject;
 	private final Map<Id, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
 
-	private Processor(Func1<Object, Id> id, Func1<Id, EntityStateMachine<?>> stateMachineFactory) {
+	private Processor(Func1<Object, Id> id, Func1<Id, EntityStateMachine<?>> stateMachineFactory, Scheduler scheduler) {
 		Preconditions.checkNotNull(id);
 		Preconditions.checkNotNull(stateMachineFactory);
 		this.id = id;
@@ -39,9 +40,14 @@ public final class Processor<Id> {
 		this.subject = PublishSubject.create();
 	}
 
+	public static <Id> Processor<Id> create(Func1<Object, Id> id, Func1<Id, EntityStateMachine<?>> stateMachineFactory,
+			Scheduler scheduler) {
+		return new Processor<Id>(id, stateMachineFactory, scheduler);
+	}
+
 	public static <Id> Processor<Id> create(Func1<Object, Id> id,
 			Func1<Id, EntityStateMachine<?>> stateMachineFactory) {
-		return new Processor<Id>(id, stateMachineFactory);
+		return new Processor<Id>(id, stateMachineFactory, Schedulers.computation());
 	}
 
 	public Observable<EntityStateMachine<?>> observable() {
