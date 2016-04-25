@@ -22,6 +22,7 @@ import com.github.davidmoten.fsm.example.microwave.TimerTimesOut;
 import com.github.davidmoten.fsm.example.ship.In;
 import com.github.davidmoten.fsm.example.ship.Out;
 import com.github.davidmoten.fsm.example.ship.Ship;
+import com.github.davidmoten.fsm.runtime.Clock;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Signaller;
@@ -80,6 +81,7 @@ public class StateMachineTest {
 
 	@Test
 	public void testMicrowaveProcessor() throws InterruptedException {
+		TestScheduler scheduler = new TestScheduler();
 		Microwave microwave = new Microwave("1");
 		MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
 			@Override
@@ -90,8 +92,8 @@ public class StateMachineTest {
 		};
 		Func1<Object, String> identifier = x -> ((Microwave) x).id();
 		Func1<String, EntityStateMachine<?>> stateMachineCreator = id -> MicrowaveStateMachine.create(new Microwave(id),
-				behaviour, MicrowaveStateMachine.State.READY_TO_COOK);
-		TestScheduler scheduler = new TestScheduler();
+				behaviour, MicrowaveStateMachine.State.READY_TO_COOK, Clock.from(scheduler));
+		
 		Processor<String> processor = Processor.create(identifier, stateMachineCreator, scheduler);
 		TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
 		processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
