@@ -258,8 +258,7 @@ public final class Generator<T> {
 			indent.right();
 			out.format("%sreturn new %s(%s, behaviour, state, false, new %s<%s<?>>(), new %s<%s<?, ?>>(), clock);\n",
 					indent, stateMachineClassSimpleName(), instanceName(), imports.add(ArrayList.class),
-					imports.add(Event.class), imports.add(ArrayList.class), imports.add(Signal.class),
-					imports.add(ClockDefault.class));
+					imports.add(Event.class), imports.add(ArrayList.class), imports.add(Signal.class));
 			out.format("%s}\n", indent.left());
 			out.println();
 
@@ -277,10 +276,10 @@ public final class Generator<T> {
 				out.format("%spublic static %s create(%s behaviour, %s clock) {\n", indent, stateMachineClassSimpleName(),
 						imports.add(behaviourClassName()), imports.add(Clock.class));
 				out.format(
-						"%sreturn new %s(null, behaviour, State.INITIAL, false, new %s<%s<?>>(), new %s<%s<?, ?>>(), %s.instance(), clock);\n",
+						"%sreturn new %s(null, behaviour, State.INITIAL, false, new %s<%s<?>>(), new %s<%s<?, ?>>(), clock);\n",
 						indent.right(), stateMachineClassSimpleName(), imports.add(ArrayList.class),
-						imports.add(Event.class), imports.add(ArrayList.class), imports.add(Signal.class),
-						imports.add(ClockDefault.class));
+						imports.add(Event.class), imports.add(ArrayList.class), imports.add(Signal.class)
+						);
 				out.format("%s}\n", indent.left());
 				out.println();
 			}
