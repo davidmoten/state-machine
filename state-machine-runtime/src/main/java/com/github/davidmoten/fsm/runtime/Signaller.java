@@ -11,5 +11,7 @@ public interface Signaller {
 	<T> void signal(T object, Event<?> event);
 	
 	<T> void signal(T object, Event<?> event, long delay, TimeUnit unit);
+	
+    void cancelSignal(Object from , Object to);
 
 }

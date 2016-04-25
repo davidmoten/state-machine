@@ -392,6 +392,17 @@ public final class Generator<T> {
 			out.format("%s}\n", indent.left());
 			out.println();
 
+			//void cancelSignal(Object from , Object to);
+			out.format("%s@%s\n", indent, imports.add(Override.class));
+			out.format("%spublic void cancelSignal(Object from, Object to) {\n", indent);
+			out.format("%s%s.checkNotNull(from, \"from cannot be null\");\n", indent.right(),
+					imports.add(Preconditions.class));
+			out.format("%s%s.checkNotNull(to, \"to cannot be null\");\n", indent,
+					imports.add(Preconditions.class));
+			out.format("%sthrow new %s();\n", indent, imports.add(UnsupportedOperationException.class));
+			out.format("%s}\n", indent.left());
+			out.println();
+			
 			out.format("%s}", indent.left());
 		}
 		try (PrintStream out = new PrintStream(stateMachineClassFile())) {
