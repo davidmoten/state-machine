@@ -1,7 +1,6 @@
 package com.github.davidmoten.fsm.runtime.rx;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -11,17 +10,14 @@ import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.ObjectState;
 import com.github.davidmoten.fsm.runtime.Signal;
-import com.github.davidmoten.rx.Transformers;
 import com.github.davidmoten.util.Preconditions;
 
 import rx.Observable;
+import rx.Observer;
 import rx.Scheduler;
 import rx.Scheduler.Worker;
-import rx.Subscriber;
-import rx.functions.Func0;
 import rx.functions.Func1;
-import rx.functions.Func2;
-import rx.functions.Func3;
+import rx.observables.SyncOnSubscribe;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
@@ -76,20 +72,52 @@ public final class Processor<Id> {
 		});
 	}
 
+	private static final class Signals {
+		final Deque<Event<?>> signalsToSelf = new ArrayDeque<>();
+		final Deque<Signal<?, ?>> signalsToOther = new ArrayDeque<>();
+	}
+
 	private Observable<EntityStateMachine<?>> process(Id id, Event<?> x, Worker worker) {
 
-		Func0<Deque<Event<?>>> initialStateFactory = () -> new ArrayDeque<>();
-		Func3<Deque<Event<?>>, Event<?>, Subscriber<EntityStateMachine<?>>, Deque<Event<?>>> transition = (
-				signalsToSelf, ev, subscriber) -> {
-			EntityStateMachine<?> m = getStateMachine(id);
-			signalsToSelf.offerFirst(ev);
-			List<Signal<?, ?>> signalsToOther = new ArrayList<>();
-			applySignalsToSelf(signalsToSelf, subscriber, m, signalsToOther);
-			applySignalsToOther(worker, signalsToOther);
-			return signalsToSelf;
-		};
-		Func2<Deque<Event<?>>, Subscriber<EntityStateMachine<?>>, Boolean> completion = (q, sub) -> true;
-		return Observable.just(x).compose(Transformers.stateMachine(initialStateFactory, transition, completion));
+		return Observable.create(new SyncOnSubscribe<Signals, EntityStateMachine<?>>() {
+
+			@Override
+			protected Signals generateState() {
+				Signals signals = new Signals();
+				signals.signalsToSelf.offerFirst(x);
+				return signals;
+			}
+
+			@Override
+			protected Signals next(Signals signals, Observer<? super EntityStateMachine<?>> observer) {
+				EntityStateMachine<?> m = getStateMachine(id);
+				Event<?> event = signals.signalsToSelf.pollLast();
+				if (event != null) {
+					m = m.signal(event);
+					// stateMachines.put(id, m);
+					observer.onNext(m);
+					List<Event<?>> list = m.signalsToSelf();
+					for (int i = list.size() - 1; i >= 0; i--) {
+						signals.signalsToSelf.offerLast(list.get(i));
+					}
+					for (Signal<?, ?> signal : m.signalsToOther()) {
+						signals.signalsToOther.offerFirst(signal);
+					}
+				} else {
+					Signal<?, ?> signal;
+					while ((signal = signals.signalsToOther.pollLast()) != null) {
+						Signal<?, ?> s = signal;
+						if (signal.delay() == 0) {
+							subject.onNext(signal);
+						} else {
+							worker.schedule(() -> subject.onNext(s.now()), signal.delay(), signal.unit());
+						}
+					}
+					observer.onCompleted();
+				}
+				return signals;
+			}
+		});
 	}
 
 	private EntityStateMachine<?> getStateMachine(Id id) {
@@ -98,31 +126,6 @@ public final class Processor<Id> {
 			m = stateMachineFactory.call(id);
 		}
 		return m;
-	}
-
-	private void applySignalsToOther(Worker worker, List<Signal<?, ?>> signalsToOther) {
-		for (Signal<?, ?> signal : signalsToOther) {
-			if (signal.delay() == 0) {
-				subject.onNext(signal);
-			} else {
-				worker.schedule(() -> subject.onNext(signal.now()), signal.delay(), signal.unit());
-			}
-		}
-	}
-
-	private void applySignalsToSelf(Deque<Event<?>> signalsToSelf, Subscriber<EntityStateMachine<?>> subscriber,
-			EntityStateMachine<?> m, List<Signal<?, ?>> signalsToOther) {
-		Event<?> event;
-		while ((event = signalsToSelf.pollLast()) != null) {
-			// apply signal to object
-			m = m.signal(event);
-			subscriber.onNext(m);
-			List<Event<?>> list = m.signalsToSelf();
-			for (int i = list.size() - 1; i >= 0; i--) {
-				signalsToSelf.offerLast(list.get(i));
-			}
-			signalsToOther.addAll(m.signalsToOther());
-		}
 	}
 
 	public void signal(Signal<?, ?> signal) {
