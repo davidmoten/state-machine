@@ -56,8 +56,6 @@ public final class Processor<Id> {
 					//
 					.toSerialized()
 					//
-					.doOnNext(System.out::println)
-					//
 					.doOnUnsubscribe(() -> worker.unsubscribe())
 					//
 					.groupBy(signal -> id.call(signal.object()))
