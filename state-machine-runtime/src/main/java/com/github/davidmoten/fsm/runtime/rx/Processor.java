@@ -5,6 +5,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
@@ -105,10 +106,15 @@ public final class Processor<Id> {
 					Signal<?, ?> signal;
 					while ((signal = signals.signalsToOther.pollLast()) != null) {
 						Signal<?, ?> s = signal;
-						if (signal.delay() == 0) {
+						if (signal.isImmediate()) {
 							subject.onNext(signal);
 						} else {
-							worker.schedule(() -> subject.onNext(s.now()), signal.delay(), signal.unit());
+							long delayMs = signal.time() - worker.now();
+							if (delayMs <= 0) {
+								subject.onNext(signal);
+							} else {
+								worker.schedule(() -> subject.onNext(s.now()), delayMs, TimeUnit.MILLISECONDS);
+							}
 						}
 					}
 					observer.onCompleted();

@@ -1,31 +1,23 @@
 package com.github.davidmoten.fsm.runtime;
 
-import java.util.concurrent.TimeUnit;
-
-import com.github.davidmoten.util.Preconditions;
-
 public final class Signal<T, R> {
 
 	private final T object;
 	private final Event<R> event;
-	private final long delay;
-	private final TimeUnit unit;
+	private long time;
 
-	private Signal(T object, Event<R> event, long delay, TimeUnit unit) {
-		Preconditions.checkArgument(delay >= 0, "delay must be non-negative");
-		Preconditions.checkNotNull(unit, "unit cannot be null");
+	private Signal(T object, Event<R> event, long time) {
 		this.object = object;
 		this.event = event;
-		this.delay = delay;
-		this.unit = unit;
+		this.time = time;
 	}
 
 	public static <T, R> Signal<T, R> create(T object, Event<R> event) {
-		return new Signal<T, R>(object, event, 0, TimeUnit.MILLISECONDS);
+		return new Signal<T, R>(object, event, Long.MIN_VALUE);
 	}
 
-	public static <T, R> Signal<T, R> create(T object, Event<R> event, long delay, TimeUnit unit) {
-		return new Signal<T, R>(object, event, delay, unit);
+	public static <T, R> Signal<T, R> create(T object, Event<R> event, long time) {
+		return new Signal<T, R>(object, event, time);
 	}
 
 	public T object() {
@@ -36,12 +28,12 @@ public final class Signal<T, R> {
 		return event;
 	}
 
-	public long delay() {
-		return delay;
+	public long time() {
+		return time;
 	}
 
-	public TimeUnit unit() {
-		return unit;
+	public boolean isImmediate() {
+		return time == Long.MIN_VALUE;
 	}
 
 	public Signal<?, ?> now() {
@@ -50,7 +42,7 @@ public final class Signal<T, R> {
 
 	@Override
 	public String toString() {
-		return "Signal [object=" + object + ", event=" + event + ", delay=" + delay + ", unit=" + unit + "]";
+		return "Signal [object=" + object + ", event=" + event + ", time=" + (isImmediate() ? "immediate" : time) + "]";
 	}
 
 }
