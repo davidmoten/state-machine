@@ -1,6 +1,7 @@
 package com.github.davidmoten.fsm;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -114,6 +115,13 @@ public class StateMachineTest {
 		processor.signal(microwave, new DoorOpened());
 		ts.assertValueCount(3);
 		assertEquals(MicrowaveStateMachine.State.DOOR_OPEN, ts.getOnNextEvents().get(2).state());
+		
+		processor.signal(microwave, new ButtonPressed());
+		//should not be a transition
+		ts.assertValueCount(4);
+		assertEquals(MicrowaveStateMachine.State.DOOR_OPEN, ts.getOnNextEvents().get(3).state());
+		assertFalse(ts.getOnNextEvents().get(3).transitionOccurred());
+		
 		processor.onCompleted();
 		ts.awaitTerminalEvent();
 	}
