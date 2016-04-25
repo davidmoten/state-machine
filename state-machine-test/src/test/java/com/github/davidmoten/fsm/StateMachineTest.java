@@ -96,13 +96,15 @@ public class StateMachineTest {
 		TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
 		processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
 		processor.signal(microwave, new ButtonPressed());
+		ts.assertValueCount(1);
 		scheduler.advanceTimeBy(31, TimeUnit.SECONDS);
-		Thread.sleep(1000);
 		processor.onCompleted();
 		ts.awaitTerminalEvent();
 		ts.assertNoErrors();
-		ts.assertValueCount(1);
-		System.out.println(ts.getOnNextEvents());
+		ts.assertValueCount(2);
+		List<EntityStateMachine<?>> list = ts.getOnNextEvents();
+		assertEquals(MicrowaveStateMachine.State.COOKING, list.get(0).state());
+		assertEquals(MicrowaveStateMachine.State.COOKING_COMPLETE, list.get(1).state());
 	}
 
 }

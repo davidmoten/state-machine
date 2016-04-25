@@ -11,4 +11,10 @@ public class Microwave {
 	public String id() {
 		return id;
 	}
+
+	@Override
+	public String toString() {
+		return "Microwave [id=" + id + "]";
+	}
+	
 }
