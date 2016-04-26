@@ -35,18 +35,15 @@ public class IdMapper<Id> implements Func1<Object, Id> {
         }
     }
 
-    public static <T, Id> Builder<Id> add(Class<T> cls, Func1<? super T, ? extends Id> idMapper) {
-        return new Builder<Id>().add(cls, idMapper);
-    }
-
     public static final class Builder<Id> {
+
         private final Map<Class<?>, Func1<?, ? extends Id>> map = new HashMap<>();
 
         private Builder() {
             // prevent instantiation
         }
 
-        public <T> Builder<Id> add(Class<T> cls, Func1<? super T, ? extends Id> idMapper) {
+        private <T> Builder<Id> add(Class<T> cls, Func1<? super T, ? extends Id> idMapper) {
             map.put(cls, idMapper);
             return this;
         }
