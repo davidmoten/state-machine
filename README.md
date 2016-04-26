@@ -106,9 +106,9 @@ Add this artifact to your runtime pom.xml:
 
 ```xml
 <dependency>
-    <groupId>com.github.davidmoten</groupId>
-    <artifactId>rxjava-extras</artifactId>
-    <version>LATEST_VERSION_HERE</version>
+    <groupId>io.reactivex</groupId>
+    <artifactId>rxjava</artifactId>
+    <version>1.x</version>
 </dependency>
 ```
 

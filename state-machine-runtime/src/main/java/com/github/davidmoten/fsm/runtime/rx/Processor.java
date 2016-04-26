@@ -11,7 +11,7 @@ import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.ObjectState;
 import com.github.davidmoten.fsm.runtime.Signal;
-import com.github.davidmoten.util.Preconditions;
+import com.github.davidmoten.guavamini.Preconditions;
 
 import rx.Observable;
 import rx.Observer;

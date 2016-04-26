@@ -3,7 +3,7 @@ package com.github.davidmoten.fsm.runtime.rx;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.github.davidmoten.util.Preconditions;
+import com.github.davidmoten.guavamini.Preconditions;
 
 import rx.functions.Func1;
 
