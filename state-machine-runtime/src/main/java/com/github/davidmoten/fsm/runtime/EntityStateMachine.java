@@ -11,4 +11,6 @@ public interface EntityStateMachine<T> extends ObjectState<T> {
     List<Event<?>> signalsToSelf();
 
     List<Signal<?, ?>> signalsToOther();
+
+    Class<T> cls();
 }

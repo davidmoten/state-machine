@@ -18,135 +18,156 @@ import rx.Observer;
 import rx.Scheduler;
 import rx.Scheduler.Worker;
 import rx.functions.Func1;
+import rx.functions.Func2;
 import rx.observables.SyncOnSubscribe;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
 public final class Processor<Id> {
 
-	private final Func1<Object, Id> id;
-	private final Func1<Id, EntityStateMachine<?>> stateMachineFactory;
-	private final PublishSubject<Signal<?, ?>> subject;
-	private final Map<Id, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
-	private final Scheduler scheduler;
+    private final Func1<Object, Id> id;
+    private final Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory;
+    private final PublishSubject<Signal<?, ?>> subject;
+    private final Map<ClassId<?>, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
+    private final Scheduler futureScheduler;
+    private final Scheduler processingScheduler;
 
-	private Processor(Func1<Object, Id> id, Func1<Id, EntityStateMachine<?>> stateMachineFactory, Scheduler scheduler) {
-		Preconditions.checkNotNull(id);
-		Preconditions.checkNotNull(stateMachineFactory);
-		Preconditions.checkNotNull(scheduler);
-		this.id = id;
-		this.stateMachineFactory = stateMachineFactory;
-		this.scheduler = scheduler;
-		this.subject = PublishSubject.create();
-	}
+    private Processor(Func1<Object, Id> id,
+            Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
+            Scheduler processingScheduler, Scheduler futureScheduler) {
+        Preconditions.checkNotNull(id);
+        Preconditions.checkNotNull(stateMachineFactory);
+        Preconditions.checkNotNull(futureScheduler);
+        this.id = id;
+        this.stateMachineFactory = stateMachineFactory;
+        this.futureScheduler = futureScheduler;
+        this.processingScheduler = processingScheduler;
+        this.subject = PublishSubject.create();
+    }
 
-	public static <Id> Processor<Id> create(Func1<Object, Id> id, Func1<Id, EntityStateMachine<?>> stateMachineFactory,
-			Scheduler scheduler) {
-		return new Processor<Id>(id, stateMachineFactory, scheduler);
-	}
+    public static <Id> Processor<Id> create(Func1<Object, Id> id,
+            Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
+            Scheduler processingScheduler, Scheduler futureScheduler) {
+        return new Processor<Id>(id, stateMachineFactory, processingScheduler, futureScheduler);
+    }
 
-	public static <Id> Processor<Id> create(Func1<Object, Id> id,
-			Func1<Id, EntityStateMachine<?>> stateMachineFactory) {
-		return new Processor<Id>(id, stateMachineFactory, Schedulers.computation());
-	}
+    public static <Id> Processor<Id> create(Func1<Object, Id> id,
+            Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
+            Scheduler processingScheduler) {
+        return new Processor<Id>(id, stateMachineFactory, processingScheduler,
+                Schedulers.computation());
+    }
 
-	public Observable<EntityStateMachine<?>> observable() {
-		return Observable.defer(() -> {
-			Worker worker = scheduler.createWorker();
-			return subject
-					//
-					.toSerialized()
-					//
-					.doOnUnsubscribe(() -> worker.unsubscribe())
-					//
-					.groupBy(signal -> id.call(signal.object()))
-					//
-					.flatMap(g -> g
-							//
-							.map(signal -> signal.event())
-							//
-							.flatMap(x -> process(g.getKey(), x, worker))
-							//
-							.doOnNext(m -> stateMachines.put(g.getKey(), m)));
-		});
-	}
+    public static <Id> Processor<Id> create(Func1<Object, Id> id,
+            Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory) {
+        return new Processor<Id>(id, stateMachineFactory, Schedulers.immediate(),
+                Schedulers.computation());
+    }
 
-	private static final class Signals {
-		final Deque<Event<?>> signalsToSelf = new ArrayDeque<>();
-		final Deque<Signal<?, ?>> signalsToOther = new ArrayDeque<>();
-	}
+    public Observable<EntityStateMachine<?>> observable() {
+        return Observable.defer(() -> {
+            Worker worker = futureScheduler.createWorker();
+            return subject
+                    //
+                    .toSerialized()
+                    //
+                    .doOnUnsubscribe(() -> worker.unsubscribe())
+                    //
+                    .groupBy(signal -> id.call(signal.object()))
+                    //
+                    .flatMap(g -> g
+                            //
+                            .flatMap(x -> process(x.object().getClass(), g.getKey(), x.event(),
+                                    worker))
+                            //
+                            .doOnNext(m -> stateMachines
+                                    .put(new ClassId<Object>(m.cls(), g.getKey()), m))
+                            //
+                            .subscribeOn(processingScheduler));
+        });
+    }
 
-	private Observable<EntityStateMachine<?>> process(Id id, Event<?> x, Worker worker) {
+    private static final class Signals {
+        final Deque<Event<?>> signalsToSelf = new ArrayDeque<>();
+        final Deque<Signal<?, ?>> signalsToOther = new ArrayDeque<>();
+    }
 
-		return Observable.create(new SyncOnSubscribe<Signals, EntityStateMachine<?>>() {
+    private Observable<EntityStateMachine<?>> process(Class<?> cls, Id id, Event<?> x,
+            Worker worker) {
 
-			@Override
-			protected Signals generateState() {
-				Signals signals = new Signals();
-				signals.signalsToSelf.offerFirst(x);
-				return signals;
-			}
+        return Observable.create(new SyncOnSubscribe<Signals, EntityStateMachine<?>>() {
 
-			@Override
-			protected Signals next(Signals signals, Observer<? super EntityStateMachine<?>> observer) {
-				EntityStateMachine<?> m = getStateMachine(id);
-				Event<?> event = signals.signalsToSelf.pollLast();
-				if (event != null) {
-					m = m.signal(event);
-					// stateMachines.put(id, m);
-					observer.onNext(m);
-					List<Event<?>> list = m.signalsToSelf();
-					for (int i = list.size() - 1; i >= 0; i--) {
-						signals.signalsToSelf.offerLast(list.get(i));
-					}
-					for (Signal<?, ?> signal : m.signalsToOther()) {
-						signals.signalsToOther.offerFirst(signal);
-					}
-				} else {
-					Signal<?, ?> signal;
-					while ((signal = signals.signalsToOther.pollLast()) != null) {
-						Signal<?, ?> s = signal;
-						if (signal.isImmediate()) {
-							subject.onNext(signal);
-						} else {
-							long delayMs = signal.time() - worker.now();
-							if (delayMs <= 0) {
-								subject.onNext(signal);
-							} else {
-								worker.schedule(() -> subject.onNext(s.now()), delayMs, TimeUnit.MILLISECONDS);
-							}
-						}
-					}
-					observer.onCompleted();
-				}
-				return signals;
-			}
-		});
-	}
+            @Override
+            protected Signals generateState() {
+                Signals signals = new Signals();
+                signals.signalsToSelf.offerFirst(x);
+                return signals;
+            }
 
-	private EntityStateMachine<?> getStateMachine(Id id) {
-		EntityStateMachine<?> m = stateMachines.get(id);
-		if (m == null) {
-			m = stateMachineFactory.call(id);
-		}
-		return m;
-	}
+            @Override
+            protected Signals next(Signals signals,
+                    Observer<? super EntityStateMachine<?>> observer) {
+                EntityStateMachine<?> m = getStateMachine(cls, id);
+                Event<?> event = signals.signalsToSelf.pollLast();
+                if (event != null) {
+                    m = m.signal(event);
+                    // stateMachines.put(id, m);
+                    observer.onNext(m);
+                    List<Event<?>> list = m.signalsToSelf();
+                    for (int i = list.size() - 1; i >= 0; i--) {
+                        signals.signalsToSelf.offerLast(list.get(i));
+                    }
+                    for (Signal<?, ?> signal : m.signalsToOther()) {
+                        signals.signalsToOther.offerFirst(signal);
+                    }
+                } else {
+                    Signal<?, ?> signal;
+                    while ((signal = signals.signalsToOther.pollLast()) != null) {
+                        Signal<?, ?> s = signal;
+                        if (signal.isImmediate()) {
+                            subject.onNext(signal);
+                        } else {
+                            long delayMs = signal.time() - worker.now();
+                            if (delayMs <= 0) {
+                                subject.onNext(signal);
+                            } else {
+                                worker.schedule(() -> subject.onNext(s.now()), delayMs,
+                                        TimeUnit.MILLISECONDS);
+                            }
+                        }
+                    }
+                    observer.onCompleted();
+                }
+                return signals;
+            }
+        });
+    }
 
-	public void signal(Signal<?, ?> signal) {
-		subject.onNext(signal);
-	}
+    @SuppressWarnings("unchecked")
+    private <T> EntityStateMachine<T> getStateMachine(Class<T> cls, Id id) {
+        EntityStateMachine<T> m = (EntityStateMachine<T>) stateMachines
+                .get(new ClassId<Id>(cls, id));
+        if (m == null) {
+            m = (EntityStateMachine<T>) stateMachineFactory.call(cls, id);
+        }
+        return m;
+    }
 
-	public <T, R> void signal(T object, Event<R> event) {
-		subject.onNext(Signal.create(object, event));
-	}
+    public void signal(Signal<?, ?> signal) {
+        subject.onNext(signal);
+    }
 
-	@SuppressWarnings("unchecked")
-	public <T> ObjectState<T> get(Id id) {
-		return (EntityStateMachine<T>) stateMachines.get(id);
-	}
+    public <T, R> void signal(T object, Event<R> event) {
+        subject.onNext(Signal.create(object, event));
+    }
 
-	public void onCompleted() {
-		subject.onCompleted();
-	}
+    @SuppressWarnings("unchecked")
+    public <T> ObjectState<T> get(Class<T> cls, Id id) {
+        return (EntityStateMachine<T>) stateMachines.get(new ClassId<Id>(cls, id));
+    }
+
+    public void onCompleted() {
+        subject.onCompleted();
+    }
 
 }
