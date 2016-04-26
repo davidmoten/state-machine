@@ -101,8 +101,9 @@ public class StateMachineTest {
 
         Func2<Class<?>, String, EntityStateMachine<?>> stateMachineFactory = StateMachineFactory
                 .cls(Microwave.class)
-                .<String> hasFactory(id -> MicrowaveStateMachine.create(new Microwave(id), behaviour,
-                        MicrowaveStateMachine.State.READY_TO_COOK, Clock.from(scheduler)))
+                .<String> hasFactory(
+                        id -> MicrowaveStateMachine.create(new Microwave(id), behaviour,
+                                MicrowaveStateMachine.State.READY_TO_COOK, Clock.from(scheduler)))
                 .build();
 
         Processor<String> processor = Processor.idMapper(idMapper)
@@ -130,10 +131,13 @@ public class StateMachineTest {
         assertEquals(MicrowaveStateMachine.State.DOOR_OPEN, ts.getOnNextEvents().get(2).state());
 
         processor.signal(microwave, new ButtonPressed());
-        // should not be a transition
-        ts.assertValueCount(4);
-        assertEquals(MicrowaveStateMachine.State.DOOR_OPEN, ts.getOnNextEvents().get(3).state());
-        assertFalse(ts.getOnNextEvents().get(3).transitionOccurred());
+        {
+            // should not be a transition
+            ts.assertValueCount(4);
+            List<EntityStateMachine<?>> list = ts.getOnNextEvents();
+            assertEquals(MicrowaveStateMachine.State.DOOR_OPEN, list.get(3).state());
+            assertFalse(list.get(3).transitionOccurred());
+        }
 
         processor.onCompleted();
         ts.awaitTerminalEvent();
