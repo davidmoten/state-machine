@@ -102,6 +102,18 @@ Rx processing of signals
 -------------------------
 The runtime artifact has optional support for a reactive implementation of the processing of signals using [RxJava](https://github.com/ReactiveX/RxJava).
 
+Add this artifact to your runtime pom.xml:
+
+```xml
+<dependency>
+    <groupId>com.github.davidmoten</groupId>
+    <artifactId>rxjava-extras</artifactId>
+    <version>LATEST_VERSION_HERE</version>
+</dependency>
+```
+
+[ProcessorTest.java](state-machine-test/src/test/java/com/github/davidmoten/fsm/rx/ProcessorTest.java) demonstrates usage of an Rx processor for a state machine (or set of state machines).
+
 
 
 
