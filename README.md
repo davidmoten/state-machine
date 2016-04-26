@@ -108,7 +108,7 @@ Add this artifact to your runtime pom.xml:
 <dependency>
     <groupId>io.reactivex</groupId>
     <artifactId>rxjava</artifactId>
-    <version>1.x</version>
+    <version>1.x.x</version>
 </dependency>
 ```
 
