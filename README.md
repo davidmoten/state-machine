@@ -60,6 +60,19 @@ Create a maven artifact like [state-machine-test-definition](state-machine-test-
 
 Then in the project where you want to have the generated classes, set it up like [state-machine-test](state-machine-test). That means adding dependencies on your definition artifact to the pom and also snippets using *state-machine-maven-plugin* and *build-helper-maven-plugin* to your pom.xml. Then you will have generated state machine classes to use in your program.
 
+Behaviour
+---------------
+When a transition occurs in a state machine from state A to state B, the transition is not considered complete till the *onEntry* procedure for B has been run. Behaviour is specified according to a generated interface and is given to an instance of `MicrowaveStateMachine` at creation. For instance to specify that when a Microwave enters the Cooking state that it will time out and stop cooking after 30 seconds (transition to state Cooking Complete) we would implement the behaviour for a Microwave like this:
 
+```java
+MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
+    @Override
+    public Microwave onEntry_Cooking(Signaller signaller, Microwave microwave,
+            ButtonPressed event) {
+        signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
+        return microwave;
+    }
+};
+```
 
 
