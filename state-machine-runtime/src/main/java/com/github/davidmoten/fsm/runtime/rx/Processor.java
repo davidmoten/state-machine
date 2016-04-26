@@ -25,42 +25,42 @@ import rx.subjects.PublishSubject;
 
 public final class Processor<Id> {
 
-    private final Func1<Object, Id> id;
+    private final Func1<Object, Id> idMapper;
     private final Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory;
     private final PublishSubject<Signal<?, ?>> subject;
     private final Map<ClassId<?>, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
     private final Scheduler futureScheduler;
     private final Scheduler processingScheduler;
 
-    private Processor(Func1<Object, Id> id,
+    private Processor(Func1<Object, Id> idMapper,
             Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
             Scheduler processingScheduler, Scheduler futureScheduler) {
-        Preconditions.checkNotNull(id);
+        Preconditions.checkNotNull(idMapper);
         Preconditions.checkNotNull(stateMachineFactory);
         Preconditions.checkNotNull(futureScheduler);
-        this.id = id;
+        this.idMapper = idMapper;
         this.stateMachineFactory = stateMachineFactory;
         this.futureScheduler = futureScheduler;
         this.processingScheduler = processingScheduler;
         this.subject = PublishSubject.create();
     }
 
-    public static <Id> Processor<Id> create(Func1<Object, Id> id,
+    public static <Id> Processor<Id> create(Func1<Object, Id> idMapper,
             Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
             Scheduler processingScheduler, Scheduler futureScheduler) {
-        return new Processor<Id>(id, stateMachineFactory, processingScheduler, futureScheduler);
+        return new Processor<Id>(idMapper, stateMachineFactory, processingScheduler, futureScheduler);
     }
 
-    public static <Id> Processor<Id> create(Func1<Object, Id> id,
+    public static <Id> Processor<Id> create(Func1<Object, Id> idMapper,
             Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
             Scheduler processingScheduler) {
-        return new Processor<Id>(id, stateMachineFactory, processingScheduler,
+        return new Processor<Id>(idMapper, stateMachineFactory, processingScheduler,
                 Schedulers.computation());
     }
 
-    public static <Id> Processor<Id> create(Func1<Object, Id> id,
+    public static <Id> Processor<Id> create(Func1<Object, Id> idMapper,
             Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory) {
-        return new Processor<Id>(id, stateMachineFactory, Schedulers.immediate(),
+        return new Processor<Id>(idMapper, stateMachineFactory, Schedulers.immediate(),
                 Schedulers.computation());
     }
 
@@ -73,7 +73,7 @@ public final class Processor<Id> {
                     //
                     .doOnUnsubscribe(() -> worker.unsubscribe())
                     //
-                    .groupBy(signal -> id.call(signal.object()))
+                    .groupBy(signal -> idMapper.call(signal.object()))
                     //
                     .flatMap(g -> g
                             //
