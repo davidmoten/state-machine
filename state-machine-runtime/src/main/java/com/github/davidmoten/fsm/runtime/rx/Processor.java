@@ -5,9 +5,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
