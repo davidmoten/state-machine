@@ -30,7 +30,7 @@ public class IdMapper<Id> implements Func1<Object, Id> {
         }
 
         @SuppressWarnings("unchecked")
-        public <Id> Builder<Id> hasMapper(Func1<T, Id> idMapper) {
+        public <Id> Builder<Id> hasMapper(Func1<? super T, ? extends Id> idMapper) {
             return ((Builder<Id>) builder).add(cls, idMapper);
         }
     }

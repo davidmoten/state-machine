@@ -100,9 +100,9 @@ public class StateMachineTest {
         IdMapper<String> idMapper = IdMapper.cls(Microwave.class).hasMapper(x -> x.id()).build();
 
         Func2<Class<?>, String, EntityStateMachine<?>> stateMachineFactory = StateMachineFactory
-                .<Microwave, String> add(Microwave.class,
-                        id -> MicrowaveStateMachine.create(new Microwave(id), behaviour,
-                                MicrowaveStateMachine.State.READY_TO_COOK, Clock.from(scheduler)))
+                .cls(Microwave.class)
+                .<String> hasFactory(id -> MicrowaveStateMachine.create(new Microwave(id), behaviour,
+                        MicrowaveStateMachine.State.READY_TO_COOK, Clock.from(scheduler)))
                 .build();
 
         Processor<String> processor = Processor.idMapper(idMapper)
