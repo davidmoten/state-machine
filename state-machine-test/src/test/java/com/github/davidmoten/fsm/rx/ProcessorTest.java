@@ -105,8 +105,12 @@ public class ProcessorTest {
 
         // cooking would time out by now if signal had not been cancelled
         signalScheduler.advanceTimeBy(30, TimeUnit.SECONDS);
-
         ts.assertValueCount(1);
+
+        // now cancel a non-existent signal to get coverage
+        processor.cancelSignal(microwave, microwave);
+        ts.assertValueCount(1);
+
         processor.onCompleted();
         ts.assertNoErrors();
     }

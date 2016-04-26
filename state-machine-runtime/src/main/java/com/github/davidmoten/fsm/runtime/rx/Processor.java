@@ -169,7 +169,7 @@ public final class Processor<Id> {
                             Object from = ((CancelTimedSignal) signal.event()).from();
                             Object to = signal.object();
                             Subscription sub = subscriptions
-                                    .get(new IdPair<Id>(idMapper.call(from), idMapper.call(to)));
+                                    .remove(new IdPair<Id>(idMapper.call(from), idMapper.call(to)));
                             if (sub != null) {
                                 sub.unsubscribe();
                             }
@@ -178,6 +178,8 @@ public final class Processor<Id> {
                             if (delayMs <= 0) {
                                 subject.onNext(signal);
                             } else {
+                                // record pairwise signal so we can cancel it if
+                                // desired
                                 IdPair<Id> idPair = new IdPair<Id>(id,
                                         idMapper.call(signal.object()));
                                 long t1 = signalScheduler.now();
