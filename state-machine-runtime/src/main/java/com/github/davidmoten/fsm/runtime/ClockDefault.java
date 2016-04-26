@@ -1,6 +1,6 @@
 package com.github.davidmoten.fsm.runtime;
 
-public class ClockDefault implements Clock{
+public final class ClockDefault implements Clock{
 	
 	private static final ClockDefault instance = new ClockDefault();
 	
