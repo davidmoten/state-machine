@@ -28,45 +28,73 @@ public final class Processor<Id> {
     private final Func1<Object, Id> idMapper;
     private final Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory;
     private final PublishSubject<Signal<?, ?>> subject;
-    private final Map<ClassId<?>, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
-    private final Scheduler futureScheduler;
+    private final Scheduler signalScheduler;
     private final Scheduler processingScheduler;
+    private final Map<ClassId<?>, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
 
     private Processor(Func1<Object, Id> idMapper,
             Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
-            Scheduler processingScheduler, Scheduler futureScheduler) {
+            Scheduler processingScheduler, Scheduler signalScheduler) {
         Preconditions.checkNotNull(idMapper);
         Preconditions.checkNotNull(stateMachineFactory);
-        Preconditions.checkNotNull(futureScheduler);
+        Preconditions.checkNotNull(signalScheduler);
         this.idMapper = idMapper;
         this.stateMachineFactory = stateMachineFactory;
-        this.futureScheduler = futureScheduler;
+        this.signalScheduler = signalScheduler;
         this.processingScheduler = processingScheduler;
         this.subject = PublishSubject.create();
     }
 
-    public static <Id> Processor<Id> create(Func1<Object, Id> idMapper,
-            Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
-            Scheduler processingScheduler, Scheduler futureScheduler) {
-        return new Processor<Id>(idMapper, stateMachineFactory, processingScheduler, futureScheduler);
+    public static <Id> Builder<Id> idMapper(Func1<Object, Id> idMapper) {
+        return new Builder<Id>().idMapper(idMapper);
     }
 
-    public static <Id> Processor<Id> create(Func1<Object, Id> idMapper,
-            Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
-            Scheduler processingScheduler) {
-        return new Processor<Id>(idMapper, stateMachineFactory, processingScheduler,
-                Schedulers.computation());
-    }
-
-    public static <Id> Processor<Id> create(Func1<Object, Id> idMapper,
+    public static <Id> Builder<Id> stateMachineFactory(
             Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory) {
-        return new Processor<Id>(idMapper, stateMachineFactory, Schedulers.immediate(),
-                Schedulers.computation());
+        return new Builder<Id>().stateMachineFactory(stateMachineFactory);
+    }
+
+    public static class Builder<Id> {
+
+        private Func1<Object, Id> idMapper;
+        private Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory;
+        private Scheduler signalScheduler = Schedulers.computation();
+        private Scheduler processingScheduler = Schedulers.immediate();
+
+        private Builder() {
+        }
+
+        public Builder<Id> idMapper(Func1<Object, Id> idMapper) {
+            this.idMapper = idMapper;
+            return this;
+        }
+
+        public Builder<Id> stateMachineFactory(
+                Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory) {
+            this.stateMachineFactory = stateMachineFactory;
+            return this;
+        }
+
+        public Builder<Id> signalScheduler(Scheduler signalScheduler) {
+            this.signalScheduler = signalScheduler;
+            return this;
+        }
+
+        public Builder<Id> processingScheduler(Scheduler processingScheduler) {
+            this.processingScheduler = processingScheduler;
+            return this;
+        }
+
+        public Processor<Id> build() {
+            return new Processor<Id>(idMapper, stateMachineFactory, processingScheduler,
+                    signalScheduler);
+        }
+
     }
 
     public Observable<EntityStateMachine<?>> observable() {
         return Observable.defer(() -> {
-            Worker worker = futureScheduler.createWorker();
+            Worker worker = signalScheduler.createWorker();
             return subject
                     //
                     .toSerialized()

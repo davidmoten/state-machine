@@ -98,13 +98,17 @@ public class StateMachineTest {
 
         // this is where we define how instances are instantiated and looked up
         IdMapper<String> idMapper = IdMapper.add(Microwave.class, x -> x.id()).build();
+
         Func2<Class<?>, String, EntityStateMachine<?>> stateMachineFactory = StateMachineFactory
                 .<Microwave, String> add(Microwave.class,
                         id -> MicrowaveStateMachine.create(new Microwave(id), behaviour,
                                 MicrowaveStateMachine.State.READY_TO_COOK, Clock.from(scheduler)))
                 .build();
-        Processor<String> processor = Processor.create(idMapper, stateMachineFactory,
-                Schedulers.immediate(), scheduler);
+
+        Processor<String> processor = Processor.idMapper(idMapper)
+                .stateMachineFactory(stateMachineFactory)
+                .processingScheduler(Schedulers.immediate()).signalScheduler(scheduler).build();
+
         TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
         processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
         processor.signal(microwave, new ButtonPressed());
