@@ -75,4 +75,33 @@ MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
 };
 ```
 
+The signaller has these methods:
+
+```java
+public interface Signaller {
+
+    void signalToSelf(Event<?> event);
+    
+    void signalToSelf(Event<?> event, long delay, TimeUnit unit);
+
+	<T> void signal(T object, Event<?> event);
+	
+	<T> void signal(T object, Event<?> event, long delay, TimeUnit unit);
+	
+    void cancelSignal(Object from , Object to);
+}
+```
+
+When the *onEntry* procedure is run all signals to self and to others are collected. Upon completion the signals to self are run first in order they were called in the procedure and then the signals to others are run.
+
+At any one time there should only be one outstanding scheduled (non-immediate) signal between object 1 and object 2. This is clearly a pre-requesite for `cancelSignal` to make sense in its present form and is a nice simplification generally.
+
+Signals to self are actioned synchronously but signals to others may be actioned asynchronously.
+
+Rx processing of signals
+-------------------------
+The runtime artifact has optional support for a reactive implementation of the processing of signals using [RxJava](https://github.com/ReactiveX/RxJava).
+
+
+
 
