@@ -54,6 +54,14 @@ public final class Processor<Id> {
         return new Builder<Id>().stateMachineFactory(stateMachineFactory);
     }
 
+    public static <Id> Builder<Id> signalScheduler(Scheduler signalScheduler) {
+        return new Builder<Id>().signalScheduler(signalScheduler);
+    }
+
+    public static <Id> Builder<Id> processingScheduler(Scheduler processingScheduler) {
+        return new Builder<Id>().processingScheduler(processingScheduler);
+    }
+
     public static class Builder<Id> {
 
         private Func1<Object, Id> idMapper;
