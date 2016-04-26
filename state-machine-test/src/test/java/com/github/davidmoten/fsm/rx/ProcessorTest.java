@@ -33,30 +33,14 @@ public class ProcessorTest {
     public void testRxProcessor() throws InterruptedException {
         // special scheduler that we will use to schedule signals
         TestScheduler signalScheduler = new TestScheduler();
-        Microwave microwave = new Microwave("1");
-        MicrowaveBehaviour behaviour = createMicrowaveBehaviour();
 
-        // define how a deterministic primary identifier is created from an
-        // object (primary key)
-        IdMapper<String> idMapper = IdMapper.cls(Microwave.class).hasMapper(x -> x.id()).build();
-
-        // define how to instantiate state machines from identifiers
-        Func2<Class<?>, String, EntityStateMachine<?>> stateMachineFactory = StateMachineFactory
-                .cls(Microwave.class)
-                .<String> hasFactory(id -> MicrowaveStateMachine.create(new Microwave(id),
-                        behaviour, MicrowaveStateMachine.State.READY_TO_COOK,
-                        Clock.from(signalScheduler)))
-                .build();
-
-        // build a processor
-        Processor<String> processor = Processor.idMapper(idMapper)
-                .stateMachineFactory(stateMachineFactory)
-                .processingScheduler(Schedulers.immediate()).signalScheduler(signalScheduler)
-                .build();
+        Processor<String> processor = createProcessor(signalScheduler);
 
         // do some tests with the processor
         TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
         processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
+
+        Microwave microwave = new Microwave("1");
 
         // button is pressed
         processor.signal(microwave, new ButtonPressed());
@@ -95,6 +79,59 @@ public class ProcessorTest {
         processor.onCompleted();
 
         ts.awaitTerminalEvent();
+    }
+
+    @Test
+    public void testCancelSignal() {
+        // special scheduler that we will use to schedule signals
+        TestScheduler signalScheduler = new TestScheduler();
+
+        Processor<String> processor = createProcessor(signalScheduler);
+
+        // do some tests with the processor
+        TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
+        processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
+
+        Microwave microwave = new Microwave("1");
+
+        // button is pressed
+        processor.signal(microwave, new ButtonPressed());
+        ts.assertValueCount(1);
+        assertEquals(MicrowaveStateMachine.State.COOKING, ts.getOnNextEvents().get(0).state());
+        // advance by less time than the timeout
+        signalScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
+        ts.assertValueCount(1);
+        processor.cancelSignal(microwave, microwave);
+
+        // cooking would time out by now if signal had not been cancelled
+        signalScheduler.advanceTimeBy(30, TimeUnit.SECONDS);
+
+        ts.assertValueCount(1);
+        processor.onCompleted();
+        ts.assertNoErrors();
+    }
+
+    private static Processor<String> createProcessor(TestScheduler signalScheduler) {
+        MicrowaveBehaviour behaviour = createMicrowaveBehaviour();
+
+        // define how a deterministic primary identifier is created from an
+        // object (primary key)
+        IdMapper<String> idMapper = IdMapper.cls(Microwave.class).hasMapper(x -> x.id()).build();
+
+        // define how to instantiate state machines from identifiers
+        Func2<Class<?>, String, EntityStateMachine<?>> stateMachineFactory = StateMachineFactory
+                .cls(Microwave.class)
+                .<String> hasFactory(id -> MicrowaveStateMachine.create(new Microwave(id),
+                        behaviour, MicrowaveStateMachine.State.READY_TO_COOK,
+                        Clock.from(signalScheduler)))
+                .build();
+
+        // build a processor
+        Processor<String> processor = Processor.idMapper(idMapper)
+                .stateMachineFactory(stateMachineFactory)
+                .processingScheduler(Schedulers.immediate()).signalScheduler(signalScheduler)
+                .build();
+        return processor;
     }
 
     private static MicrowaveBehaviourBase createMicrowaveBehaviour() {
