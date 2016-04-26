@@ -25,7 +25,7 @@ public class StateMachineFactory<Id> implements Func2<Class<?>, Id, EntityStateM
         private final Class<T> cls;
         private final Builder<Object> builder;
 
-        public Builder2(Class<T> cls, Builder<Object> builder) {
+        private Builder2(Class<T> cls, Builder<Object> builder) {
             this.cls = cls;
             this.builder = builder;
         }
@@ -40,6 +40,10 @@ public class StateMachineFactory<Id> implements Func2<Class<?>, Id, EntityStateM
     public static final class Builder<Id> {
 
         private final Map<Class<?>, Func1<? super Id, EntityStateMachine<?>>> map = new HashMap<>();
+        
+        private Builder() {
+        	//prevent instantiation publicly
+        }
 
         @SuppressWarnings("unchecked")
         private <T> Builder<Id> add(Class<T> cls,
