@@ -16,6 +16,25 @@ public class IdMapper<Id> implements Func1<Object, Id> {
         this.map = new HashMap<>(map);
     }
 
+    public static <T> Builder2<T> cls(Class<T> cls) {
+        return new Builder2<T>(new Builder<Object>(), cls);
+    }
+
+    public static final class Builder2<T> {
+        private final Class<T> cls;
+        private final Builder<?> builder;
+
+        private Builder2(Builder<?> builder, Class<T> cls) {
+            this.builder = builder;
+            this.cls = cls;
+        }
+
+        @SuppressWarnings("unchecked")
+        public <Id> Builder<Id> hasMapper(Func1<T, Id> idMapper) {
+            return ((Builder<Id>) builder).add(cls, idMapper);
+        }
+    }
+
     public static <T, Id> Builder<Id> add(Class<T> cls, Func1<? super T, ? extends Id> idMapper) {
         return new Builder<Id>().add(cls, idMapper);
     }
@@ -23,9 +42,17 @@ public class IdMapper<Id> implements Func1<Object, Id> {
     public static final class Builder<Id> {
         private final Map<Class<?>, Func1<?, ? extends Id>> map = new HashMap<>();
 
+        private Builder() {
+            // prevent instantiation
+        }
+
         public <T> Builder<Id> add(Class<T> cls, Func1<? super T, ? extends Id> idMapper) {
             map.put(cls, idMapper);
             return this;
+        }
+
+        public <T> Builder2<T> cls(Class<T> cls) {
+            return new Builder2<T>(this, cls);
         }
 
         public IdMapper<Id> build() {

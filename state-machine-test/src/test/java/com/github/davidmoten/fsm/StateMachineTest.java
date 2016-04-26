@@ -97,7 +97,7 @@ public class StateMachineTest {
         };
 
         // this is where we define how instances are instantiated and looked up
-        IdMapper<String> idMapper = IdMapper.add(Microwave.class, x -> x.id()).build();
+        IdMapper<String> idMapper = IdMapper.cls(Microwave.class).hasMapper(x -> x.id()).build();
 
         Func2<Class<?>, String, EntityStateMachine<?>> stateMachineFactory = StateMachineFactory
                 .<Microwave, String> add(Microwave.class,
