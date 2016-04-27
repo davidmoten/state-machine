@@ -113,7 +113,7 @@
                 <version>1.6.5</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+                    <skipNexusStagingDeployMojo>false</skipNexusStagingDeployMojo>
                 </configuration>
             </plugin>
         </plugins>
