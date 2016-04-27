@@ -149,58 +149,75 @@ public final class Processor<Id> {
                 EntityStateMachine<?> m = getStateMachine(cls, id);
                 Event<?> event = signals.signalsToSelf.pollLast();
                 if (event != null) {
-                    m = m.signal(event);
-                    // stateMachines.put(id, m);
-                    observer.onNext(m);
-                    List<Event<?>> list = m.signalsToSelf();
-                    for (int i = list.size() - 1; i >= 0; i--) {
-                        signals.signalsToSelf.offerLast(list.get(i));
-                    }
-                    for (Signal<?, ?> signal : m.signalsToOther()) {
-                        signals.signalsToOther.offerFirst(signal);
-                    }
+                    applySignalToSelf(signals, observer, m, event);
                 } else {
-                    Signal<?, ?> signal;
-                    while ((signal = signals.signalsToOther.pollLast()) != null) {
-                        Signal<?, ?> s = signal;
-                        if (signal.isImmediate()) {
-                            subject.onNext(signal);
-                        } else if (signal.event() instanceof CancelTimedSignal) {
-                            Object from = ((CancelTimedSignal) signal.event()).from();
-                            Object to = signal.object();
-                            Subscription sub = subscriptions
-                                    .remove(new IdPair<Id>(idMapper.call(from), idMapper.call(to)));
-                            if (sub != null) {
-                                sub.unsubscribe();
-                            }
-                        } else {
-                            long delayMs = signal.time() - worker.now();
-                            if (delayMs <= 0) {
-                                subject.onNext(signal);
-                            } else {
-                                // record pairwise signal so we can cancel it if
-                                // desired
-                                IdPair<Id> idPair = new IdPair<Id>(id,
-                                        idMapper.call(signal.object()));
-                                long t1 = signalScheduler.now();
-                                Subscription subscription = worker.schedule(() -> {
-                                    subject.onNext(s.now());
-                                } , delayMs, TimeUnit.MILLISECONDS);
-                                long t2 = signalScheduler.now();
-                                worker.schedule(() -> {
-                                    subscriptions.remove(idPair);
-                                } , delayMs - (t2 - t1), TimeUnit.MILLISECONDS);
-                                Subscription previous = subscriptions.put(idPair, subscription);
-                                if (previous != null) {
-                                    previous.unsubscribe();
-                                }
-                            }
-                        }
-                    }
+                    applySignalsToOthers(id, worker, signals);
                     observer.onCompleted();
                 }
                 return signals;
             }
+            
+            private void applySignalToSelf(Signals signals, Observer<? super EntityStateMachine<?>> observer,
+					EntityStateMachine<?> m, Event<?> event) {
+				m = m.signal(event);
+				// stateMachines.put(id, m);
+				observer.onNext(m);
+				List<Event<?>> list = m.signalsToSelf();
+				for (int i = list.size() - 1; i >= 0; i--) {
+				    signals.signalsToSelf.offerLast(list.get(i));
+				}
+				for (Signal<?, ?> signal : m.signalsToOther()) {
+				    signals.signalsToOther.offerFirst(signal);
+				}
+			}
+
+			private void applySignalsToOthers(Id id, Worker worker, Signals signals) {
+				Signal<?, ?> signal;
+				while ((signal = signals.signalsToOther.pollLast()) != null) {
+				    Signal<?, ?> s = signal;
+				    if (signal.isImmediate()) {
+				        subject.onNext(signal);
+				    } else if (signal.event() instanceof CancelTimedSignal) {
+				        cancel(signal);
+				    } else {
+				        long delayMs = signal.time() - worker.now();
+				        if (delayMs <= 0) {
+				            subject.onNext(signal);
+				        } else {
+				            scheduleSignal(id, worker, signal, s, delayMs);
+				        }
+				    }
+				}
+			}
+
+			private void cancel(Signal<?, ?> signal) {
+				Object from = ((CancelTimedSignal) signal.event()).from();
+				Object to = signal.object();
+				Subscription sub = subscriptions
+				        .remove(new IdPair<Id>(idMapper.call(from), idMapper.call(to)));
+				if (sub != null) {
+				    sub.unsubscribe();
+				}
+			}
+			
+			private void scheduleSignal(Id id, Worker worker, Signal<?, ?> signal, Signal<?, ?> s, long delayMs) {
+				// record pairwise signal so we can cancel it if
+				// desired
+				IdPair<Id> idPair = new IdPair<Id>(id,
+				        idMapper.call(signal.object()));
+				long t1 = signalScheduler.now();
+				Subscription subscription = worker.schedule(() -> {
+				    subject.onNext(s.now());
+				} , delayMs, TimeUnit.MILLISECONDS);
+				long t2 = signalScheduler.now();
+				worker.schedule(() -> {
+				    subscriptions.remove(idPair);
+				} , delayMs - (t2 - t1), TimeUnit.MILLISECONDS);
+				Subscription previous = subscriptions.put(idPair, subscription);
+				if (previous != null) {
+				    previous.unsubscribe();
+				}
+			}
         });
 
     }
