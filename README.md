@@ -126,5 +126,5 @@ A popular strategy for dealing with this issue is to use [Event Sourcing](http:/
 Given a stream of events to the state machine, 
 * persist only those events that bring about a transition in the state machine
 * optionally supplement persisted events with a sample of the incoming stream (so that if state machine rules change we can replay). That sample may of course be the full resolution stream.
-* periodically persist the entities in the case when replay using events could be very time-consuming
+* periodically persist the entities in the case when replay using full history of events could be very time-consuming
 
