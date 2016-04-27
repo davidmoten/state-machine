@@ -11,6 +11,7 @@ immutability (though is not opinionated in the sense that if you want to mutate 
 * leverages the simplicity of the Exectuable UML approach
 to state diagrams (one Event type for each State)
 * Maven plugin
+* Not coupled to a persistence mechanism (both a feature and a non-feature!)
 
 Status: *pre-alpha*
 
@@ -114,6 +115,16 @@ Add this artifact to your runtime pom.xml:
 
 [ProcessorTest.java](state-machine-test/src/test/java/com/github/davidmoten/fsm/rx/ProcessorTest.java) demonstrates usage of an Rx processor for a state machine (or set of state machines).
 
+Persistence
+---------------
+For a system to recover properly from failure all signals and state changes should be persisted to media that survives process restarts.
 
+Having had scaling problems with a system that persisted every signal and state change to a database was one of the motivations to develop this project. 
 
+A popular strategy for dealing with this issue is to use [Event Sourcing](http://martinfowler.com/eaaDev/EventSourcing.html) and [CQRS](http://martinfowler.com/bliki/CQRS.html). 
+
+Given a stream of events to the state machine, 
+* persist only those events that bring about a transition in the state machine
+* optionally supplement persisted events with a sample of the incoming stream (so that if state machine rules change we can replay). That sample may of course be the full resolution stream.
+* periodically persist the entities in the case when replay using events could be very time-consuming
 
