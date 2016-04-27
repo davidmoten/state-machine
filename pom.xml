@@ -83,7 +83,6 @@
         <module>state-machine-maven-plugin</module>
         <module>state-machine-test-definition</module>
         <module>state-machine-test</module>
-        <module>for-deploy</module>
     </modules>
 
 </project>

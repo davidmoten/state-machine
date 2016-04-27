@@ -102,7 +102,9 @@
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>${deploy.plugin.version}</version>
                 <configuration>
-                    <skip>true</skip>
+                    <!-- don't skip even though we want to because it is the last -->
+                    <!-- module and deploy will fail if we skip it -->
+                    <skip>false</skip>
                 </configuration>
             </plugin>
             <plugin>
