@@ -19,7 +19,7 @@ public class GraphmlWriter {
         out.println("  <graph id=\"G\" edgedefault=\"directed\">");
 
         for (GraphNode node : graph.getNodes()) {
-            printNode(out, node.name(), node.isEnabled());
+            printNode(out, node.name(), node.longName(), node.isEnabled());
         }
 
         for (GraphEdge edge : graph.getEdges()) {
@@ -33,14 +33,18 @@ public class GraphmlWriter {
 
     }
 
-    private static void printEdge(PrintWriter out, String userId, String id) {
-        out.println("    <edge source=\"" + escapeXml10(userId) + "\" target=\"" + escapeXml10(id)
-                + "\"/>");
+    private static void printEdge(PrintWriter out, String from, String to) {
+        String label = "Out";
+        out.println("    <edge source=\"" + escapeXml10(from) + "\" target=\"" + escapeXml10(to)
+                + "\">");
+        out.println("");
+        out.println("    </edge>");
     }
 
-    private static void printNode(PrintWriter out, String userId, boolean enabled) {
+    private static void printNode(PrintWriter out, String nodeName, String nodeLabel,
+            boolean enabled) {
 
-        boolean isEmail = userId.contains("@");
+        boolean isEmail = nodeName.contains("@");
         String fillColor;
         if (isEmail)
             fillColor = "#80FF00";
@@ -48,14 +52,14 @@ public class GraphmlWriter {
             fillColor = "#FF2A00";
         else
             fillColor = "#FFCC00";
-        out.println("    <node id=\"" + escapeXml10(userId) + "\">");
+        out.println("    <node id=\"" + escapeXml10(nodeName) + "\">");
         out.println("      <data key=\"d1\">");
         out.println("        <y:ShapeNode>");
         out.println(
-                "          <y:Geometry height=\"100.0\" width=\"100.0\" x=\"77.0\" y=\"113.0\"/>\n"
+                "          <y:Geometry height=\"150.0\" width=\"150.0\" x=\"77.0\" y=\"113.0\"/>\n"
                         + "          <y:Fill color=\"" + fillColor + "\" transparent=\"false\"/>\n"
                         + "          <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
-        out.println("          <y:NodeLabel>" + escapeXml10(userId) + "</y:NodeLabel>");
+        out.println("          <y:NodeLabel>" + escapeXml10(nodeLabel) + "</y:NodeLabel>");
         out.println("        </y:ShapeNode>");
         out.println("      </data>");
         out.println("    </node>");

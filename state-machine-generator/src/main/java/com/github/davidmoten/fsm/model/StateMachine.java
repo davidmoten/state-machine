@@ -105,7 +105,9 @@ public final class StateMachine<T> {
     }
 
     public String graphml() {
-        List<GraphNode> nodes = states.stream().map(state -> new GraphNode(state.name(), true))
+        List<GraphNode> nodes = states.stream()
+                .map(state -> new GraphNode(state.name(),
+                        state.name() + "\n[" + state.eventClass().getSimpleName() + "]", true))
                 .collect(Collectors.toList());
         Map<String, GraphNode> map = nodes.stream()
                 .collect(Collectors.toMap(node -> node.name(), node -> node));
