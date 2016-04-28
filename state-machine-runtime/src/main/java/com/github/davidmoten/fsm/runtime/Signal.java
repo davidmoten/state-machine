@@ -1,48 +1,66 @@
 package com.github.davidmoten.fsm.runtime;
 
-public final class Signal<T, R> {
+public final class Signal<T, Id, R> {
 
-	private final T object;
-	private final Event<R> event;
-	private long time;
+    private final Class<T> cls;
+    private final Id id;
+    private final Event<R> event;
+    // TODO use Optional?
+    private final long time;
 
-	private Signal(T object, Event<R> event, long time) {
-		this.object = object;
-		this.event = event;
-		this.time = time;
-	}
+    private Signal(Class<T> cls, Id id, Event<R> event, long time) {
+        this.cls = cls;
+        this.id = id;
+        this.event = event;
+        this.time = time;
+    }
 
-	public static <T, R> Signal<T, R> create(T object, Event<R> event) {
-		return new Signal<T, R>(object, event, Long.MIN_VALUE);
-	}
+    public static <T, Id, R> Signal<T, Id, R> create(Class<T> cls, Id id, Event<R> event) {
+        return new Signal<T, Id, R>(cls, id, event, Long.MIN_VALUE);
+    }
 
-	public static <T, R> Signal<T, R> create(T object, Event<R> event, long time) {
-		return new Signal<T, R>(object, event, time);
-	}
+    public static <T, Id, R> Signal<T, Id, R> create(Class<T> cls, Id id, Event<R> event,
+            long time) {
+        return new Signal<T, Id, R>(cls, id, event, time);
+    }
 
-	public T object() {
-		return object;
-	}
+    public Class<T> cls() {
+        return cls;
+    }
 
-	public Event<R> event() {
-		return event;
-	}
+    public Event<R> event() {
+        return event;
+    }
 
-	public long time() {
-		return time;
-	}
+    public Id id() {
+        return id;
+    }
 
-	public boolean isImmediate() {
-		return time == Long.MIN_VALUE;
-	}
+    public long time() {
+        return time;
+    }
 
-	public Signal<?, ?> now() {
-		return create(object, event);
-	}
+    public boolean isImmediate() {
+        return time == Long.MIN_VALUE;
+    }
 
-	@Override
-	public String toString() {
-		return "Signal [object=" + object + ", event=" + event + ", time=" + (isImmediate() ? "immediate" : time) + "]";
-	}
+    public Signal<T, Id, ?> now() {
+        return create(cls, id, event);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Signal [cls=");
+        builder.append(cls);
+        builder.append(", id=");
+        builder.append(id);
+        builder.append(", event=");
+        builder.append(event);
+        builder.append(", time=");
+        builder.append(time);
+        builder.append("]");
+        return builder.toString();
+    }
 
 }

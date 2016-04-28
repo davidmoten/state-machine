@@ -1,14 +1,21 @@
 package com.github.davidmoten.fsm.runtime;
 
-public final class CancelTimedSignal implements Event<CancelTimedSignal> {
+public final class CancelTimedSignal<Id> implements Event<CancelTimedSignal<Id>> {
 
-	private final Object from;
+    private final Class<?> fromClass;
+    private final Id fromId;
 
-	public CancelTimedSignal(Object from) {
-		this.from = from;
-	}
+    public CancelTimedSignal(Class<?> fromClass, Id fromId) {
+        this.fromClass = fromClass;
+        this.fromId = fromId;
+    }
 
-	public Object from() {
-		return from;
-	}
+    public Class<?> fromClass() {
+        return fromClass;
+    }
+
+    public Id fromId() {
+        return fromId;
+    }
+
 }

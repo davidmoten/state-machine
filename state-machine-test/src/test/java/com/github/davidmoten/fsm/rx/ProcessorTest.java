@@ -43,7 +43,7 @@ public class ProcessorTest {
         Microwave microwave = new Microwave("1");
 
         // button is pressed
-        processor.signal(microwave, new ButtonPressed());
+        processor.signal(Microwave.class, "1", new ButtonPressed());
         ts.assertValueCount(1);
         assertEquals(MicrowaveStateMachine.State.COOKING, ts.getOnNextEvents().get(0).state());
         signalScheduler.advanceTimeBy(29, TimeUnit.SECONDS);
@@ -61,12 +61,12 @@ public class ProcessorTest {
         }
 
         // open the door
-        processor.signal(microwave, new DoorOpened());
+        processor.signal(Microwave.class, "1", new DoorOpened());
         ts.assertValueCount(3);
         assertEquals(MicrowaveStateMachine.State.DOOR_OPEN, ts.getOnNextEvents().get(2).state());
 
         // press the button (will not start cooking)
-        processor.signal(microwave, new ButtonPressed());
+        processor.signal(Microwave.class, "1", new ButtonPressed());
         {
             // should not be a transition
             ts.assertValueCount(4);
@@ -95,20 +95,20 @@ public class ProcessorTest {
         Microwave microwave = new Microwave("1");
 
         // button is pressed
-        processor.signal(microwave, new ButtonPressed());
+        processor.signal(Microwave.class, "1", new ButtonPressed());
         ts.assertValueCount(1);
         assertEquals(MicrowaveStateMachine.State.COOKING, ts.getOnNextEvents().get(0).state());
         // advance by less time than the timeout
         signalScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
         ts.assertValueCount(1);
-        processor.cancelSignal(microwave, microwave);
+        processor.cancelSignalToSelf(Microwave.class, "1");
 
         // cooking would time out by now if signal had not been cancelled
         signalScheduler.advanceTimeBy(30, TimeUnit.SECONDS);
         ts.assertValueCount(1);
 
         // now cancel a non-existent signal to get coverage
-        processor.cancelSignal(microwave, microwave);
+        processor.cancelSignalToSelf(Microwave.class, "1");
         ts.assertValueCount(1);
 
         processor.onCompleted();
@@ -125,14 +125,13 @@ public class ProcessorTest {
         // define how to instantiate state machines from identifiers
         Func2<Class<?>, String, EntityStateMachine<?>> stateMachineFactory = StateMachineFactory
                 .cls(Microwave.class)
-                .<String> hasFactory(id -> MicrowaveStateMachine.create(new Microwave(id),
+                .<String> hasFactory(id -> MicrowaveStateMachine.create(new Microwave(id), id,
                         behaviour, MicrowaveStateMachine.State.READY_TO_COOK,
                         Clock.from(signalScheduler)))
                 .build();
 
         // build a processor
-        Processor<String> processor = Processor.idMapper(idMapper)
-                .stateMachineFactory(stateMachineFactory)
+        Processor<String> processor = Processor.stateMachineFactory(stateMachineFactory)
                 .processingScheduler(Schedulers.immediate()).signalScheduler(signalScheduler)
                 .build();
         return processor;
