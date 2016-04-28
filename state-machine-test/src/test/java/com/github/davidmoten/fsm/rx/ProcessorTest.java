@@ -18,6 +18,7 @@ import com.github.davidmoten.fsm.example.microwave.TimerTimesOut;
 import com.github.davidmoten.fsm.runtime.Clock;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Signaller;
+import com.github.davidmoten.fsm.runtime.rx.ClassId;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 import com.github.davidmoten.fsm.runtime.rx.StateMachineFactory;
 
@@ -39,8 +40,10 @@ public class ProcessorTest {
         TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
         processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
 
+        ClassId<String> microwave = ClassId.create(Microwave.class, "1");
+
         // button is pressed
-        processor.signal(Microwave.class, "1", new ButtonPressed());
+        processor.signal(microwave, new ButtonPressed());
         ts.assertValueCount(1);
         assertEquals(MicrowaveStateMachine.State.COOKING, ts.getOnNextEvents().get(0).state());
         signalScheduler.advanceTimeBy(29, TimeUnit.SECONDS);
@@ -58,12 +61,12 @@ public class ProcessorTest {
         }
 
         // open the door
-        processor.signal(Microwave.class, "1", new DoorOpened());
+        processor.signal(microwave, new DoorOpened());
         ts.assertValueCount(3);
         assertEquals(MicrowaveStateMachine.State.DOOR_OPEN, ts.getOnNextEvents().get(2).state());
 
         // press the button (will not start cooking)
-        processor.signal(Microwave.class, "1", new ButtonPressed());
+        processor.signal(microwave, new ButtonPressed());
         {
             // should not be a transition
             ts.assertValueCount(4);
@@ -89,21 +92,23 @@ public class ProcessorTest {
         TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
         processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
 
+        ClassId<String> microwave = ClassId.create(Microwave.class, "1");
+
         // button is pressed
-        processor.signal(Microwave.class, "1", new ButtonPressed());
+        processor.signal(microwave, new ButtonPressed());
         ts.assertValueCount(1);
         assertEquals(MicrowaveStateMachine.State.COOKING, ts.getOnNextEvents().get(0).state());
         // advance by less time than the timeout
         signalScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
         ts.assertValueCount(1);
-        processor.cancelSignalToSelf(Microwave.class, "1");
+        processor.cancelSignalToSelf(microwave);
 
         // cooking would time out by now if signal had not been cancelled
         signalScheduler.advanceTimeBy(30, TimeUnit.SECONDS);
         ts.assertValueCount(1);
 
         // now cancel a non-existent signal to get coverage
-        processor.cancelSignalToSelf(Microwave.class, "1");
+        processor.cancelSignalToSelf(microwave);
         ts.assertValueCount(1);
 
         processor.onCompleted();

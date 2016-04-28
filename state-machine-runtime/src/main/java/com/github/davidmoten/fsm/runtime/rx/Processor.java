@@ -255,4 +255,8 @@ public final class Processor<Id> {
         cancelSignal(cls, id, cls, id);
     }
 
+    public void cancelSignalToSelf(ClassId<Id> cid) {
+        cancelSignalToSelf(cid.cls(), cid.id());
+    }
+
 }

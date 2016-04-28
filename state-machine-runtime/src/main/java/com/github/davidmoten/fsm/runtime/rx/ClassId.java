@@ -9,6 +9,10 @@ public final class ClassId<Id> {
         this.id = id;
     }
 
+    public static <T> ClassId<T> create(Class<?> cls, T id) {
+        return new ClassId<T>(cls, id);
+    }
+
     public Class<?> cls() {
         return cls;
     }
