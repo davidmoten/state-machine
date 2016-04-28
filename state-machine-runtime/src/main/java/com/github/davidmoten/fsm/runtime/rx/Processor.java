@@ -230,6 +230,10 @@ public final class Processor<Id> {
         subject.onNext(Signal.create(cls, id, event));
     }
 
+    public <T> void signal(ClassId<Id> cid, Event<T> event) {
+        subject.onNext(Signal.create(cid.cls(), cid.id(), event));
+    }
+
     @SuppressWarnings("unchecked")
     public <T> ObjectState<T> get(Class<T> cls, Id id) {
         return (EntityStateMachine<T>) stateMachines.get(new ClassId<Id>(cls, id));

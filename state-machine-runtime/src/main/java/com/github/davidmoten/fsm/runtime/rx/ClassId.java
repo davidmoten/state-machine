@@ -1,10 +1,10 @@
 package com.github.davidmoten.fsm.runtime.rx;
 
-final class ClassId<Id> {
+public final class ClassId<Id> {
     final Class<?> cls;
     final Id id;
 
-    ClassId(Class<?> cls, Id id) {
+    public ClassId(Class<?> cls, Id id) {
         this.cls = cls;
         this.id = id;
     }
