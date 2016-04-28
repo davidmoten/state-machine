@@ -18,7 +18,6 @@ import com.github.davidmoten.fsm.example.microwave.TimerTimesOut;
 import com.github.davidmoten.fsm.runtime.Clock;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Signaller;
-import com.github.davidmoten.fsm.runtime.rx.IdMapper;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 import com.github.davidmoten.fsm.runtime.rx.StateMachineFactory;
 
@@ -39,8 +38,6 @@ public class ProcessorTest {
         // do some tests with the processor
         TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
         processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
-
-        Microwave microwave = new Microwave("1");
 
         // button is pressed
         processor.signal(Microwave.class, "1", new ButtonPressed());
@@ -92,8 +89,6 @@ public class ProcessorTest {
         TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
         processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
 
-        Microwave microwave = new Microwave("1");
-
         // button is pressed
         processor.signal(Microwave.class, "1", new ButtonPressed());
         ts.assertValueCount(1);
@@ -117,10 +112,6 @@ public class ProcessorTest {
 
     private static Processor<String> createProcessor(TestScheduler signalScheduler) {
         MicrowaveBehaviour behaviour = createMicrowaveBehaviour();
-
-        // define how a deterministic primary identifier is created from an
-        // object (primary key)
-        IdMapper<String> idMapper = IdMapper.cls(Microwave.class).hasMapper(x -> x.id()).build();
 
         // define how to instantiate state machines from identifiers
         Func2<Class<?>, String, EntityStateMachine<?>> stateMachineFactory = StateMachineFactory
