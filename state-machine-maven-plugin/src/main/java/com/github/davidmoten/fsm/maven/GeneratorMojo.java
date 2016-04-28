@@ -1,6 +1,8 @@
 package com.github.davidmoten.fsm.maven;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -24,6 +26,9 @@ public class GeneratorMojo extends AbstractMojo {
     @Parameter(name = "outputDirectory", defaultValue = "${project.build.directory}/generated-sources/java")
     File outputDirectory;
 
+    @Parameter(name = "diagramsDirectory", defaultValue = "${project.build.directory}/diagrams")
+    File diagramsDirectory;
+
     @SuppressWarnings("unchecked")
     @Override
     public void execute() throws MojoExecutionException {
@@ -37,7 +42,20 @@ public class GeneratorMojo extends AbstractMojo {
         List<StateMachine<?>> machines = supplier.get();
         for (StateMachine<?> machine : machines) {
             machine.generateClasses(outputDirectory, packageName);
+            generateGraphml(machine);
         }
         getLog().info("generated classes in " + outputDirectory + " with package " + packageName);
+    }
+
+    private void generateGraphml(StateMachine<?> machine) {
+        diagramsDirectory.mkdirs();
+        File gml = new File(diagramsDirectory,
+                machine.cls().getCanonicalName().replace("$", ".") + ".graphml");
+        try (PrintWriter out = new PrintWriter(gml)) {
+            out.println(machine.graphml());
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        getLog().info("generated graphml file for import to yed (for instance): " + gml);
     }
 }

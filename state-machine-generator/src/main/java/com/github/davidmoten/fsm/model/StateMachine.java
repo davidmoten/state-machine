@@ -7,8 +7,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.github.davidmoten.fsm.graph.Graph;
+import com.github.davidmoten.fsm.graph.GraphEdge;
+import com.github.davidmoten.fsm.graph.GraphNode;
+import com.github.davidmoten.fsm.graph.GraphmlWriter;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.EventVoid;
 import com.github.davidmoten.guavamini.Preconditions;
@@ -95,6 +101,23 @@ public final class StateMachine<T> {
         out.println("</body>");
         out.println("</html>");
         out.close();
+        return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    public String graphml() {
+        List<GraphNode> nodes = states.stream().map(state -> new GraphNode(state.name(), true))
+                .collect(Collectors.toList());
+        Map<String, GraphNode> map = nodes.stream()
+                .collect(Collectors.toMap(node -> node.name(), node -> node));
+        List<GraphEdge> edges = transitions.stream().map(t -> {
+            GraphNode from = map.get(t.from().name());
+            GraphNode to = map.get(t.to().name());
+            return new GraphEdge(from, to);
+        }).collect(Collectors.toList());
+        Graph graph = new Graph(nodes, edges);
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        PrintWriter out = new PrintWriter(bytes);
+        new GraphmlWriter().printGraphml(out, graph);
         return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
     }
 
