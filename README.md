@@ -70,7 +70,7 @@ When a transition occurs in a state machine from state A to state B, the transit
 MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
     @Override
     public Microwave onEntry_Cooking(Signaller signaller, Microwave microwave,
-            ButtonPressed event) {
+            Object id, ButtonPressed event) {
         signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
         return microwave;
     }
@@ -86,11 +86,11 @@ public interface Signaller {
     
     void signalToSelf(Event<?> event, long delay, TimeUnit unit);
 
-	<T> void signal(T object, Event<?> event);
+	<T> void signal(Class<T> cls, Object id, Event<?> event);
 	
-	<T> void signal(T object, Event<?> event, long delay, TimeUnit unit);
+	<T> void signal(Class<T> cls, Object id, Event<?> event, long delay, TimeUnit unit);
 	
-    void cancelSignal(Object from , Object to);
+    void cancelSignal(Class<?> fromClass, Object fromId, Class<?> toClass, Object toId);
 }
 ```
 
