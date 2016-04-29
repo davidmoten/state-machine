@@ -34,11 +34,8 @@ public class GraphmlWriter {
     }
 
     private static void printEdge(PrintWriter out, String from, String to) {
-        String label = "Out";
         out.println("    <edge source=\"" + escapeXml10(from) + "\" target=\"" + escapeXml10(to)
-                + "\">");
-        out.println("");
-        out.println("    </edge>");
+                + "\"/>");
     }
 
     private static void printNode(PrintWriter out, String nodeName, String nodeLabel,
