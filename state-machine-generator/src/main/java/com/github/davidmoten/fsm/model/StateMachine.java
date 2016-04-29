@@ -88,7 +88,7 @@ public final class StateMachine<T> {
         out.println("<style>");
         out.println("table {border-collapse: collapse;}\n"
                 + "table, th, td {border: 1px solid black;}");
-        out.println(".transition {backround-color: green}");
+        out.println(".transition {background-color: #ADE2A7}");
         out.println("</style>");
         out.println("</head>");
         out.println("<body>");

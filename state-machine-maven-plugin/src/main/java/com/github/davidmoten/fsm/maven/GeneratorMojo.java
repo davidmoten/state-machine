@@ -26,10 +26,10 @@ public class GeneratorMojo extends AbstractMojo {
     @Parameter(name = "outputDirectory", defaultValue = "${project.build.directory}/generated-sources/java")
     File outputDirectory;
 
-    @Parameter(name = "diagramsDirectory", defaultValue = "${project.build.directory}/diagrams")
+    @Parameter(name = "diagramsDirectory", defaultValue = "${project.build.directory}/state-machine-docs")
     File diagramsDirectory;
 
-    @Parameter(name = "htmlDirectory", defaultValue = "${project.build.directory}/html")
+    @Parameter(name = "htmlDirectory", defaultValue = "${project.build.directory}/state-machine-docs")
     File htmlDirectory;
 
     @SuppressWarnings("unchecked")
