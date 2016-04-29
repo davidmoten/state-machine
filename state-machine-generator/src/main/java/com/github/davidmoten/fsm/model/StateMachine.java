@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -83,11 +84,19 @@ public final class StateMachine<T> {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintWriter out = new PrintWriter(bytes);
         out.println("<html/>");
+        out.println("<head>");
+        out.println("<style>");
+        out.println("table {border-collapse: collapse;}\n"
+                + "table, th, td {border: 1px solid black;}");
+        out.println(".transition {backround-color: green}");
+        out.println("</style>");
+        out.println("</head>");
         out.println("<body>");
         // states
         out.println("<h2>States</h2>");
-        states.stream().map(state -> state.name()).sorted()
-                .forEach(state -> out.println("<p class=\"state\"><b>" + state + "</b></p>"));
+        Comparator<State<?>> comparator = (a, b) -> a.name().compareTo(b.name());
+        states.stream().sorted(comparator).forEach(state -> out.println("<p class=\"state\"><b>"
+                + state.name() + "</b> [" + state.eventClass().getSimpleName() + "]</p>"));
 
         // events
         out.println("<h2>Events</h2>");
@@ -98,10 +107,44 @@ public final class StateMachine<T> {
         // transition table
         // state onEntry template
 
+        out.println("<h2>Transitions</h2>");
+        out.println("<table>");
+        out.print("<tr><th/>");
+        states.stream().sorted(comparator).forEach(state -> {
+            out.print("<th>" + state.name() + "</th>");
+        });
+        out.println("</tr>");
+        states.stream().sorted(comparator).forEach(state -> {
+            out.print("<tr><th>" + state.name() + "</th>");
+            states.stream().sorted(comparator).forEach(st -> {
+                boolean hasTransition = transitions.stream()
+                        .anyMatch(t -> t.from().name().equals(state.name())
+                                && t.to().name().equals(st.name()));
+                if (hasTransition) {
+                    out.print("<td class=\"transition\">"
+                            + camelCaseToSpaced(st.eventClass().getSimpleName()) + "</td>");
+                } else {
+                    out.print("<td></td>");
+                }
+            });
+            out.println("</tr>");
+        });
+        out.println("</table>");
+
         out.println("</body>");
         out.println("</html>");
         out.close();
         return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    private static String camelCaseToSpaced(String s) {
+        return s.chars().mapToObj(ch -> {
+            if (ch >= 'A' && ch <= 'Z') {
+                return " " + (char) ch;
+            } else {
+                return "" + (char) ch;
+            }
+        }).collect(Collectors.joining(""));
     }
 
     public String graphml() {

@@ -29,6 +29,9 @@ public class GeneratorMojo extends AbstractMojo {
     @Parameter(name = "diagramsDirectory", defaultValue = "${project.build.directory}/diagrams")
     File diagramsDirectory;
 
+    @Parameter(name = "htmlDirectory", defaultValue = "${project.build.directory}/html")
+    File htmlDirectory;
+
     @SuppressWarnings("unchecked")
     @Override
     public void execute() throws MojoExecutionException {
@@ -43,8 +46,22 @@ public class GeneratorMojo extends AbstractMojo {
         for (StateMachine<?> machine : machines) {
             machine.generateClasses(outputDirectory, packageName);
             generateGraphml(machine);
+            generateHtml(machine);
         }
         getLog().info("generated classes in " + outputDirectory + " with package " + packageName);
+    }
+
+    private void generateHtml(StateMachine<?> machine) {
+        htmlDirectory.mkdirs();
+        File gml = new File(htmlDirectory,
+                machine.cls().getCanonicalName().replace("$", ".") + ".html");
+        try (PrintWriter out = new PrintWriter(gml)) {
+            out.println(machine.documentationHtml());
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        getLog().info("generated graphml file for import to yed (for instance): " + gml);
+
     }
 
     private void generateGraphml(StateMachine<?> machine) {
