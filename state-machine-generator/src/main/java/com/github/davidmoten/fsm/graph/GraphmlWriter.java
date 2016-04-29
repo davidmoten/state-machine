@@ -62,7 +62,7 @@ public class GraphmlWriter {
         out.println("      <data key=\"d1\">");
         out.println("        <y:ShapeNode>");
         out.println(
-                "          <y:Geometry height=\"150.0\" width=\"250.0\" x=\"77.0\" y=\"113.0\"/>\n"
+                "          <y:Geometry height=\"150.0\" width=\"280.0\" x=\"77.0\" y=\"113.0\"/>\n"
                         + "          <y:Fill color=\"" + fillColor + "\" transparent=\"false\"/>\n"
                         + "          <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
         out.println("          <y:NodeLabel>"
