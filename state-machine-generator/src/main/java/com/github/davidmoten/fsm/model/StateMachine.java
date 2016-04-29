@@ -40,7 +40,7 @@ public final class StateMachine<T> {
         return cls;
     }
 
-    public <R> State<R> state(String name, Class<? extends Event<R>> eventClass) {
+    public <R> State<R> createState(String name, Class<? extends Event<R>> eventClass) {
         Preconditions.checkNotNull(name);
         if (name.equals("Initial")) {
             name = name.concat("_1");
@@ -95,8 +95,10 @@ public final class StateMachine<T> {
         // states
         out.println("<h2>States</h2>");
         Comparator<State<?>> comparator = (a, b) -> a.name().compareTo(b.name());
-        states.stream().sorted(comparator).forEach(state -> out.println("<p class=\"state\"><b>"
-                + state.name() + "</b> [" + state.eventClass().getSimpleName() + "]</p>"));
+        states.stream().sorted(comparator)
+                .forEach(state -> out.println("<p class=\"state\"><b>" + state.name() + "</b> ["
+                        + state.eventClass().getSimpleName() + "]</p>"
+                        + state.documentation().orElse("")));
 
         // events
         out.println("<h2>Events</h2>");

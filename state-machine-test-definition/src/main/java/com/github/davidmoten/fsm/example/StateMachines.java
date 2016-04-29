@@ -32,18 +32,18 @@ public class StateMachines implements Supplier<List<StateMachine<?>>> {
         StateMachine<Ship> m = StateMachine.create(Ship.class);
 
         // create states (with the event used to transition to it)
-        State<Void> neverOutside = m.state("Never Outside", Create.class);
-        State<Out> outside = m.state("Outside", Out.class);
-        State<In> insideNotRisky = m.state("Inside Not Risky", In.class);
-        State<Risky> insideRisky = m.state("Inside Risky", Risky.class);
-        State<NotRisky> insideNotRiskyAlreadyNotified = m.state("Inside Not Risky Already Notified",
+        State<Void> neverOutside = m.createState("Never Outside", Create.class);
+        State<Out> outside = m.createState("Outside", Out.class);
+        State<In> insideNotRisky = m.createState("Inside Not Risky", In.class);
+        State<Risky> insideRisky = m.createState("Inside Risky", Risky.class);
+        State<NotRisky> insideNotRiskyAlreadyNotified = m.createState("Inside Not Risky Already Notified",
                 NotRisky.class);
-        State<Out> departed = m.state("Departed", Out.class);
-        State<NextPort> departedToPort = m.state("Departed To Port", NextPort.class);
-        State<NextPortUnknown> departedToUnknownPort = m.state("Departed To Unknown Port",
+        State<Out> departed = m.createState("Departed", Out.class);
+        State<NextPort> departedToPort = m.createState("Departed To Port", NextPort.class);
+        State<NextPortUnknown> departedToUnknownPort = m.createState("Departed To Unknown Port",
                 NextPortUnknown.class);
-        State<Risky> notifiedNextPort = m.state("Notified Next Port", Risky.class);
-        State<NotRisky> departedToPortNotRisky = m.state("Departed To Port Not Risky",
+        State<Risky> notifiedNextPort = m.createState("Notified Next Port", Risky.class);
+        State<NotRisky> departedToPortNotRisky = m.createState("Departed To Port Not Risky",
                 NotRisky.class);
 
         // create transitions and generate classes
@@ -60,11 +60,11 @@ public class StateMachines implements Supplier<List<StateMachine<?>>> {
 
     private static StateMachine<Microwave> createMicrowaveStateMachine() {
         StateMachine<Microwave> m = StateMachine.create(Microwave.class);
-        State<DoorClosed> readyToCook = m.state("Ready to Cook", DoorClosed.class);
-        State<DoorOpened> doorOpen = m.state("Door Open", DoorOpened.class);
-        State<ButtonPressed> cooking = m.state("Cooking", ButtonPressed.class);
-        State<DoorOpened> cookingInterruped = m.state("Cooking Interrupted", DoorOpened.class);
-        State<TimerTimesOut> cookingComplete = m.state("Cooking Complete", TimerTimesOut.class);
+        State<DoorClosed> readyToCook = m.createState("Ready to Cook", DoorClosed.class);
+        State<DoorOpened> doorOpen = m.createState("Door Open", DoorOpened.class);
+        State<ButtonPressed> cooking = m.createState("Cooking", ButtonPressed.class);
+        State<DoorOpened> cookingInterruped = m.createState("Cooking Interrupted", DoorOpened.class);
+        State<TimerTimesOut> cookingComplete = m.createState("Cooking Complete", TimerTimesOut.class);
 
         readyToCook.to(cooking).to(cookingInterruped).to(
                 readyToCook.from(doorOpen.from(readyToCook).from(cookingComplete.from(cooking))));

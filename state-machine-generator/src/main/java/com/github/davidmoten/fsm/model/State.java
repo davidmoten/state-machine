@@ -1,6 +1,7 @@
 package com.github.davidmoten.fsm.model;
 
 import java.io.File;
+import java.util.Optional;
 
 import com.github.davidmoten.fsm.runtime.Event;
 
@@ -10,6 +11,7 @@ public final class State<T> {
     private final Class<? extends Event<T>> eventClass;
     private final StateMachine<?> m;
     private boolean isCreationDestination;
+    private Optional<String> documentation = Optional.empty();
 
     public State(StateMachine<?> m, String name, Class<? extends Event<T>> eventClass) {
         this.m = m;
@@ -23,6 +25,10 @@ public final class State<T> {
 
     public String name() {
         return name;
+    }
+
+    public Optional<String> documentation() {
+        return documentation;
     }
 
     public StateMachine<?> stateMachine() {
@@ -42,6 +48,11 @@ public final class State<T> {
     public State<T> initial() {
         isCreationDestination = true;
         m.addInitialTransition(this);
+        return this;
+    }
+
+    public State<T> documentation(String html) {
+        this.documentation = Optional.of(html);
         return this;
     }
 
