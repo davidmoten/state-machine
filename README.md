@@ -26,11 +26,11 @@ The definition looks like this:
 
 ```java
 StateMachine<Microwave> m = StateMachine.create(Microwave.class);
-State<DoorClosed> readyToCook = m.state("Ready to Cook", DoorClosed.class);
-State<DoorOpened> doorOpen = m.state("Door Open", DoorOpened.class);
-State<ButtonPressed> cooking = m.state("Cooking", ButtonPressed.class);
-State<DoorOpened> cookingInterruped = m.state("Cooking Interrupted", DoorOpened.class);
-State<TimerTimesOut> cookingComplete = m.state("Cooking Complete", TimerTimesOut.class);
+State<DoorClosed> readyToCook = m.createState("Ready to Cook", DoorClosed.class);
+State<DoorOpened> doorOpen = m.createState("Door Open", DoorOpened.class);
+State<ButtonPressed> cooking = m.createState("Cooking", ButtonPressed.class);
+State<DoorOpened> cookingInterruped = m.createState("Cooking Interrupted", DoorOpened.class);
+State<TimerTimesOut> cookingComplete = m.createState("Cooking Complete", TimerTimesOut.class);
 
 readyToCook
   .to(cooking)
