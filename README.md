@@ -11,7 +11,7 @@ immutability (though is not opinionated in the sense that if you want to mutate 
 * leverages the simplicity of the Exectuable UML approach
 to state diagrams (one Event type for each State)
 * Maven plugin
-* Not coupled to a persistence mechanism (both a feature and a non-feature!)
+* Not coupled to a storage mechanism (both a feature and a non-feature!)
 * optional reactive API using [RxJava](https://github.com/ReactiveX/RxJava)
 
 Status: *pre-alpha*
