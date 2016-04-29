@@ -21,7 +21,7 @@ public class GraphmlWriter {
         out.println("  <graph id=\"G\" edgedefault=\"directed\">");
 
         for (GraphNode node : graph.getNodes()) {
-            printNode(out, node.name(), node.longName(), node.isEnabled());
+            printNode(out, node.name());
         }
 
         for (GraphEdge edge : graph.getEdges()) {
@@ -56,17 +56,8 @@ public class GraphmlWriter {
         out.println("    </edge>");
     }
 
-    private static void printNode(PrintWriter out, String nodeName, String nodeLabel,
-            boolean enabled) {
-
-        boolean isEmail = nodeName.contains("@");
-        String fillColor;
-        if (isEmail)
-            fillColor = "#80FF00";
-        else if (!enabled)
-            fillColor = "#F3F2C0";
-        else
-            fillColor = "#FFCC00";
+    private static void printNode(PrintWriter out, String nodeName) {
+        String fillColor = "#F3F2C0";
         out.println("    <node id=\"" + escapeXml10(nodeName) + "\">");
         out.println("      <data key=\"d1\">");
         out.println("        <y:ShapeNode>");
@@ -74,7 +65,7 @@ public class GraphmlWriter {
                 "          <y:Geometry height=\"150.0\" width=\"150.0\" x=\"77.0\" y=\"113.0\"/>\n"
                         + "          <y:Fill color=\"" + fillColor + "\" transparent=\"false\"/>\n"
                         + "          <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
-        out.println("          <y:NodeLabel>" + escapeXml10(nodeLabel) + "</y:NodeLabel>");
+        out.println("          <y:NodeLabel>" + escapeXml10(nodeName) + "</y:NodeLabel>");
         out.println("        </y:ShapeNode>");
         out.println("      </data>");
         out.println("    </node>");
