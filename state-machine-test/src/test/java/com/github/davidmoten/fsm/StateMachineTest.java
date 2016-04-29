@@ -32,19 +32,19 @@ public class StateMachineTest {
         ShipBehaviour shipBehaviour = new ShipBehaviourBase() {
 
             @Override
-            public Ship onEntry_Outside(Signaller signaller, Ship ship, Out out) {
+            public Ship onEntry_Outside(Signaller signaller, Ship ship, Object id, Out out) {
                 list.add(1);
                 return new Ship(ship.imo(), ship.mmsi(), out.lat, out.lon);
             }
 
             @Override
-            public Ship onEntry_NeverOutside(Signaller signaller, Create created) {
+            public Ship onEntry_NeverOutside(Signaller signaller, Object id, Create created) {
                 list.add(2);
                 return ship;
             }
 
             @Override
-            public Ship onEntry_InsideNotRisky(Signaller signaller, Ship ship, In in) {
+            public Ship onEntry_InsideNotRisky(Signaller signaller, Ship ship, Object id, In in) {
                 list.add(3);
                 return new Ship(ship.imo(), ship.mmsi(), in.lat, in.lon);
             }

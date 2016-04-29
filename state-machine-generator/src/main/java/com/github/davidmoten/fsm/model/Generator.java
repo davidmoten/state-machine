@@ -139,14 +139,15 @@ public final class Generator<T> {
             indent.right();
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
                 if (state.isCreationDestination()) {
-                    out.format("%s%s %s(%s signaller, %s event);\n", indent, imports.add(cls),
-                            onEntryMethodName(state), imports.add(Signaller.class),
+                    out.format("%s%s %s(%s signaller, %s id, %s event);\n", indent,
+                            imports.add(cls), onEntryMethodName(state),
+                            imports.add(Signaller.class), imports.add(Object.class),
                             imports.add(state.eventClass()));
                 } else {
-                    out.format("%s%s %s(%s signaller, %s %s, %s event);\n", indent,
+                    out.format("%s%s %s(%s signaller, %s %s, %s id, %s event);\n", indent,
                             imports.add(cls), onEntryMethodName(state),
                             imports.add(Signaller.class), imports.add(cls), instanceName(),
-                            imports.add(state.eventClass()));
+                            imports.add(Object.class), imports.add(state.eventClass()));
                 }
                 out.println();
             });
@@ -180,10 +181,10 @@ public final class Generator<T> {
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
                 if (!state.isCreationDestination()) {
                     out.format("%s@%s\n", indent, imports.add(Override.class));
-                    out.format("%spublic %s %s(%s signaller, %s %s, %s event) {\n", indent,
+                    out.format("%spublic %s %s(%s signaller, %s %s, %s id, %s event) {\n", indent,
                             imports.add(cls), onEntryMethodName(state),
                             imports.add(Signaller.class), imports.add(cls), instanceName(),
-                            imports.add(state.eventClass()));
+                            imports.add(Object.class), imports.add(state.eventClass()));
                     out.format("%sreturn %s;\n", indent.right(), instanceName());
                     out.format("%s}\n", indent.left());
                     out.println();
@@ -349,12 +350,12 @@ public final class Generator<T> {
                 out.format("%sState nextState = State.%s;\n", indent.right(),
                         stateConstant(t.to()));
                 if (t.from().name().equals("Initial")) {
-                    out.format("%s%s nextObject = behaviour.%s(this, (%s) event);\n", indent,
-                            imports.add(cls), onEntryMethodName(t.to()),
+                    out.format("%s%s nextObject = behaviour.%s(this, this.id, (%s) event);\n",
+                            indent, imports.add(cls), onEntryMethodName(t.to()),
                             imports.add(t.to().eventClass()));
                 } else {
-                    out.format("%s%s nextObject = behaviour.%s(this, %s, (%s) event);\n", indent,
-                            imports.add(cls), onEntryMethodName(t.to()), instanceName(),
+                    out.format("%s%s nextObject = behaviour.%s(this, %s, this.id, (%s) event);\n",
+                            indent, imports.add(cls), onEntryMethodName(t.to()), instanceName(),
                             imports.add(t.to().eventClass()));
                 }
                 out.format(
