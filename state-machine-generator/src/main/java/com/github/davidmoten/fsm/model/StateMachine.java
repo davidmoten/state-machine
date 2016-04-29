@@ -150,15 +150,14 @@ public final class StateMachine<T> {
 
     public String graphml() {
         List<GraphNode> nodes = states.stream()
-                .map(state -> new GraphNode(state.name(),
-                        state.name() + "\n[" + state.eventClass().getSimpleName() + "]", true))
+                .map(state -> new GraphNode(state.name(), state.name(), true))
                 .collect(Collectors.toList());
         Map<String, GraphNode> map = nodes.stream()
                 .collect(Collectors.toMap(node -> node.name(), node -> node));
         List<GraphEdge> edges = transitions.stream().map(t -> {
             GraphNode from = map.get(t.from().name());
             GraphNode to = map.get(t.to().name());
-            return new GraphEdge(from, to);
+            return new GraphEdge(from, to, t.to().eventClass().getSimpleName());
         }).collect(Collectors.toList());
         Graph graph = new Graph(nodes, edges);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
