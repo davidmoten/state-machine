@@ -102,7 +102,8 @@ public final class StateMachine<T> {
         out.println("<h2>Events</h2>");
         states.stream().filter(state -> !state.isInitial())
                 .map(state -> state.eventClass().getSimpleName()).distinct().sorted()
-                .forEach(event -> out.println("<p class=\"event\"><i>" + event + "</i></p>"));
+                .forEach(event -> out
+                        .println("<p class=\"event\"><i>" + camelCaseToSpaced(event) + "</i></p>"));
 
         // transition table
         // state onEntry template
