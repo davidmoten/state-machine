@@ -1,5 +1,6 @@
 package com.github.davidmoten.fsm.maven;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -12,6 +13,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import com.github.davidmoten.fsm.graph.NodeOptions;
 import com.github.davidmoten.fsm.model.StateMachine;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
@@ -31,6 +33,15 @@ public class GeneratorMojo extends AbstractMojo {
 
     @Parameter(name = "htmlDirectory", defaultValue = "${project.build.directory}/state-machine-docs")
     File htmlDirectory;
+
+    @Parameter(name = "nodeWidth", defaultValue = "280")
+    Float nodeWidth;
+
+    @Parameter(name = "nodeHeight", defaultValue = "150")
+    Float nodeHeight;
+
+    @Parameter(name = "nodeBackgroundColor", defaultValue = "#")
+    String nodeBackgroundColor;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -69,7 +80,8 @@ public class GeneratorMojo extends AbstractMojo {
         File gml = new File(diagramsDirectory,
                 machine.cls().getCanonicalName().replace("$", ".") + ".graphml");
         try (PrintWriter out = new PrintWriter(gml)) {
-            out.println(machine.graphml());
+            out.println(machine.graphml((node -> new NodeOptions(nodeWidth, nodeHeight,
+                    Color.decode(nodeBackgroundColor)))));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
