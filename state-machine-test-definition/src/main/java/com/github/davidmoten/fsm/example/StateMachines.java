@@ -36,8 +36,8 @@ public class StateMachines implements Supplier<List<StateMachine<?>>> {
         State<Out> outside = m.createState("Outside", Out.class);
         State<In> insideNotRisky = m.createState("Inside Not Risky", In.class);
         State<Risky> insideRisky = m.createState("Inside Risky", Risky.class);
-        State<NotRisky> insideNotRiskyAlreadyNotified = m.createState("Inside Not Risky Already Notified",
-                NotRisky.class);
+        State<NotRisky> insideNotRiskyAlreadyNotified = m
+                .createState("Inside Not Risky Already Notified", NotRisky.class);
         State<Out> departed = m.createState("Departed", Out.class);
         State<NextPort> departedToPort = m.createState("Departed To Port", NextPort.class);
         State<NextPortUnknown> departedToUnknownPort = m.createState("Departed To Unknown Port",
@@ -60,11 +60,17 @@ public class StateMachines implements Supplier<List<StateMachine<?>>> {
 
     private static StateMachine<Microwave> createMicrowaveStateMachine() {
         StateMachine<Microwave> m = StateMachine.create(Microwave.class);
-        State<DoorClosed> readyToCook = m.createState("Ready to Cook", DoorClosed.class);
-        State<DoorOpened> doorOpen = m.createState("Door Open", DoorOpened.class);
-        State<ButtonPressed> cooking = m.createState("Cooking", ButtonPressed.class);
-        State<DoorOpened> cookingInterruped = m.createState("Cooking Interrupted", DoorOpened.class);
-        State<TimerTimesOut> cookingComplete = m.createState("Cooking Complete", TimerTimesOut.class);
+        State<DoorClosed> readyToCook = m.createState("Ready to Cook", DoorClosed.class)
+                .documentation("<pre>/entry\nturn light off;</pre>");
+        State<DoorOpened> doorOpen = m.createState("Door Open", DoorOpened.class)
+                .documentation("<pre>/entry\nturn light on;</pre>");
+        State<ButtonPressed> cooking = m.createState("Cooking", ButtonPressed.class)
+                .documentation("<pre>/entry\nturn light on;</pre>");
+        State<DoorOpened> cookingInterruped = m.createState("Cooking Interrupted", DoorOpened.class)
+                .documentation("<pre>/entry\nturn light on;</pre>");
+        State<TimerTimesOut> cookingComplete = m
+                .createState("Cooking Complete", TimerTimesOut.class)
+                .documentation("<pre>/entry\nturn light off;</pre>");
 
         readyToCook.to(cooking).to(cookingInterruped).to(
                 readyToCook.from(doorOpen.from(readyToCook).from(cookingComplete.from(cooking))));
