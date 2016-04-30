@@ -67,6 +67,9 @@
                         <configuration>
                             <supplierClass>com.github.davidmoten.fsm.example.StateMachines</supplierClass>
                             <packageName>com.github.davidmoten.fsm.example.generated</packageName>
+                            <nodeWidth>280</nodeWidth>
+                            <nodeHeight>150</nodeHeight>
+                            <nodeBackgroundColor>#F3F2C0</nodeBackgroundColor>
                         </configuration>
                     </execution>
                 </executions>
