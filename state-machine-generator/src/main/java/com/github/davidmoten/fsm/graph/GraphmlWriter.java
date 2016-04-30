@@ -2,6 +2,7 @@ package com.github.davidmoten.fsm.graph;
 
 import static org.apache.commons.lang3.StringEscapeUtils.escapeXml10;
 
+import java.awt.Color;
 import java.io.PrintWriter;
 
 public class GraphmlWriter {
@@ -21,7 +22,7 @@ public class GraphmlWriter {
         out.println("  <graph id=\"G\" edgedefault=\"directed\">");
 
         for (GraphNode node : graph.getNodes()) {
-            printNode(out, node);
+            printNode(out, node, options);
         }
 
         for (GraphEdge edge : graph.getEdges()) {
@@ -59,20 +60,28 @@ public class GraphmlWriter {
         out.println("    </edge>");
     }
 
-    private static void printNode(PrintWriter out, GraphNode node) {
-        String fillColor = "#F3F2C0";
+    private static void printNode(PrintWriter out, GraphNode node, GraphOptions options) {
+        String fillColor = toHexString(options.backgroundColor);
         out.println("    <node id=\"" + escapeXml10(node.state().name()) + "\">");
         out.println("      <data key=\"d1\">");
         out.println("        <y:ShapeNode>");
-        out.println(
-                "          <y:Geometry height=\"150.0\" width=\"280.0\" x=\"77.0\" y=\"113.0\"/>\n"
-                        + "          <y:Fill color=\"" + fillColor + "\" transparent=\"false\"/>\n"
-                        + "          <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
+        out.println("          <y:Geometry height=\"" + options.nodeHeight + "\" width=\""
+                + options.nodeWidth + "\" x=\"77.0\" y=\"113.0\"/>\n" + "          <y:Fill color=\""
+                + fillColor + "\" transparent=\"false\"/>\n"
+                + "          <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
         out.println("          <y:NodeLabel>" + escapeXml10("<html><p><b>" + node.state().name()
                 + "</b></p>" + node.state().documentation() + "</html>") + "</y:NodeLabel>");
         out.println("        </y:ShapeNode>");
         out.println("      </data>");
         out.println("    </node>");
+    }
+
+    private final static String toHexString(Color colour) {
+        String hexColour = Integer.toHexString(colour.getRGB() & 0xffffff);
+        if (hexColour.length() < 6) {
+            hexColour = "000000".substring(0, 6 - hexColour.length()) + hexColour;
+        }
+        return "#" + hexColour;
     }
 
 }
