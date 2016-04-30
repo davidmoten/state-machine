@@ -6,7 +6,7 @@ import java.io.PrintWriter;
 
 public class GraphmlWriter {
 
-    public void printGraphml(PrintWriter out, Graph graph) {
+    public void printGraphml(PrintWriter out, Graph graph, GraphOptions options) {
 
         out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"  \n"
@@ -21,11 +21,11 @@ public class GraphmlWriter {
         out.println("  <graph id=\"G\" edgedefault=\"directed\">");
 
         for (GraphNode node : graph.getNodes()) {
-            printNode(out, node.name(), node.descriptionHtml());
+            printNode(out, node);
         }
 
         for (GraphEdge edge : graph.getEdges()) {
-            printEdge(out, edge.getFrom().name(), edge.getTo().name(), edge.label());
+            printEdge(out, edge);
         }
 
         out.println("  </graph>");
@@ -35,7 +35,10 @@ public class GraphmlWriter {
 
     }
 
-    private static void printEdge(PrintWriter out, String from, String to, String label) {
+    private static void printEdge(PrintWriter out, GraphEdge edge) {
+        String from = edge.getFrom().state().name();
+        String to = edge.getTo().state().name();
+        String label = edge.label();
         out.println("    <edge source=\"" + escapeXml10(from) + "\" target=\"" + escapeXml10(to)
                 + "\">");
         out.println("        <data key=\"d2\">" + label + "</data>");
@@ -56,18 +59,17 @@ public class GraphmlWriter {
         out.println("    </edge>");
     }
 
-    private static void printNode(PrintWriter out, String nodeName, String descriptionHtml) {
+    private static void printNode(PrintWriter out, GraphNode node) {
         String fillColor = "#F3F2C0";
-        out.println("    <node id=\"" + escapeXml10(nodeName) + "\">");
+        out.println("    <node id=\"" + escapeXml10(node.state().name()) + "\">");
         out.println("      <data key=\"d1\">");
         out.println("        <y:ShapeNode>");
         out.println(
                 "          <y:Geometry height=\"150.0\" width=\"280.0\" x=\"77.0\" y=\"113.0\"/>\n"
                         + "          <y:Fill color=\"" + fillColor + "\" transparent=\"false\"/>\n"
                         + "          <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
-        out.println("          <y:NodeLabel>"
-                + escapeXml10("<html><p><b>" + nodeName + "</b></p>" + descriptionHtml + "</html>")
-                + "</y:NodeLabel>");
+        out.println("          <y:NodeLabel>" + escapeXml10("<html><p><b>" + node.state().name()
+                + "</b></p>" + node.state().documentation() + "</html>") + "</y:NodeLabel>");
         out.println("        </y:ShapeNode>");
         out.println("      </data>");
         out.println("    </node>");

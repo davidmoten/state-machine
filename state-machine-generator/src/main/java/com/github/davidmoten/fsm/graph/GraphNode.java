@@ -1,26 +1,22 @@
 package com.github.davidmoten.fsm.graph;
 
-public class GraphNode {
+import com.github.davidmoten.fsm.model.State;
 
-    private final String name;
-    private final String descriptionHtml;
+public final class GraphNode {
 
-    public GraphNode(String name, String descriptionHtml) {
-        this.name = name;
-        this.descriptionHtml = descriptionHtml;
+    private final State<?> state;
+
+    public GraphNode(State<?> state) {
+        this.state = state;
     }
 
-    public String name() {
-        return name;
-    }
-
-    public String descriptionHtml() {
-        return descriptionHtml;
+    public State<?> state() {
+        return state;
     }
 
     @Override
     public String toString() {
-        return name;
+        return state.name();
     }
 
 }
