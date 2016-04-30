@@ -72,12 +72,13 @@ public class GraphmlWriter {
         out.println("          <y:Geometry height=\"" + op.nodeHeight + "\" width=\"" + op.nodeWidth
                 + "\" x=\"77.0\" y=\"113.0\"/>\n" + "          <y:Fill color=\"" + fillColor
                 + "\" transparent=\"false\"/>\n"
-                + "          <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
+                + "            <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
         out.println(
-                "          <y:NodeLabel modelName=\"internal\" modelPosition=\"tl\">"
+                "            <y:NodeLabel modelName=\"internal\" modelPosition=\"tl\">"
                         + escapeXml10("<html><p><b>" + node.state().name() + "</b></p>"
                                 + node.state().documentation().orElse("") + "</html>")
                 + "</y:NodeLabel>");
+        out.println("           <y:DropShadow color=\"#B3A691\" offsetX=\"5\" offsetY=\"5\"/>");
         out.println("        </y:ShapeNode>");
         out.println("      </data>");
         out.println("    </node>");
