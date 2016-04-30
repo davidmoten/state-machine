@@ -65,7 +65,7 @@ public class StateMachines implements Supplier<List<StateMachine<?>>> {
         State<DoorOpened> doorOpen = m.createState("Door Open", DoorOpened.class)
                 .documentation("<pre>/entry\nturn light on;</pre>");
         State<ButtonPressed> cooking = m.createState("Cooking", ButtonPressed.class).documentation(
-                "<pre>/entry\nturn light on;\nsignal to self TimerTimesOut in 30 seconds;</pre>");
+                "<pre>/entry\nturn light on;\nsignal TimerTimesOut to self in 1 min;</pre>");
         State<DoorOpened> cookingInterruped = m.createState("Cooking Interrupted", DoorOpened.class)
                 .documentation("<pre>/entry\nturn light on;\ncancel signal to self;</pre>");
         State<TimerTimesOut> cookingComplete = m
