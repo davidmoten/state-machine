@@ -69,8 +69,11 @@ public class GraphmlWriter {
                 + options.nodeWidth + "\" x=\"77.0\" y=\"113.0\"/>\n" + "          <y:Fill color=\""
                 + fillColor + "\" transparent=\"false\"/>\n"
                 + "          <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
-        out.println("          <y:NodeLabel>" + escapeXml10("<html><p><b>" + node.state().name()
-                + "</b></p>" + node.state().documentation() + "</html>") + "</y:NodeLabel>");
+        out.println(
+                "          <y:NodeLabel>"
+                        + escapeXml10("<html><p><b>" + node.state().name() + "</b></p>"
+                                + node.state().documentation().orElse("") + "</html>")
+                + "</y:NodeLabel>");
         out.println("        </y:ShapeNode>");
         out.println("      </data>");
         out.println("    </node>");
