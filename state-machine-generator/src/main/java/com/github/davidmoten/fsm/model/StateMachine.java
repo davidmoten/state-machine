@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 import com.github.davidmoten.fsm.graph.Graph;
 import com.github.davidmoten.fsm.graph.GraphEdge;
 import com.github.davidmoten.fsm.graph.GraphNode;
-import com.github.davidmoten.fsm.graph.GraphOptions;
 import com.github.davidmoten.fsm.graph.GraphmlWriter;
+import com.github.davidmoten.fsm.graph.NodeOptions;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.EventVoid;
 import com.github.davidmoten.guavamini.Preconditions;
@@ -164,7 +164,7 @@ public final class StateMachine<T> {
         Graph graph = new Graph(nodes, edges);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintWriter out = new PrintWriter(bytes);
-        new GraphmlWriter().printGraphml(out, graph, GraphOptions.defaultInstance());
+        new GraphmlWriter().printGraphml(out, graph, x -> NodeOptions.defaultInstance());
         return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
     }
 

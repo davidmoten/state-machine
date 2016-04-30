@@ -4,10 +4,12 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeXml10;
 
 import java.awt.Color;
 import java.io.PrintWriter;
+import java.util.function.Function;
 
 public class GraphmlWriter {
 
-    public void printGraphml(PrintWriter out, Graph graph, GraphOptions options) {
+    public void printGraphml(PrintWriter out, Graph graph,
+            Function<GraphNode, NodeOptions> options) {
 
         out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"  \n"
@@ -60,14 +62,16 @@ public class GraphmlWriter {
         out.println("    </edge>");
     }
 
-    private static void printNode(PrintWriter out, GraphNode node, GraphOptions options) {
-        String fillColor = toHexString(options.backgroundColor);
+    private static void printNode(PrintWriter out, GraphNode node,
+            Function<GraphNode, NodeOptions> options) {
+        NodeOptions op = options.apply(node);
+        String fillColor = toHexString(op.backgroundColor);
         out.println("    <node id=\"" + escapeXml10(node.state().name()) + "\">");
         out.println("      <data key=\"d1\">");
         out.println("        <y:ShapeNode>");
-        out.println("          <y:Geometry height=\"" + options.nodeHeight + "\" width=\""
-                + options.nodeWidth + "\" x=\"77.0\" y=\"113.0\"/>\n" + "          <y:Fill color=\""
-                + fillColor + "\" transparent=\"false\"/>\n"
+        out.println("          <y:Geometry height=\"" + op.nodeHeight + "\" width=\"" + op.nodeWidth
+                + "\" x=\"77.0\" y=\"113.0\"/>\n" + "          <y:Fill color=\"" + fillColor
+                + "\" transparent=\"false\"/>\n"
                 + "          <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
         out.println(
                 "          <y:NodeLabel>"
