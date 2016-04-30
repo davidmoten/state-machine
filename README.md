@@ -62,6 +62,14 @@ Create a maven artifact like [state-machine-test-definition](state-machine-test-
 
 Then in the project where you want to have the generated classes, set it up like [state-machine-test](state-machine-test). That means adding dependencies on your definition artifact to the pom and also snippets using *state-machine-maven-plugin* and *build-helper-maven-plugin* to your pom.xml. Then you will have generated state machine classes to use in your program.
 
+
+Generating a diagram
+-------------------------
+In my experience it's essential to generate a diagram from what you have coded to ensure it is what you expect. After numerous experiments over the years I've settled on generating a GraphML file and using the excellent free 
+tool [yEd](https://www.yworks.com/products/yed) to perform the layout. The state-machine maven plugin generates code but also generates `.graphml` files (with some `yEd` extensions) for each state machine that can be opened in yEd. Select **Layout - Orthogonal - UML Style** and a dialog will appear. The setting `Grid` refers to the internode spacing so play with that as you wish. The results are excellent!
+
+<img src="state-machine-test/src/docs/com.github.davidmoten.fsm.example.microwave.Microwave.png?raw=true" />
+
 Behaviour
 ---------------
 When a transition occurs in a state machine from state A to state B, the transition is not considered complete till the *onEntry* procedure for B has been run. Behaviour is specified according to a generated interface and is given to an instance of `MicrowaveStateMachine` at creation. For instance to specify that when a Microwave enters the Cooking state that it will time out and stop cooking after 30 seconds (transition to state Cooking Complete) we would implement the behaviour for a Microwave like this:
