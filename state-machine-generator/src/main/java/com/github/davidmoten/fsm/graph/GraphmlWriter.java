@@ -74,7 +74,7 @@ public class GraphmlWriter {
                 + "\" transparent=\"false\"/>\n"
                 + "          <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
         out.println(
-                "          <y:NodeLabel>"
+                "          <y:NodeLabel modelName=\"internal\" modelPosition=\"tl\">"
                         + escapeXml10("<html><p><b>" + node.state().name() + "</b></p>"
                                 + node.state().documentation().orElse("") + "</html>")
                 + "</y:NodeLabel>");
