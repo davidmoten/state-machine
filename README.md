@@ -76,6 +76,12 @@ The state-machine maven plugin also generates a more detailed state diagram that
 
 <img src="state-machine-test/src/docs/com.github.davidmoten.fsm.example.microwave.Microwave-with-docs.png?raw=true" />
 
+On my linux machine I have a command line alias for *yEd*: `alias yed='java -jar /opt/yed/current/yed.jar'` so that I can automate the regeneration of the diagram from the command line like this:
+
+```bash
+mvn clean install && yed state-machine/state-machine-test/target/state-machine-docs/com.github.davidmoten.fsm.example.microwave.Microwave.graphml
+```
+
 Behaviour
 ---------------
 When a transition occurs in a state machine from state A to state B, the transition is not considered complete till the *onEntry* procedure for B has been run. Behaviour is specified according to a generated interface and is given to an instance of `MicrowaveStateMachine` at creation. For instance to specify that when a Microwave enters the Cooking state that it will time out and stop cooking after 30 seconds (transition to state Cooking Complete) we would implement the behaviour for a Microwave like this:
