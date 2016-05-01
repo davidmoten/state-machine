@@ -66,6 +66,14 @@ public class GraphmlWriter {
             Function<GraphNode, NodeOptions> options) {
         NodeOptions op = options.apply(node);
         String fillColor = toHexString(op.backgroundColor);
+        String modelPosition;
+        if (node.state().documentation().isPresent()) {
+        	//top left
+        	modelPosition = "tl";
+        } else {
+        	//centre
+        	modelPosition = "c";
+        }
         out.println("    <node id=\"" + escapeXml10(node.state().name()) + "\">");
         out.println("      <data key=\"d1\">");
         out.println("        <y:ShapeNode>");
@@ -74,7 +82,7 @@ public class GraphmlWriter {
                 + "\" transparent=\"false\"/>\n"
                 + "            <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
         out.println(
-                "            <y:NodeLabel modelName=\"internal\" modelPosition=\"tl\">"
+                "            <y:NodeLabel modelName=\"internal\" modelPosition=\""+ modelPosition+"\">"
                         + escapeXml10("<html><p><b>" + node.state().name() + "</b></p>"
                                 + node.state().documentation().orElse("") + "</html>")
                 + "</y:NodeLabel>");

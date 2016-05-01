@@ -61,16 +61,16 @@ public class StateMachines implements Supplier<List<StateMachine<?>>> {
     private static StateMachine<Microwave> createMicrowaveStateMachine() {
         StateMachine<Microwave> m = StateMachine.create(Microwave.class);
         State<DoorClosed> readyToCook = m.createState("Ready to Cook", DoorClosed.class)
-                .documentation("<pre>/entry\nturn light off;</pre>");
+                .documentation("<pre>entry/\nturn light off;</pre>");
         State<DoorOpened> doorOpen = m.createState("Door Open", DoorOpened.class)
-                .documentation("<pre>/entry\nturn light on;</pre>");
+                .documentation("<pre>entry/\nturn light on;</pre>");
         State<ButtonPressed> cooking = m.createState("Cooking", ButtonPressed.class).documentation(
-                "<pre>/entry\nturn light on;\nsignal TimerTimesOut to self in 1 min;</pre>");
+                "<pre>entry/\nturn light on;\nsignal TimerTimesOut to self in 1 min;</pre>");
         State<DoorOpened> cookingInterruped = m.createState("Cooking Interrupted", DoorOpened.class)
-                .documentation("<pre>/entry\nturn light on;\ncancel signal to self;</pre>");
+                .documentation("<pre>entry/\nturn light on;\ncancel signal to self;</pre>");
         State<TimerTimesOut> cookingComplete = m
-                .createState("Cooking Complete", TimerTimesOut.class)
-                .documentation("<pre>/entry\nturn light off;</pre>");
+                .createState("Cooking Complete", TimerTimesOut.class);
+                //.documentation("<pre>entry/\nturn light off;</pre>");
 
         readyToCook.to(cooking).to(cookingInterruped).to(
                 readyToCook.from(doorOpen.from(readyToCook).from(cookingComplete.from(cooking))));
