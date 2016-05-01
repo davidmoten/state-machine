@@ -152,7 +152,7 @@ public final class StateMachine<T> {
         }).collect(Collectors.joining(""));
     }
 
-    public String graphml(Function<GraphNode, NodeOptions> options) {
+    public String graphml(Function<GraphNode, NodeOptions> options, boolean includeDocumentation) {
         List<GraphNode> nodes = states.stream().map(state -> new GraphNode(state))
                 .collect(Collectors.toList());
         Map<String, GraphNode> map = nodes.stream()
@@ -165,7 +165,7 @@ public final class StateMachine<T> {
         Graph graph = new Graph(nodes, edges);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintWriter out = new PrintWriter(bytes);
-        new GraphmlWriter().printGraphml(out, graph, options);
+        new GraphmlWriter().printGraphml(out, graph, options, includeDocumentation);
         return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
     }
 

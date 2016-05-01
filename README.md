@@ -20,7 +20,7 @@ Example State Diagram
 ------------------------
 Consider a microwave. If you were going to write the control system for a microwave you'd find it's a natural candidate for a state machine (actually all programming is working with state machines but we are going to work with one quite explicitly).
 
-<img src="src/docs/microwave-state-diagram.png?raw=true" />
+<img src="state-machine-test/src/docs/com.github.davidmoten.fsm.example.microwave.Microwave.png.png?raw=true" />
 
 The definition looks like this:
 
@@ -71,6 +71,10 @@ After numerous experiments over the years I've settled on generating a GraphML f
 tool [yEd](https://www.yworks.com/products/yed) to automate the layout. The state-machine maven plugin generates code but also generates `.graphml` files (with some *yEd* extensions) for each state machine that can be opened in *yEd*. Select **Layout - Orthogonal - UML Style** and a dialog will appear. The setting `Grid` refers to the internode spacing so play with that as you wish. The results are excellent!
 
 <img src="state-machine-test/src/docs/com.github.davidmoten.fsm.example.microwave.Microwave.png?raw=true" />
+
+The state-machine maven plugin also generates a more detailed state diagram that includes documentation of each state in the diagram nodes. In the example below the documentation is a pseudo-code description of the *onEntry* procedures for each state (discussed in Behaviour section below):
+
+<img src="state-machine-test/src/docs/com.github.davidmoten.fsm.example.microwave.Microwave-with-docs.png?raw=true" />
 
 Behaviour
 ---------------
