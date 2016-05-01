@@ -20,7 +20,7 @@ Example State Diagram
 ------------------------
 Consider a microwave. If you were going to write the control system for a microwave you'd find it's a natural candidate for a state machine (actually all programming is working with state machines but we are going to work with one quite explicitly).
 
-<img src="state-machine-test/src/docs/com.github.davidmoten.fsm.example.microwave.Microwave.png?raw=true" />
+<img src="state-machine/src/docs/microwave-state-diagram.png?raw=true" />
 
 The definition looks like this:
 
