@@ -65,8 +65,10 @@ Then in the project where you want to have the generated classes, set it up like
 
 Generating a diagram
 -------------------------
-In my experience it's essential to generate a diagram from what you have coded to ensure it is what you expect. After numerous experiments over the years I've settled on generating a GraphML file and using the excellent free 
-tool [yEd](https://www.yworks.com/products/yed) to perform the layout. The state-machine maven plugin generates code but also generates `.graphml` files (with some `yEd` extensions) for each state machine that can be opened in yEd. Select **Layout - Orthogonal - UML Style** and a dialog will appear. The setting `Grid` refers to the internode spacing so play with that as you wish. The results are excellent!
+It's a great idea to generate a diagram from what you have coded to ensure it is what you expect. In the final product you might choose to unit test all transitions but while you are exploring the requirements and your design it's really useful to visualize the state machines your are creating. 
+
+After numerous experiments over the years I've settled on generating a GraphML file and using the excellent free 
+tool [yEd](https://www.yworks.com/products/yed) to automate the layout. The state-machine maven plugin generates code but also generates `.graphml` files (with some *yEd* extensions) for each state machine that can be opened in *yEd*. Select **Layout - Orthogonal - UML Style** and a dialog will appear. The setting `Grid` refers to the internode spacing so play with that as you wish. The results are excellent!
 
 <img src="state-machine-test/src/docs/com.github.davidmoten.fsm.example.microwave.Microwave.png?raw=true" />
 
