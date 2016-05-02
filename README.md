@@ -60,8 +60,8 @@ Generating code
 
 From the above state machine definition for a microwave we generate these classes:
 
-* `MicrowaveStateMachine` - throw events at this to see transitions and to collect signals to self and others emitted during the new state's onEntry behaviour
-* `MicrowaveBehaviour` - interface to capture onEntry procedures
+* `MicrowaveStateMachine` - throw events at this to see transitions and to collect signals to self and others emitted during the new state's *entry procedure* 
+* `MicrowaveBehaviour` - interface to capture entry procedures
 * `MicrowaveBehaviourBase` - a do-nothing implentation of `MicrowaveBehaviour` that is convenient for inheriting
 
 The cleanest implementation of this generation is using maven artifacts.
@@ -80,7 +80,7 @@ tool [yEd](https://www.yworks.com/products/yed) to automate the layout. The stat
 
 <img src="state-machine-test/src/docs/com.github.davidmoten.fsm.example.microwave.Microwave.png?raw=true" />
 
-The state-machine maven plugin also generates a more detailed state diagram that includes documentation of each state in the diagram nodes. In the example below the documentation is a pseudo-code description of the *onEntry* procedures for each state (discussed in Behaviour section below):
+The state-machine maven plugin also generates a more detailed state diagram that includes documentation of each state in the diagram nodes. In the example below the documentation is a pseudo-code description of the *entry procedures* for each state (discussed in Behaviour section below):
 
 <img src="state-machine-test/src/docs/com.github.davidmoten.fsm.example.microwave.Microwave-with-docs.png?raw=true" />
 
@@ -94,7 +94,7 @@ I hit `Alt-Shift-U` to do the layout and then export the diagram as I please (**
 
 Behaviour
 ---------------
-When a transition occurs in a state machine from state A to state B, the transition is not considered complete till the *onEntry* procedure for B has been run. Behaviour is specified according to a generated interface and is given to an instance of `MicrowaveStateMachine` at creation. For instance to specify that when a Microwave enters the Cooking state that it will time out and stop cooking after 30 seconds (transition to state Cooking Complete) we would implement the behaviour for a Microwave like this:
+When a transition occurs in a state machine from state A to state B, the transition is not considered complete till the *entry procedure* for B has been run. Behaviour is specified according to a generated interface and is given to an instance of `MicrowaveStateMachine` at creation. For instance to specify that when a Microwave enters the Cooking state that it will time out and stop cooking after 30 seconds (transition to state Cooking Complete) we would implement the behaviour for a Microwave like this:
 
 ```java
 MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
