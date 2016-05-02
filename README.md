@@ -88,7 +88,7 @@ State<DoorClosed> readyToCook =
      .documentation("<pre>entry/\nturn light off;</pre>");
 ```
 
-In the example below the documentation is a pseudo-code description of the *entry procedures* for each state (discussed in Behaviour section below):
+In the example below the documentation is a pseudo-code description of the *entry procedures* for each state (discussed in [Behaviour](#Behaviour) section below):
 
 <img src="state-machine-test/src/docs/com.github.davidmoten.fsm.example.microwave.Microwave-with-docs.png?raw=true" />
 
