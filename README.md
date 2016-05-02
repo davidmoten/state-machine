@@ -80,7 +80,8 @@ MicrowaveStateMachine m =
               "1", 
               behaviour,
               MicrowaveStateMachine.State.READY_TO_COOK);
-m = m.signal(new ButtonPressed()).signal(new DoorOpened());
+m = m.signal(new ButtonPressed())
+     .signal(new DoorOpened());
 ```
 
 Identifiers
