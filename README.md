@@ -18,20 +18,28 @@ Status: *pre-alpha*
 
 Example State Diagram
 ------------------------
-Consider a microwave. If you were going to write the control system for a microwave you'd find it's a natural candidate for a state machine (actually all programming is working with state machines but we are going to work with one quite explicitly).
+Consider a microwave. If you were going to write the control system for a microwave you'd find it's a natural candidate for a state machine (actually all programming is working with state machines but we are going to work with one quite explicitly). We are going to work with a very simple microwave design (one you'd be crazy to buy in the shops!) just to demonstrate state diagrams.
 
 <img src="src/docs/microwave-state-diagram.png?raw=true" />
 
 The definition looks like this:
 
 ```java
-StateMachine<Microwave> m = StateMachine.create(Microwave.class);
-State<DoorClosed> readyToCook = m.createState("Ready to Cook", DoorClosed.class);
-State<DoorOpened> doorOpen = m.createState("Door Open", DoorOpened.class);
-State<ButtonPressed> cooking = m.createState("Cooking", ButtonPressed.class);
-State<DoorOpened> cookingInterruped = m.createState("Cooking Interrupted", DoorOpened.class);
-State<TimerTimesOut> cookingComplete = m.createState("Cooking Complete", TimerTimesOut.class);
+//define states
+StateMachine<Microwave> m = 
+    StateMachine.create(Microwave.class);
+State<DoorClosed> readyToCook = 
+    m.createState("Ready to Cook", DoorClosed.class);
+State<DoorOpened> doorOpen = 
+    m.createState("Door Open", DoorOpened.class);
+State<ButtonPressed> cooking = 
+    m.createState("Cooking", ButtonPressed.class);
+State<DoorOpened> cookingInterruped = i
+    m.createState("Cooking Interrupted", DoorOpened.class);
+State<TimerTimesOut> cookingComplete = i
+    m.createState("Cooking Complete", TimerTimesOut.class);
 
+//define transitions
 readyToCook
   .to(cooking)
   .to(cookingInterruped)

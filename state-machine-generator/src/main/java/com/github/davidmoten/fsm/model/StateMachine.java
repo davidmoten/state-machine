@@ -1,5 +1,7 @@
 package com.github.davidmoten.fsm.model;
 
+import static com.github.davidmoten.fsm.Util.camelCaseToSpaced;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintWriter;
@@ -140,16 +142,6 @@ public final class StateMachine<T> {
         out.println("</html>");
         out.close();
         return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
-    }
-
-    private static String camelCaseToSpaced(String s) {
-        return s.chars().mapToObj(ch -> {
-            if (ch >= 'A' && ch <= 'Z') {
-                return " " + (char) ch;
-            } else {
-                return "" + (char) ch;
-            }
-        }).collect(Collectors.joining(""));
     }
 
     public String graphml(Function<GraphNode, NodeOptions> options, boolean includeDocumentation) {

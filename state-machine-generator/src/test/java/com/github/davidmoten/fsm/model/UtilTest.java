@@ -1,11 +1,12 @@
 package com.github.davidmoten.fsm.model;
 
-import static com.github.davidmoten.fsm.model.Util.camelCaseToLowerUnderscore;
-import static com.github.davidmoten.fsm.model.Util.toColumnName;
+import static com.github.davidmoten.fsm.Util.camelCaseToLowerUnderscore;
+import static com.github.davidmoten.fsm.Util.toColumnName;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import com.github.davidmoten.fsm.Util;
 import com.github.davidmoten.junit.Asserts;
 
 public class UtilTest {

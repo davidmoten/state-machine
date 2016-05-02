@@ -1,10 +1,11 @@
-package com.github.davidmoten.fsm.model;
+package com.github.davidmoten.fsm;
 
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.github.davidmoten.guavamini.annotations.VisibleForTesting;
 
-final class Util {
+public final class Util {
 
     private Util() {
         // prevent instantiation
@@ -119,6 +120,16 @@ final class Util {
             return className;
         else
             return className.substring(className.lastIndexOf(".") + 1, className.length());
+    }
+
+    public static String camelCaseToSpaced(String s) {
+        return s.chars().mapToObj(ch -> {
+            if (ch >= 'A' && ch <= 'Z') {
+                return " " + (char) ch;
+            } else {
+                return "" + (char) ch;
+            }
+        }).collect(Collectors.joining(""));
     }
 
 }
