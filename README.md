@@ -25,9 +25,11 @@ Consider a microwave. If you were going to write the control system for a microw
 The definition looks like this:
 
 ```java
-//define states
+// create state machine 
 StateMachine<Microwave> m = 
     StateMachine.create(Microwave.class);
+
+// create states
 State<DoorClosed> readyToCook = 
     m.createState("Ready to Cook", DoorClosed.class);
 State<DoorOpened> doorOpen = 
@@ -39,7 +41,7 @@ State<DoorOpened> cookingInterruped = i
 State<TimerTimesOut> cookingComplete = i
     m.createState("Cooking Complete", TimerTimesOut.class);
 
-//define transitions
+// define transitions
 readyToCook
   .to(cooking)
   .to(cookingInterruped)
