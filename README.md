@@ -70,6 +70,22 @@ Create a maven artifact like [state-machine-test-definition](state-machine-test-
 
 Then in the project where you want to have the generated classes, set it up like [state-machine-test](state-machine-test). That means adding dependencies on your definition artifact to the pom and also snippets using *state-machine-maven-plugin* and *build-helper-maven-plugin* to your pom.xml. Then you will have generated state machine classes to use in your program.
 
+Once you have generated these classes you can use the *Rx* helpers or you can do your own thing:
+
+```java
+MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
+MicrowaveStateMachine m = 
+    MicrowaveStateMachine
+      .create(microwave, 
+              "1", 
+              behaviour,
+              MicrowaveStateMachine.State.READY_TO_COOK);
+m = m.signal(new ButtonPressed()).signal(new DoorOpened());
+```
+
+Identifiers
+----------------
+Every object controlled by a state machine must have a unique id. When an immutable object is transformed by a state transition then the transformed object must have the same id as the original object.
 
 Generating a diagram
 -------------------------
