@@ -424,21 +424,21 @@ public final class Generator<T> {
             out.format("%s}\n", indent.left());
             out.println();
 
-            // <R> void signal(Class<R> cls, Object id, Event<?> event);
+            // void signal(Class<?> cls, Object id, Event<?> event);
             out.format("%s@%s\n", indent, imports.add(Override.class));
-            out.format("%spublic <R> void signal(%s<R> cls, %s id, %s<?> event) {\n", indent,
+            out.format("%spublic void signal(%s<?> cls, %s id, %s<?> event) {\n", indent,
                     imports.add(Class.class), imports.add(Object.class), imports.add(Event.class));
             out.format("%ssignalsToOther.add(%s.create(cls, id, event));\n", indent.right(),
                     imports.add(Signal.class));
             out.format("%s}\n", indent.left());
             out.println();
 
-            // <R> void signal(Class<R> cls, Object id, Event<?> event, long
+            // void signal(Class<?> cls, Object id, Event<?> event, long
             // delay, TimeUnit
             // unit);
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format(
-                    "%spublic <R> void signal(%s<R> cls, %s id, %s<?> event, long delay, %s unit) {\n",
+                    "%spublic void signal(%s<?> cls, %s id, %s<?> event, long delay, %s unit) {\n",
                     indent, imports.add(Class.class), imports.add(Object.class),
                     imports.add(Event.class), imports.add(TimeUnit.class));
             out.format("%s%s.checkNotNull(unit, \"unit cannot be null\");\n", indent.right(),
