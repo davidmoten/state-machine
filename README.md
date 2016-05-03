@@ -95,7 +95,7 @@ Generating a diagram
 It's a great idea to generate a diagram from what you have coded to ensure it is what you expect. In the final product you might choose to unit test all transitions but while you are exploring the requirements and your design it's really useful to visualize the state machines your are creating. 
 
 After numerous experiments over the years I've settled on generating a [GraphML](http://graphml.graphdrawing.org/) file and using the excellent free 
-tool [yEd](https://www.yworks.com/products/yed) to automate the layout. The state-machine maven plugin generates code but also generates `.graphml` files (with some *yEd* extensions) for each state machine that can be opened in *yEd*. Select **Layout - Orthogonal - UML Style** (Alt-Shift-U) and a dialog will appear. The setting `Grid` in the dialog affects the internode spacing so play with that as you wish. The results are excellent!
+tool [yEd](https://www.yworks.com/products/yed) to automate the layout. The state-machine maven plugin generates code but also generates `.graphml` files (with some *yEd* extensions) for each state machine that can be opened in *yEd*. Select **Layout - Orthogonal - UML Style** (Alt-Shift-U) and a dialog will appear. The setting `Grid` in the dialog affects the internode spacing so play with that as you wish. I usually set (just once) the setting **Labeling - Edge Label Model - Side Slider** to avoid ambiguity in positioning of edge labels. The results are excellent!
 
 <img src="state-machine-test/src/docs/com.github.davidmoten.fsm.example.microwave.Microwave.png?raw=true" />
 
