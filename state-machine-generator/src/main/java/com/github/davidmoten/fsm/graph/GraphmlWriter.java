@@ -54,21 +54,29 @@ public class GraphmlWriter {
         }
         out.println("    <node id=\"" + escapeXml10(node.state().name()) + "\">");
         out.println("      <data key=\"d1\">");
-        out.println("        <y:ShapeNode>");
-        out.println("          <y:Geometry height=\"" + op.nodeHeight + "\" width=\"" + op.nodeWidth
-                + "\" x=\"77.0\" y=\"113.0\"/>\n" + "          <y:Fill color=\"" + fillColor
-                + "\" transparent=\"false\"/>\n"
-                + "            <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
-        out.println(
-                "            <y:NodeLabel modelName=\"internal\" modelPosition=\"" + modelPosition
-                        + "\">"
-                        + escapeXml10("<html><p><b>" + node.state().name()
-                                + "</b></p>" + (includeDocumentation
-                                        ? node.state().documentation().orElse("") : "")
-                                + "</html>")
-                        + "</y:NodeLabel>");
-        out.println("           <y:DropShadow color=\"#B3A691\" offsetX=\"5\" offsetY=\"5\"/>");
-        out.println("        </y:ShapeNode>");
+        if (node.state().isInitial()) {
+            out.println("<y:ShapeNode>\n"
+                    + "          <y:Geometry height=\"25.0\" width=\"25.0\" x=\"1987.5\" y=\"1762.5\"/>\n"
+                    + "          <y:Fill color=\"#000000\" transparent=\"false\"/>\n"
+                    + "          <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>\n"
+                    + "          <y:NodeLabel alignment=\"center\" autoSizePolicy=\"content\" fontFamily=\"Dialog\" fontSize=\"12\" fontStyle=\"plain\" hasBackgroundColor=\"false\" hasLineColor=\"false\" hasText=\"false\" height=\"4.0\" modelName=\"internal\" modelPosition=\"c\" textColor=\"#000000\" visible=\"true\" width=\"4.0\" x=\"10.5\" y=\"10.5\"/>\n"
+                    + "          <y:Shape type=\"ellipse\"/>\n" + "        </y:ShapeNode>");
+        } else {
+            out.println("        <y:ShapeNode>");
+            out.println("          <y:Geometry height=\"" + op.nodeHeight + "\" width=\""
+                    + op.nodeWidth + "\" x=\"77.0\" y=\"113.0\"/>\n" + "          <y:Fill color=\""
+                    + fillColor + "\" transparent=\"false\"/>\n"
+                    + "            <y:BorderStyle color=\"#000000\" type=\"line\" width=\"1.0\"/>");
+            out.println(
+                    "            <y:NodeLabel modelName=\"internal\" modelPosition=\""
+                            + modelPosition + "\">"
+                            + escapeXml10("<html><p><b>" + node.state().name() + "</b></p>"
+                                    + (includeDocumentation
+                                            ? node.state().documentation().orElse("") : "")
+                            + "</html>") + "</y:NodeLabel>");
+            out.println("           <y:DropShadow color=\"#B3A691\" offsetX=\"5\" offsetY=\"5\"/>");
+            out.println("        </y:ShapeNode>");
+        }
         out.println("      </data>");
         out.println("    </node>");
     }
