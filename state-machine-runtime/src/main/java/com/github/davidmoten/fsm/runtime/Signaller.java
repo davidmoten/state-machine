@@ -14,4 +14,6 @@ public interface Signaller {
 
     void cancelSignal(Class<?> fromClass, Object fromId, Class<?> toClass, Object toId);
 
+    long now();
+
 }

@@ -488,6 +488,13 @@ public final class Generator<T> {
             out.format("%s}\n", indent.left());
             out.println();
 
+            // Class<T> cls()
+            out.format("%s@%s\n", indent, imports.add(Override.class));
+            out.format("%spublic long now() {\n", indent);
+            out.format("%sreturn clock.now();\n", indent.right());
+            out.format("%s}\n", indent.left());
+            out.println();
+
             out.format("%s}", indent.left());
         }
         try (PrintStream out = new PrintStream(stateMachineClassFile())) {
