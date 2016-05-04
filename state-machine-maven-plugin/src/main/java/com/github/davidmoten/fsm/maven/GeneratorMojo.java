@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -34,14 +35,8 @@ public class GeneratorMojo extends AbstractMojo {
     @Parameter(name = "htmlDirectory", defaultValue = "${project.build.directory}/state-machine-docs")
     File htmlDirectory;
 
-    @Parameter(name = "nodeWidth", defaultValue = "280")
-    Float nodeWidth;
-
-    @Parameter(name = "nodeHeight", defaultValue = "150")
-    Float nodeHeight;
-
-    @Parameter(name = "nodeBackgroundColor", defaultValue = "#F3F2C0")
-    String nodeBackgroundColor;
+    @Parameter
+    Map<String, String> stateMachines;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -83,11 +78,23 @@ public class GeneratorMojo extends AbstractMojo {
         File gml = new File(diagramsDirectory, machine.cls().getCanonicalName().replace("$", ".")
                 + (includeDocumentation ? "-with-docs" : "") + ".graphml");
         try (PrintWriter out = new PrintWriter(gml)) {
+            int nodeWidth = Integer.parseInt(value(machine, "nodeWidth", "280"));
+            int nodeHeight = Integer.parseInt(value(machine, "nodeHeight", "150"));
+            String nodeBackgroundColor = value(machine, "nodeBackgroundColor", "#F3F2C0");
             out.println(machine.graphml((node -> new NodeOptions(nodeWidth, nodeHeight,
                     Color.decode(nodeBackgroundColor))), includeDocumentation));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
         getLog().info("generated graphml file for import to yed (for instance): " + gml);
+    }
+
+    private String value(StateMachine<?> machine, String key, String defaultValue) {
+        String value = stateMachines.get(machine.cls().getSimpleName() + "." + key);
+        if (value == null) {
+            return defaultValue;
+        } else {
+            return value;
+        }
     }
 }

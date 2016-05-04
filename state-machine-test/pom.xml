@@ -67,9 +67,11 @@
                         <configuration>
                             <supplierClass>com.github.davidmoten.fsm.example.StateMachines</supplierClass>
                             <packageName>com.github.davidmoten.fsm.example.generated</packageName>
-                            <nodeWidth>280</nodeWidth>
-                            <nodeHeight>150</nodeHeight>
-                            <nodeBackgroundColor>#F3F2C0</nodeBackgroundColor>
+                            <stateMachines>
+                                <Microwave.nodeWidth>280</Microwave.nodeWidth>
+                                <Microwave.nodeHeight>150</Microwave.nodeHeight>
+                                <Microwave.nodeBackgroundColor>#F3F2C0</Microwave.nodeBackgroundColor>
+                            </stateMachines>
                         </configuration>
                     </execution>
                 </executions>
