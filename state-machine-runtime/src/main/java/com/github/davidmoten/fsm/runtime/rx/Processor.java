@@ -57,10 +57,6 @@ public final class Processor<Id> {
         return new Builder<Id>().processingScheduler(processingScheduler);
     }
 
-    public PublishSubject<Signal<?, Id, ?>> subject() {
-        return subject;
-    }
-
     public static class Builder<Id> {
 
         private Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory;
