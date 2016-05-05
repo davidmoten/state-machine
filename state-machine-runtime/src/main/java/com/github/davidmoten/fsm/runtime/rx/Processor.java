@@ -90,6 +90,7 @@ public final class Processor<Id> {
 
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Observable<EntityStateMachine<?>> observable() {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
@@ -111,8 +112,10 @@ public final class Processor<Id> {
         });
     }
 
+    @SuppressWarnings("unchecked")
     private Func1<? super Signal<?, Id>, Observable<EntityStateMachine<?>>> processLambda(
-            Worker worker, GroupedObservable<ClassId, Signal<?, Id>> g) {
+            Worker worker,
+            @SuppressWarnings("rawtypes") GroupedObservable<ClassId, Signal<?, Id>> g) {
         return x -> process(g.getKey(), x.event(), worker);
     }
 
@@ -136,8 +139,10 @@ public final class Processor<Id> {
             @Override
             protected Signals<Id> next(Signals<Id> signals,
                     Observer<? super EntityStateMachine<?>> observer) {
+                @SuppressWarnings("unchecked")
                 EntityStateMachine<Object> m = (EntityStateMachine<Object>) getStateMachine(
                         cid.cls(), cid.id());
+                @SuppressWarnings("unchecked")
                 Event<Object> event = (Event<Object>) signals.signalsToSelf.pollLast();
                 if (event != null) {
                     applySignalToSelf(signals, observer, m, event);
@@ -187,6 +192,7 @@ public final class Processor<Id> {
             private void cancel(Signal<?, Id> signal) {
                 @SuppressWarnings("unchecked")
                 CancelTimedSignal<Id> s = ((CancelTimedSignal<Id>) signal.event());
+                @SuppressWarnings({ "unchecked", "rawtypes" })
                 Subscription sub = subscriptions
                         .remove(new ClassIdPair<Id>(new ClassId(s.fromClass(), s.fromId()),
                                 new ClassId(signal.cls(), signal.id())));
@@ -199,6 +205,7 @@ public final class Processor<Id> {
                     Signal<?, Id> s, long delayMs) {
                 // record pairwise signal so we can cancel it if
                 // desired
+                @SuppressWarnings({ "unchecked", "rawtypes" })
                 ClassIdPair<Id> idPair = new ClassIdPair<Id>(from,
                         new ClassId(signal.cls(), signal.id()));
                 long t1 = signalScheduler.now();
@@ -236,11 +243,11 @@ public final class Processor<Id> {
         subject.onNext(signal);
     }
 
-    public <T> void signal(Class<T> cls, Id id, Event<T> event) {
+    public <T> void signal(Class<T> cls, Id id, Event<? super T> event) {
         subject.onNext(Signal.create(cls, id, event));
     }
 
-    public <T> void signal(ClassId<T, Id> cid, Event<T> event) {
+    public <T> void signal(ClassId<T, Id> cid, Event<? super T> event) {
         subject.onNext(Signal.create(cid.cls(), cid.id(), event));
     }
 
@@ -254,6 +261,7 @@ public final class Processor<Id> {
     }
 
     public void cancelSignal(Class<?> fromClass, Id fromId, Class<?> toClass, Id toId) {
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         Subscription subscription = subscriptions.remove(
                 new ClassIdPair<Id>(new ClassId(fromClass, fromId), new ClassId(toClass, toId)));
         if (subscription != null) {

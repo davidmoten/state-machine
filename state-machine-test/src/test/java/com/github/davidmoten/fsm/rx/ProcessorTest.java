@@ -136,8 +136,8 @@ public class ProcessorTest {
     private static MicrowaveBehaviourBase createMicrowaveBehaviour() {
         return new MicrowaveBehaviourBase() {
             @Override
-            public Microwave onEntry_Cooking(Signaller signaller, Microwave microwave, Object id,
-                    ButtonPressed event) {
+            public Microwave onEntry_Cooking(Signaller<Microwave> signaller, Microwave microwave,
+                    Object id, ButtonPressed event) {
                 signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
                 return microwave;
             }

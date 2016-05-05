@@ -143,15 +143,16 @@ public final class Generator<T> {
             indent.right();
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
                 if (state.isCreationDestination()) {
-                    out.format("%s%s %s(%s signaller, %s id, %s event);\n", indent,
+                    out.format("%s%s %s(%s<%s> signaller, %s id, %s event);\n", indent,
                             imports.add(cls), onEntryMethodName(state),
-                            imports.add(Signaller.class), imports.add(Object.class),
-                            imports.add(state.eventClass()));
-                } else {
-                    out.format("%s%s %s(%s signaller, %s %s, %s id, %s event);\n", indent,
-                            imports.add(cls), onEntryMethodName(state),
-                            imports.add(Signaller.class), imports.add(cls), instanceName(),
+                            imports.add(Signaller.class), imports.add(cls),
                             imports.add(Object.class), imports.add(state.eventClass()));
+                } else {
+                    out.format("%s%s %s(%s<%s> signaller, %s %s, %s id, %s event);\n", indent,
+                            imports.add(cls), onEntryMethodName(state),
+                            imports.add(Signaller.class), imports.add(cls), imports.add(cls),
+                            instanceName(), imports.add(Object.class),
+                            imports.add(state.eventClass()));
                 }
                 out.println();
             });
@@ -185,10 +186,11 @@ public final class Generator<T> {
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
                 if (!state.isCreationDestination()) {
                     out.format("%s@%s\n", indent, imports.add(Override.class));
-                    out.format("%spublic %s %s(%s signaller, %s %s, %s id, %s event) {\n", indent,
-                            imports.add(cls), onEntryMethodName(state),
-                            imports.add(Signaller.class), imports.add(cls), instanceName(),
-                            imports.add(Object.class), imports.add(state.eventClass()));
+                    out.format("%spublic %s %s(%s<%s> signaller, %s %s, %s id, %s event) {\n",
+                            indent, imports.add(cls), onEntryMethodName(state),
+                            imports.add(Signaller.class), imports.add(cls), imports.add(cls),
+                            instanceName(), imports.add(Object.class),
+                            imports.add(state.eventClass()));
                     out.format("%sreturn %s;\n", indent.right(), instanceName());
                     out.format("%s}\n", indent.left());
                     out.println();
