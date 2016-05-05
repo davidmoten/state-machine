@@ -121,7 +121,7 @@ public class ProcessorTest {
         // define how to instantiate state machines from identifiers
         Func2<Class<?>, String, EntityStateMachine<?>> stateMachineFactory = StateMachineFactory
                 .cls(Microwave.class)
-                .<String> hasFactory(id -> MicrowaveStateMachine.create(new Microwave(id), id,
+                .<String> hasFactory(id -> MicrowaveStateMachine.create(Microwave.fromId(id), id,
                         behaviour, MicrowaveStateMachine.State.READY_TO_COOK,
                         Clock.from(signalScheduler)))
                 .build();
