@@ -40,7 +40,7 @@ public class ProcessorTest {
         TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
         processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
 
-        ClassId<String> microwave = ClassId.create(Microwave.class, "1");
+        ClassId<Microwave, String> microwave = ClassId.create(Microwave.class, "1");
 
         // button is pressed
         processor.signal(microwave, new ButtonPressed());
@@ -92,7 +92,7 @@ public class ProcessorTest {
         TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
         processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
 
-        ClassId<String> microwave = ClassId.create(Microwave.class, "1");
+        ClassId<Microwave, String> microwave = ClassId.create(Microwave.class, "1");
 
         // button is pressed
         processor.signal(microwave, new ButtonPressed());

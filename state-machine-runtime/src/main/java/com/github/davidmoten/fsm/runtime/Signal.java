@@ -1,34 +1,34 @@
 package com.github.davidmoten.fsm.runtime;
 
-public final class Signal<T, Id, R> {
+public final class Signal<T, Id> {
 
     private final Class<T> cls;
     private final Id id;
-    private final Event<R> event;
+    private final Event<? super T> event;
     // TODO use Optional?
     private final long time;
 
-    private Signal(Class<T> cls, Id id, Event<R> event, long time) {
+    private Signal(Class<T> cls, Id id, Event<? super T> event, long time) {
         this.cls = cls;
         this.id = id;
         this.event = event;
         this.time = time;
     }
 
-    public static <T, Id, R> Signal<T, Id, R> create(Class<T> cls, Id id, Event<R> event) {
-        return new Signal<T, Id, R>(cls, id, event, Long.MIN_VALUE);
+    public static <T, Id> Signal<T, Id> create(Class<T> cls, Id id, Event<? super T> event) {
+        return new Signal<T, Id>(cls, id, event, Long.MIN_VALUE);
     }
 
-    public static <T, Id, R> Signal<T, Id, R> create(Class<T> cls, Id id, Event<R> event,
+    public static <T, Id> Signal<T, Id> create(Class<T> cls, Id id, Event<? super T> event,
             long time) {
-        return new Signal<T, Id, R>(cls, id, event, time);
+        return new Signal<T, Id>(cls, id, event, time);
     }
 
     public Class<T> cls() {
         return cls;
     }
 
-    public Event<R> event() {
+    public Event<? super T> event() {
         return event;
     }
 
@@ -44,7 +44,7 @@ public final class Signal<T, Id, R> {
         return time == Long.MIN_VALUE;
     }
 
-    public Signal<T, Id, ?> now() {
+    public Signal<T, Id> now() {
         return create(cls, id, event);
     }
 

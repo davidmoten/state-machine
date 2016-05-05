@@ -2,7 +2,7 @@ package com.github.davidmoten.fsm.example.ship;
 
 import com.github.davidmoten.fsm.runtime.Event;
 
-public class In implements Event<In> {
+public class In implements Event<Ship> {
     public final float lat;
     public final float lon;
 

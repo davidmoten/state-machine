@@ -1,10 +1,10 @@
 package com.github.davidmoten.fsm.runtime.rx;
 
 final class ClassIdPair<Id> {
-    final ClassId<Id> from;
-    final ClassId<Id> to;
+    final ClassId<?, Id> from;
+    final ClassId<?, Id> to;
 
-    ClassIdPair(ClassId<Id> from, ClassId<Id> to) {
+    ClassIdPair(ClassId<?, Id> from, ClassId<?, Id> to) {
         this.from = from;
         this.to = to;
     }

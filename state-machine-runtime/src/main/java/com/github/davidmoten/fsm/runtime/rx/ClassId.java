@@ -1,19 +1,19 @@
 package com.github.davidmoten.fsm.runtime.rx;
 
-public final class ClassId<Id> {
-    final Class<?> cls;
+public final class ClassId<T, Id> {
+    final Class<T> cls;
     final Id id;
 
-    public ClassId(Class<?> cls, Id id) {
+    public ClassId(Class<T> cls, Id id) {
         this.cls = cls;
         this.id = id;
     }
 
-    public static <T> ClassId<T> create(Class<?> cls, T id) {
-        return new ClassId<T>(cls, id);
+    public static <T, Id> ClassId<T, Id> create(Class<T> cls, Id id) {
+        return new ClassId<T, Id>(cls, id);
     }
 
-    public Class<?> cls() {
+    public Class<T> cls() {
         return cls;
     }
 
@@ -38,7 +38,7 @@ public final class ClassId<Id> {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ClassId<?> other = (ClassId<?>) obj;
+        ClassId<?, ?> other = (ClassId<?, ?>) obj;
         if (cls.getCanonicalName() == null) {
             if (other.cls.getCanonicalName() != null)
                 return false;

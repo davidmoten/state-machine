@@ -4,13 +4,13 @@ import com.github.davidmoten.fsm.model.State;
 
 public final class GraphNode {
 
-    private final State<?> state;
+    private final State<?, ?> state;
 
-    public GraphNode(State<?> state) {
+    public GraphNode(State<?, ?> state) {
         this.state = state;
     }
 
-    public State<?> state() {
+    public State<?, ?> state() {
         return state;
     }
 

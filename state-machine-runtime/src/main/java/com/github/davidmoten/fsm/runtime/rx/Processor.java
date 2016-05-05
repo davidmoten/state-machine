@@ -20,7 +20,9 @@ import rx.Observer;
 import rx.Scheduler;
 import rx.Scheduler.Worker;
 import rx.Subscription;
+import rx.functions.Func1;
 import rx.functions.Func2;
+import rx.observables.GroupedObservable;
 import rx.observables.SyncOnSubscribe;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
@@ -28,10 +30,10 @@ import rx.subjects.PublishSubject;
 public final class Processor<Id> {
 
     private final Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory;
-    private final PublishSubject<Signal<?, Id, ?>> subject;
+    private final PublishSubject<Signal<?, Id>> subject;
     private final Scheduler signalScheduler;
     private final Scheduler processingScheduler;
-    private final Map<ClassId<?>, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
+    private final Map<ClassId<?, Id>, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
     private final Map<ClassIdPair<Id>, Subscription> subscriptions = new ConcurrentHashMap<>();
 
     private Processor(Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
@@ -97,11 +99,11 @@ public final class Processor<Id> {
                     //
                     .doOnUnsubscribe(() -> worker.unsubscribe())
                     //
-                    .groupBy(signal -> new ClassId<Id>(signal.cls(), signal.id()))
+                    .groupBy(signal -> new ClassId(signal.cls(), signal.id()))
                     //
                     .flatMap(g -> g
                             //
-                            .flatMap(x -> process(g.getKey(), x.event(), worker))
+                            .flatMap(processLambda(worker, g))
                             //
                             .doOnNext(m -> stateMachines.put(g.getKey(), m))
                             //
@@ -109,12 +111,18 @@ public final class Processor<Id> {
         });
     }
 
-    private static final class Signals<Id> {
-        final Deque<Event<?>> signalsToSelf = new ArrayDeque<>();
-        final Deque<Signal<?, Id, ?>> signalsToOther = new ArrayDeque<>();
+    private Func1<? super Signal<?, Id>, Observable<EntityStateMachine<?>>> processLambda(
+            Worker worker, GroupedObservable<ClassId, Signal<?, Id>> g) {
+        return x -> process(g.getKey(), x.event(), worker);
     }
 
-    private Observable<EntityStateMachine<?>> process(ClassId<Id> cid, Event<?> x, Worker worker) {
+    private static final class Signals<Id> {
+        final Deque<Event<?>> signalsToSelf = new ArrayDeque<>();
+        final Deque<Signal<?, Id>> signalsToOther = new ArrayDeque<>();
+    }
+
+    private <R> Observable<EntityStateMachine<?>> process(ClassId<R, Id> cid, Event<R> x,
+            Worker worker) {
 
         return Observable.create(new SyncOnSubscribe<Signals<Id>, EntityStateMachine<?>>() {
 
@@ -128,8 +136,9 @@ public final class Processor<Id> {
             @Override
             protected Signals<Id> next(Signals<Id> signals,
                     Observer<? super EntityStateMachine<?>> observer) {
-                EntityStateMachine<?> m = getStateMachine(cid.cls(), cid.id());
-                Event<?> event = signals.signalsToSelf.pollLast();
+                EntityStateMachine<Object> m = (EntityStateMachine<Object>) getStateMachine(
+                        cid.cls(), cid.id());
+                Event<Object> event = (Event<Object>) signals.signalsToSelf.pollLast();
                 if (event != null) {
                     applySignalToSelf(signals, observer, m, event);
                 } else {
@@ -140,25 +149,26 @@ public final class Processor<Id> {
             }
 
             @SuppressWarnings("unchecked")
-            private void applySignalToSelf(Signals<Id> signals,
-                    Observer<? super EntityStateMachine<?>> observer, EntityStateMachine<?> m,
-                    Event<?> event) {
+            private <T> void applySignalToSelf(Signals<Id> signals,
+                    Observer<? super EntityStateMachine<?>> observer, EntityStateMachine<T> m,
+                    Event<T> event) {
                 m = m.signal(event);
                 // stateMachines.put(id, m);
                 observer.onNext(m);
-                List<Event<?>> list = m.signalsToSelf();
+                List<Event<? super T>> list = m.signalsToSelf();
                 for (int i = list.size() - 1; i >= 0; i--) {
                     signals.signalsToSelf.offerLast(list.get(i));
                 }
-                for (Signal<?, ?, ?> signal : m.signalsToOther()) {
-                    signals.signalsToOther.offerFirst((Signal<?, Id, ?>) signal);
+                for (Signal<?, ?> signal : m.signalsToOther()) {
+                    signals.signalsToOther.offerFirst((Signal<?, Id>) signal);
                 }
             }
 
-            private void applySignalsToOthers(ClassId<Id> cid, Worker worker, Signals<Id> signals) {
-                Signal<?, Id, ?> signal;
+            private void applySignalsToOthers(ClassId<?, Id> cid, Worker worker,
+                    Signals<Id> signals) {
+                Signal<?, Id> signal;
                 while ((signal = signals.signalsToOther.pollLast()) != null) {
-                    Signal<?, Id, ?> s = signal;
+                    Signal<?, Id> s = signal;
                     if (signal.isImmediate()) {
                         subject.onNext(signal);
                     } else if (signal.event() instanceof CancelTimedSignal) {
@@ -174,23 +184,23 @@ public final class Processor<Id> {
                 }
             }
 
-            private void cancel(Signal<?, Id, ?> signal) {
+            private void cancel(Signal<?, Id> signal) {
                 @SuppressWarnings("unchecked")
                 CancelTimedSignal<Id> s = ((CancelTimedSignal<Id>) signal.event());
                 Subscription sub = subscriptions
-                        .remove(new ClassIdPair<Id>(new ClassId<Id>(s.fromClass(), s.fromId()),
-                                new ClassId<Id>(signal.cls(), signal.id())));
+                        .remove(new ClassIdPair<Id>(new ClassId(s.fromClass(), s.fromId()),
+                                new ClassId(signal.cls(), signal.id())));
                 if (sub != null) {
                     sub.unsubscribe();
                 }
             }
 
-            private void scheduleSignal(ClassId<Id> from, Worker worker, Signal<?, Id, ?> signal,
-                    Signal<?, Id, ?> s, long delayMs) {
+            private void scheduleSignal(ClassId<?, Id> from, Worker worker, Signal<?, Id> signal,
+                    Signal<?, Id> s, long delayMs) {
                 // record pairwise signal so we can cancel it if
                 // desired
                 ClassIdPair<Id> idPair = new ClassIdPair<Id>(from,
-                        new ClassId<Id>(signal.cls(), signal.id()));
+                        new ClassId(signal.cls(), signal.id()));
                 long t1 = signalScheduler.now();
                 Subscription subscription = worker.schedule(() -> {
                     subject.onNext(s.now());
@@ -211,7 +221,7 @@ public final class Processor<Id> {
     @SuppressWarnings("unchecked")
     private <T> EntityStateMachine<T> getStateMachine(Class<T> cls, Id id) {
         EntityStateMachine<T> m = (EntityStateMachine<T>) stateMachines
-                .get(new ClassId<Id>(cls, id));
+                .get(new ClassId<T, Id>(cls, id));
         if (m == null) {
             m = (EntityStateMachine<T>) stateMachineFactory.call(cls, id);
         }
@@ -222,21 +232,21 @@ public final class Processor<Id> {
         return getStateMachine(cls, id).get();
     }
 
-    public void signal(Signal<?, Id, ?> signal) {
+    public void signal(Signal<?, Id> signal) {
         subject.onNext(signal);
     }
 
-    public <T, R> void signal(Class<T> cls, Id id, Event<R> event) {
+    public <T> void signal(Class<T> cls, Id id, Event<T> event) {
         subject.onNext(Signal.create(cls, id, event));
     }
 
-    public <T> void signal(ClassId<Id> cid, Event<T> event) {
+    public <T> void signal(ClassId<T, Id> cid, Event<T> event) {
         subject.onNext(Signal.create(cid.cls(), cid.id(), event));
     }
 
     @SuppressWarnings("unchecked")
     public <T> ObjectState<T> get(Class<T> cls, Id id) {
-        return (EntityStateMachine<T>) stateMachines.get(new ClassId<Id>(cls, id));
+        return (EntityStateMachine<T>) stateMachines.get(new ClassId<T, Id>(cls, id));
     }
 
     public void onCompleted() {
@@ -244,8 +254,8 @@ public final class Processor<Id> {
     }
 
     public void cancelSignal(Class<?> fromClass, Id fromId, Class<?> toClass, Id toId) {
-        Subscription subscription = subscriptions.remove(new ClassIdPair<Id>(
-                new ClassId<Id>(fromClass, fromId), new ClassId<Id>(toClass, toId)));
+        Subscription subscription = subscriptions.remove(
+                new ClassIdPair<Id>(new ClassId(fromClass, fromId), new ClassId(toClass, toId)));
         if (subscription != null) {
             subscription.unsubscribe();
         }
@@ -255,7 +265,7 @@ public final class Processor<Id> {
         cancelSignal(cls, id, cls, id);
     }
 
-    public void cancelSignalToSelf(ClassId<Id> cid) {
+    public void cancelSignalToSelf(ClassId<?, Id> cid) {
         cancelSignalToSelf(cid.cls(), cid.id());
     }
 

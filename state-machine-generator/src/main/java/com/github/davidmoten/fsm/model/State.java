@@ -5,21 +5,21 @@ import java.util.Optional;
 
 import com.github.davidmoten.fsm.runtime.Event;
 
-public final class State<T> {
+public final class State<T, R extends Event<? super T>> {
 
     private final String name;
-    private final Class<? extends Event<T>> eventClass;
-    private final StateMachine<?> m;
+    private final Class<R> eventClass;
+    private final StateMachine<T> m;
     private boolean isCreationDestination;
     private Optional<String> documentation = Optional.empty();
 
-    public State(StateMachine<?> m, String name, Class<? extends Event<T>> eventClass) {
+    public State(StateMachine<T> m, String name, Class<R> eventClass) {
         this.m = m;
         this.name = name;
         this.eventClass = eventClass;
     }
 
-    public Class<? extends Event<T>> eventClass() {
+    public Class<R> eventClass() {
         return eventClass;
     }
 
@@ -35,23 +35,23 @@ public final class State<T> {
         return m;
     }
 
-    public <R> State<R> to(State<R> other) {
+    public <S extends Event<? super T>> State<T, S> to(State<T, S> other) {
         m.addTransition(this, other);
         return other;
     }
 
-    public <R> State<T> from(State<R> other) {
+    public <S extends Event<? super T>> State<T, R> from(State<T, S> other) {
         m.addTransition(other, this);
         return this;
     }
 
-    public State<T> initial() {
+    public State<T, R> initial() {
         isCreationDestination = true;
         m.addInitialTransition(this);
         return this;
     }
 
-    public State<T> documentation(String html) {
+    public State<T, R> documentation(String html) {
         this.documentation = Optional.of(html);
         return this;
     }

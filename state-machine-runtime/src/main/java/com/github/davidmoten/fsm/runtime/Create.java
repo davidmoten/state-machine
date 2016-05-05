@@ -1,6 +1,6 @@
 package com.github.davidmoten.fsm.runtime;
 
-public final class Create implements Event<Void> {
+public final class Create implements Event<Object> {
 
     private static final Create instance = new Create();
 

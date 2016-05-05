@@ -27,13 +27,13 @@ import com.github.davidmoten.guavamini.Preconditions;
 public final class StateMachine<T> {
 
     private final Class<T> cls;
-    private final List<Transition<?, ?>> transitions = new ArrayList<>();
-    private final Set<State<?>> states = new HashSet<State<?>>();
-    private final State<Void> initialState;
+    private final List<Transition<T, ? extends Event<? super T>, ? extends Event<? super T>>> transitions = new ArrayList<>();
+    private final Set<State<T, ? extends Event<? super T>>> states = new HashSet<>();
+    private final State<T, EventVoid> initialState;
 
     private StateMachine(Class<T> cls) {
         this.cls = cls;
-        this.initialState = new State<Void>(this, "Initial", EventVoid.class);
+        this.initialState = new State<T, EventVoid>(this, "Initial", EventVoid.class);
     }
 
     public static <T> StateMachine<T> create(Class<T> cls) {
@@ -44,20 +44,21 @@ public final class StateMachine<T> {
         return cls;
     }
 
-    public <R> State<R> createState(String name, Class<? extends Event<R>> eventClass) {
+    public <R extends Event<? super T>> State<T, R> createState(String name, Class<R> eventClass) {
         Preconditions.checkNotNull(name);
         if (name.equals("Initial")) {
             name = name.concat("_1");
         }
-        State<R> state = new State<R>(this, name, eventClass);
+        State<T, R> state = new State<T, R>(this, name, eventClass);
         states.add(state);
         return state;
     }
 
-    public <R, S> StateMachine<T> addTransition(State<R> state, State<S> other) {
-        Transition<R, S> transition = new Transition<R, S>(state, other);
+    public <R extends Event<? super T>, S extends Event<? super T>> StateMachine<T> addTransition(
+            State<T, R> state, State<T, S> other) {
+        Transition<T, R, S> transition = new Transition<T, R, S>(state, other);
         System.out.println("adding " + transition);
-        for (Transition<?, ?> t : transitions) {
+        for (Transition<T, ?, ?> t : transitions) {
             if (t.from() == state && t.to() == other) {
                 throw new IllegalArgumentException(
                         "the transition already exists: " + state.name() + " -> " + other.name());
@@ -67,8 +68,9 @@ public final class StateMachine<T> {
         return this;
     }
 
-    <S> StateMachine<T> addInitialTransition(State<S> other) {
-        Transition<Void, S> transition = new Transition<Void, S>(initialState, other);
+    <S extends Event<? super T>> StateMachine<T> addInitialTransition(State<T, S> other) {
+        Transition<T, EventVoid, S> transition = new Transition<T, EventVoid, S>(initialState,
+                other);
         System.out.println("adding " + transition);
         transitions.add(transition);
         states.add(initialState);
@@ -80,7 +82,7 @@ public final class StateMachine<T> {
         new Generator<T>(this, directory, pkg).generate();
     }
 
-    public List<Transition<?, ?>> transitions() {
+    public List<Transition<T, ? extends Event<? super T>, ? extends Event<? super T>>> transitions() {
         return transitions;
     }
 
@@ -98,7 +100,7 @@ public final class StateMachine<T> {
         out.println("<body>");
         // states
         out.println("<h2>States</h2>");
-        Comparator<State<?>> comparator = (a, b) -> a.name().compareTo(b.name());
+        Comparator<State<T, ?>> comparator = (a, b) -> a.name().compareTo(b.name());
         states.stream().sorted(comparator)
                 .forEach(state -> out.println("<p class=\"state\"><b>" + state.name() + "</b> ["
                         + state.eventClass().getSimpleName() + "]</p>"
