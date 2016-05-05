@@ -30,15 +30,15 @@ StateMachine<Microwave> m =
     StateMachine.create(Microwave.class);
 
 // create states
-State<DoorClosed> readyToCook = 
+State<Microwave, DoorClosed> readyToCook = 
     m.createState("Ready to Cook", DoorClosed.class);
-State<DoorOpened> doorOpen = 
+State<Microwave, DoorOpened> doorOpen = 
     m.createState("Door Open", DoorOpened.class);
-State<ButtonPressed> cooking = 
+State<Microwave, ButtonPressed> cooking = 
     m.createState("Cooking", ButtonPressed.class);
-State<DoorOpened> cookingInterruped = i
+State<Microwave, DoorOpened> cookingInterruped = i
     m.createState("Cooking Interrupted", DoorOpened.class);
-State<TimerTimesOut> cookingComplete = i
+State<Microwave, TimerTimesOut> cookingComplete = i
     m.createState("Cooking Complete", TimerTimesOut.class);
 
 // define transitions
@@ -102,7 +102,7 @@ tool [yEd](https://www.yworks.com/products/yed) to automate the layout. The stat
 The state-machine maven plugin also generates a more detailed state diagram that includes documentation of each state in the diagram nodes. This is how html documentation is associated with each state:
 
 ```java
-State<DoorClosed> readyToCook = 
+State<Microwave, DoorClosed> readyToCook = 
     m.createState("Ready to Cook", DoorClosed.class)
      .documentation("<pre>entry/\nturn light off;</pre>");
 ```
@@ -129,7 +129,7 @@ When a transition occurs in a state machine from state A to state B, the transit
 ```java
 MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
     @Override
-    public Microwave onEntry_Cooking(Signaller signaller, Microwave microwave,
+    public Microwave onEntry_Cooking(Signaller<Microwave> signaller, Microwave microwave,
             Object id, ButtonPressed event) {
         signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
         return microwave;
@@ -140,15 +140,15 @@ MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
 The signaller has these methods:
 
 ```java
-public interface Signaller {
+public interface Signaller<T> {
 
-    void signalToSelf(Event<?> event);
+    void signalToSelf(Event<? super T> event);
     
-    void signalToSelf(Event<?> event, long delay, TimeUnit unit);
+    void signalToSelf(Event<? super T> event, long delay, TimeUnit unit);
 
-	<T> void signal(Class<T> cls, Object id, Event<?> event);
+    <R> void signal(Class<R> cls, Object id, Event<? super R> event);
 	
-	<T> void signal(Class<T> cls, Object id, Event<?> event, long delay, TimeUnit unit);
+    <R> void signal(Class<R> cls, Object id, Event<? super R> event, long delay, TimeUnit unit);
 	
     void cancelSignal(Class<?> fromClass, Object fromId, Class<?> toClass, Object toId);
 }
