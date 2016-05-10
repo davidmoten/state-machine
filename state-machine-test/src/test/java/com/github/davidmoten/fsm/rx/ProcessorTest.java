@@ -116,7 +116,7 @@ public class ProcessorTest {
     }
 
     private static Processor<String> createProcessor(TestScheduler signalScheduler) {
-        MicrowaveBehaviour behaviour = createMicrowaveBehaviour();
+        MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
 
         // define how to instantiate state machines from identifiers
         Func2<Class<?>, String, EntityStateMachine<?>> stateMachineFactory = StateMachineFactory
@@ -133,11 +133,11 @@ public class ProcessorTest {
         return processor;
     }
 
-    private static MicrowaveBehaviourBase createMicrowaveBehaviour() {
-        return new MicrowaveBehaviourBase() {
+    private static MicrowaveBehaviourBase<String> createMicrowaveBehaviour() {
+        return new MicrowaveBehaviourBase<String>() {
             @Override
             public Microwave onEntry_Cooking(Signaller<Microwave> signaller, Microwave microwave,
-                    Object id, ButtonPressed event) {
+                    String id, ButtonPressed event) {
                 signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
                 return microwave;
             }
