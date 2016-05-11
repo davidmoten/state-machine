@@ -179,7 +179,7 @@ public final class Processor<Id> {
                     } else if (signal.event() instanceof CancelTimedSignal) {
                         cancel(signal);
                     } else {
-                        long delayMs = signal.time() - worker.now();
+                        long delayMs = signal.time().get() - worker.now();
                         if (delayMs <= 0) {
                             subject.onNext(signal);
                         } else {

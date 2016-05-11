@@ -1,14 +1,15 @@
 package com.github.davidmoten.fsm.runtime;
 
+import java.util.Optional;
+
 public final class Signal<T, Id> {
 
     private final Class<T> cls;
     private final Id id;
     private final Event<? super T> event;
-    // TODO use Optional?
-    private final long time;
+    private final Optional<Long> time;
 
-    private Signal(Class<T> cls, Id id, Event<? super T> event, long time) {
+    private Signal(Class<T> cls, Id id, Event<? super T> event, Optional<Long> time) {
         this.cls = cls;
         this.id = id;
         this.event = event;
@@ -16,12 +17,12 @@ public final class Signal<T, Id> {
     }
 
     public static <T, Id> Signal<T, Id> create(Class<T> cls, Id id, Event<? super T> event) {
-        return new Signal<T, Id>(cls, id, event, Long.MIN_VALUE);
+        return new Signal<T, Id>(cls, id, event, Optional.empty());
     }
 
     public static <T, Id> Signal<T, Id> create(Class<T> cls, Id id, Event<? super T> event,
             long time) {
-        return new Signal<T, Id>(cls, id, event, time);
+        return new Signal<T, Id>(cls, id, event, Optional.of(time));
     }
 
     public Class<T> cls() {
@@ -36,12 +37,12 @@ public final class Signal<T, Id> {
         return id;
     }
 
-    public long time() {
+    public Optional<Long> time() {
         return time;
     }
 
     public boolean isImmediate() {
-        return time == Long.MIN_VALUE;
+        return !time.isPresent();
     }
 
     public Signal<T, Id> now() {
@@ -58,7 +59,7 @@ public final class Signal<T, Id> {
         builder.append(", event=");
         builder.append(event);
         builder.append(", time=");
-        builder.append(time);
+        builder.append(time.flatMap(x -> Optional.of(x + "")).orElse("empty"));
         builder.append("]");
         return builder.toString();
     }

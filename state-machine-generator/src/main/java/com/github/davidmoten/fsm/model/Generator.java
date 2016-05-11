@@ -289,7 +289,7 @@ public final class Generator<T> {
             out.println();
 
             if (hasCreationTransition()) {
-                out.format("%spublic <T> static %s<T> create(T id, %s<T> behaviour) {\n", indent,
+                out.format("%spublic static <T> %s<T> create(T id, %s<T> behaviour) {\n", indent,
                         stateMachineClassSimpleName(), imports.add(behaviourClassName()));
                 out.format(
                         "%sreturn new %s<T>(null, id, behaviour, State.INITIAL, false, new %s<%s<? super %s>>(), new %s<%s<?, ?>>(), %s.instance());\n",
@@ -299,7 +299,7 @@ public final class Generator<T> {
                 out.format("%s}\n", indent.left());
                 out.println();
 
-                out.format("%spublic <T> static %s<T> create(T id, %s<T> behaviour, %s clock) {\n",
+                out.format("%spublic static <T> %s<T> create(T id, %s<T> behaviour, %s clock) {\n",
                         indent, stateMachineClassSimpleName(), imports.add(behaviourClassName()),
                         imports.add(Clock.class));
                 out.format(
