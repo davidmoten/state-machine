@@ -146,9 +146,9 @@ public interface Signaller<T> {
     
     void signalToSelf(Event<? super T> event, long delay, TimeUnit unit);
 
-    <R> void signal(Class<R> cls, String id, Event<? super R> event);
+    <R> void signal(Class<R> cls, Object id, Event<? super R> event);
 	
-    <R> void signal(Class<R> cls, String id, Event<? super R> event, long delay, TimeUnit unit);
+    <R> void signal(Class<R> cls, Object id, Event<? super R> event, long delay, TimeUnit unit);
 	
     void cancelSignal(Class<?> fromClass, Object fromId, Class<?> toClass, Object toId);
 }
