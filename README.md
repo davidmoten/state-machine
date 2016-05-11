@@ -75,8 +75,8 @@ Then in the project where you want to have the generated classes, set it up like
 Once you have generated these classes you can use the *Rx* helpers or you can do your own thing:
 
 ```java
-MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase();
-MicrowaveStateMachine m = 
+MicrowaveBehaviour<String> behaviour = new MicrowaveBehaviourBase<String>();
+MicrowaveStateMachine<String> m = 
     MicrowaveStateMachine
       .create(microwave, 
               "1", 
@@ -127,10 +127,10 @@ Behaviour
 When a transition occurs in a state machine from state A to state B, the transition is not considered complete till the *entry procedure* for B has been run. Behaviour is specified according to a generated interface and is given to an instance of `MicrowaveStateMachine` at creation. For instance to specify that when a Microwave enters the Cooking state that it will time out and stop cooking after 30 seconds (transition to state Cooking Complete) we would implement the behaviour for a Microwave like this:
 
 ```java
-MicrowaveBehaviour behaviour = new MicrowaveBehaviourBase() {
+MicrowaveBehaviour<String> behaviour = new MicrowaveBehaviourBase<String>() {
     @Override
     public Microwave onEntry_Cooking(Signaller<Microwave> signaller, Microwave microwave,
-            Object id, ButtonPressed event) {
+            String id, ButtonPressed event) {
         signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
         return microwave;
     }
@@ -146,9 +146,9 @@ public interface Signaller<T> {
     
     void signalToSelf(Event<? super T> event, long delay, TimeUnit unit);
 
-    <R> void signal(Class<R> cls, Object id, Event<? super R> event);
+    <R> void signal(Class<R> cls, String id, Event<? super R> event);
 	
-    <R> void signal(Class<R> cls, Object id, Event<? super R> event, long delay, TimeUnit unit);
+    <R> void signal(Class<R> cls, String id, Event<? super R> event, long delay, TimeUnit unit);
 	
     void cancelSignal(Class<?> fromClass, Object fromId, Class<?> toClass, Object toId);
 }
