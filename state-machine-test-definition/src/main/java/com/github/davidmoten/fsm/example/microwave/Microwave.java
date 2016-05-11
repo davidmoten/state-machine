@@ -2,23 +2,27 @@ package com.github.davidmoten.fsm.example.microwave;
 
 public class Microwave {
 
-    private final String id;
+    private final int serialNumber;
 
-    public Microwave(String id) {
-        this.id = id;
+    public Microwave(int serialNumber) {
+        this.serialNumber = serialNumber;
     }
 
-    public String id() {
-        return id;
+    public int serialNumber() {
+        return serialNumber;
+    }
+    
+    public static String idFromSerialNumber(int n) {
+    	return String.valueOf(n);
     }
 
     public static Microwave fromId(String id) {
-        return new Microwave(id);
+        return new Microwave(Integer.parseInt(id));
     }
 
     @Override
     public String toString() {
-        return "Microwave [id=" + id + "]";
+        return "Microwave [serialNumber=" + serialNumber + "]";
     }
 
 }
