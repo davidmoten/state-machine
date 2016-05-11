@@ -88,7 +88,7 @@ m = m.signal(new ButtonPressed())
 
 Identifiers
 ----------------
-Every object controlled by a state machine must have a unique id. When an immutable object is transformed by a state transition then the transformed object must have the same id as the original object.
+Every object controlled by a state machine must have an identifier unique by `object.getClass()`. When an immutable object is transformed by a state transition then the transformed object must have the same id as the original object.
 
 Generating a diagram
 -------------------------
