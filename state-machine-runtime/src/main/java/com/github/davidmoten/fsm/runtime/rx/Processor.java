@@ -91,12 +91,12 @@ public final class Processor<Id> {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public Observable<EntityStateMachine<?>> observable() {
+    public Observable<EntityStateMachine<?>> observable(Observable<Signal<?, Id>> signals) {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
-            return subject
+            return signals
                     //
-                    .toSerialized()
+                    .mergeWith(subject.toSerialized())
                     //
                     .doOnUnsubscribe(() -> worker.unsubscribe())
                     //
@@ -110,6 +110,10 @@ public final class Processor<Id> {
                             //
                             .subscribeOn(processingScheduler));
         });
+    }
+
+    public Observable<EntityStateMachine<?>> observable() {
+        return observable(Observable.empty());
     }
 
     @SuppressWarnings("unchecked")
