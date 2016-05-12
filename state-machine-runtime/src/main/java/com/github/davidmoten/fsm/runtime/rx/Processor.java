@@ -94,9 +94,9 @@ public final class Processor<Id> {
     public Observable<EntityStateMachine<?>> observable(Observable<Signal<?, Id>> signals) {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
-            return signals
+            return subject.toSerialized()
                     //
-                    .mergeWith(subject.toSerialized())
+                    .mergeWith(signals) //
                     //
                     .doOnUnsubscribe(() -> worker.unsubscribe())
                     //
