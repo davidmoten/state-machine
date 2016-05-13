@@ -91,29 +91,30 @@ public final class Processor<Id> {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public Observable<EntityStateMachine<?>> observable(Observable<Signal<?, Id>> signals) {
+    public Observable<EntityStateMachine<?>> observable(Observable<Signal<?, Id>> signals,
+            Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?>>, Observable<EntityStateMachine<?>>> entityTransform) {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
-            return subject.toSerialized()
-                    //
+            return subject.toSerialized() //
                     .mergeWith(signals) //
-                    //
-                    .doOnUnsubscribe(() -> worker.unsubscribe())
-                    //
-                    .groupBy(signal -> new ClassId(signal.cls(), signal.id()))
-                    //
-                    .flatMap(g -> g
-                            //
-                            .flatMap(processLambda(worker, g))
-                            //
-                            .doOnNext(m -> stateMachines.put(g.getKey(), m))
-                            //
-                            .subscribeOn(processingScheduler));
+                    .doOnUnsubscribe(() -> worker.unsubscribe()) //
+                    .groupBy(signal -> new ClassId(signal.cls(), signal.id())) //
+                    .flatMap(g -> {
+                Observable<EntityStateMachine<?>> obs = g //
+                        .flatMap(processLambda(worker, g)) //
+                        .doOnNext(m -> stateMachines.put(g.getKey(), m)) //
+                        .subscribeOn(processingScheduler); //
+                return entityTransform.call(GroupedObservable.from(g.getKey(), obs));
+            });
         });
     }
 
+    public Observable<EntityStateMachine<?>> observable(Observable<Signal<?, Id>> signals) {
+        return observable(signals, o -> o);
+    }
+
     public Observable<EntityStateMachine<?>> observable() {
-        return observable(Observable.empty());
+        return observable(Observable.empty(), o -> o);
     }
 
     @SuppressWarnings("unchecked")

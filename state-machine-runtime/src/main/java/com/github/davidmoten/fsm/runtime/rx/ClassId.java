@@ -52,4 +52,9 @@ public final class ClassId<T, Id> {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return "ClassId [cls=" + cls + ", id=" + id + "]";
+    }
+
 }
