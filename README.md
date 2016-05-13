@@ -129,7 +129,7 @@ When a transition occurs in a state machine from state A to state B, the transit
 ```java
 MicrowaveBehaviour<String> behaviour = new MicrowaveBehaviourBase<String>() {
     @Override
-    public Microwave onEntry_Cooking(Signaller<Microwave> signaller, Microwave microwave,
+    public Microwave onEntry_Cooking(Signaller<Microwave, String> signaller, Microwave microwave,
             String id, ButtonPressed event) {
         signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
         return microwave;
@@ -140,17 +140,19 @@ MicrowaveBehaviour<String> behaviour = new MicrowaveBehaviourBase<String>() {
 The signaller has these methods:
 
 ```java
-public interface Signaller<T> {
+public interface Signaller<T, Id> {
 
     void signalToSelf(Event<? super T> event);
     
     void signalToSelf(Event<? super T> event, long delay, TimeUnit unit);
 
-    <R> void signal(Class<R> cls, Object id, Event<? super R> event);
+    <R> void signal(Class<R> cls, Id id, Event<? super R> event);
 	
-    <R> void signal(Class<R> cls, Object id, Event<? super R> event, long delay, TimeUnit unit);
+    <R> void signal(Class<R> cls, Id id, Event<? super R> event, long delay, TimeUnit unit);
 	
-    void cancelSignal(Class<?> fromClass, Object fromId, Class<?> toClass, Object toId);
+    void cancelSignal(Class<?> fromClass, Id fromId, Class<?> toClass, Id toId);
+
+    <R> Optional<R> search(Class<R> cls, Id id);
 }
 ```
 
