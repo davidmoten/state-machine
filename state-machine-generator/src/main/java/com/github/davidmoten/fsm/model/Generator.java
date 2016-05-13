@@ -334,11 +334,11 @@ public final class Generator<T> {
             }
 
             // withSearch()
-            out.format("%spublic static <T> %s<T> withSearch(%s search) {\n", indent,
+            out.format("%spublic %s<T> withSearch(%s search) {\n", indent,
                     stateMachineClassSimpleName(), imports.add(Search.class));
             out.format(
-                    "%sreturn new %s<T>(instanceName(), id, behaviour, previousState, state, transitionOccurred, signalsToSelf, signalsToOther, search, clock);\n",
-                    indent.right(), stateMachineClassSimpleName());
+                    "%sreturn new %s<T>(%s, id, behaviour, previousState, state, transitionOccurred, signalsToSelf, signalsToOther, search, clock);\n",
+                    indent.right(), stateMachineClassSimpleName(), instanceName());
             out.format("%s}\n", indent.left());
             out.println();
 
