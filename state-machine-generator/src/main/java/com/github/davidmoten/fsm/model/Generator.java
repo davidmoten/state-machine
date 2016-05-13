@@ -338,7 +338,7 @@ public final class Generator<T> {
                     stateMachineClassSimpleName(), imports.add(Search.class));
             out.format(
                     "%sreturn new %s<T>(instanceName(), id, behaviour, previousState, state, transitionOccurred, signalsToSelf, signalsToOther, search, clock);\n",
-                    indent.right());
+                    indent.right(), stateMachineClassSimpleName());
             out.format("%s}\n", indent.left());
             out.println();
 
