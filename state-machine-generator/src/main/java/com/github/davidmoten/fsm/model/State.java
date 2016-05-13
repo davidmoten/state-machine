@@ -9,11 +9,11 @@ public final class State<T, R extends Event<? super T>> {
 
     private final String name;
     private final Class<R> eventClass;
-    private final StateMachine<T> m;
+    private final StateMachineDefinition<T> m;
     private boolean isCreationDestination;
     private Optional<String> documentation = Optional.empty();
 
-    public State(StateMachine<T> m, String name, Class<R> eventClass) {
+    public State(StateMachineDefinition<T> m, String name, Class<R> eventClass) {
         this.m = m;
         this.name = name;
         this.eventClass = eventClass;
@@ -31,7 +31,7 @@ public final class State<T, R extends Event<? super T>> {
         return documentation;
     }
 
-    public StateMachine<?> stateMachine() {
+    public StateMachineDefinition<?> stateMachine() {
         return m;
     }
 

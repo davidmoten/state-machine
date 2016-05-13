@@ -15,7 +15,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import com.github.davidmoten.fsm.graph.NodeOptions;
-import com.github.davidmoten.fsm.model.StateMachine;
+import com.github.davidmoten.fsm.model.StateMachineDefinition;
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class GeneratorMojo extends AbstractMojo {
@@ -41,15 +41,15 @@ public class GeneratorMojo extends AbstractMojo {
     @SuppressWarnings("unchecked")
     @Override
     public void execute() throws MojoExecutionException {
-        Supplier<List<StateMachine<?>>> supplier;
+        Supplier<List<StateMachineDefinition<?>>> supplier;
         try {
-            supplier = (Supplier<List<StateMachine<?>>>) (Class.forName(supplierClass)
+            supplier = (Supplier<List<StateMachineDefinition<?>>>) (Class.forName(supplierClass)
                     .newInstance());
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-        List<StateMachine<?>> machines = supplier.get();
-        for (StateMachine<?> machine : machines) {
+        List<StateMachineDefinition<?>> machines = supplier.get();
+        for (StateMachineDefinition<?> machine : machines) {
             machine.generateClasses(outputDirectory, packageName);
             // with docs
             generateGraphml(machine, true);
@@ -60,7 +60,7 @@ public class GeneratorMojo extends AbstractMojo {
         getLog().info("generated classes in " + outputDirectory + " with package " + packageName);
     }
 
-    private void generateHtml(StateMachine<?> machine) {
+    private void generateHtml(StateMachineDefinition<?> machine) {
         htmlDirectory.mkdirs();
         File gml = new File(htmlDirectory,
                 machine.cls().getCanonicalName().replace("$", ".") + ".html");
@@ -73,7 +73,7 @@ public class GeneratorMojo extends AbstractMojo {
 
     }
 
-    private void generateGraphml(StateMachine<?> machine, boolean includeDocumentation) {
+    private void generateGraphml(StateMachineDefinition<?> machine, boolean includeDocumentation) {
         diagramsDirectory.mkdirs();
         File gml = new File(diagramsDirectory, machine.cls().getCanonicalName().replace("$", ".")
                 + (includeDocumentation ? "-with-docs" : "") + ".graphml");
@@ -89,7 +89,7 @@ public class GeneratorMojo extends AbstractMojo {
         getLog().info("generated graphml file for import to yed (for instance): " + gml);
     }
 
-    private String value(StateMachine<?> machine, String key, String defaultValue) {
+    private String value(StateMachineDefinition<?> machine, String key, String defaultValue) {
         String value = stateMachines.get(machine.cls().getSimpleName() + "." + key);
         if (value == null) {
             return defaultValue;

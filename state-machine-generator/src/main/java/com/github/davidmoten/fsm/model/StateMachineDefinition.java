@@ -24,20 +24,20 @@ import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.EventVoid;
 import com.github.davidmoten.guavamini.Preconditions;
 
-public final class StateMachine<T> {
+public final class StateMachineDefinition<T> {
 
     private final Class<T> cls;
     private final List<Transition<T, ? extends Event<? super T>, ? extends Event<? super T>>> transitions = new ArrayList<>();
     private final Set<State<T, ? extends Event<? super T>>> states = new HashSet<>();
     private final State<T, EventVoid> initialState;
 
-    private StateMachine(Class<T> cls) {
+    private StateMachineDefinition(Class<T> cls) {
         this.cls = cls;
         this.initialState = new State<T, EventVoid>(this, "Initial", EventVoid.class);
     }
 
-    public static <T> StateMachine<T> create(Class<T> cls) {
-        return new StateMachine<T>(cls);
+    public static <T> StateMachineDefinition<T> create(Class<T> cls) {
+        return new StateMachineDefinition<T>(cls);
     }
 
     public Class<T> cls() {
@@ -54,7 +54,7 @@ public final class StateMachine<T> {
         return state;
     }
 
-    public <R extends Event<? super T>, S extends Event<? super T>> StateMachine<T> addTransition(
+    public <R extends Event<? super T>, S extends Event<? super T>> StateMachineDefinition<T> addTransition(
             State<T, R> state, State<T, S> other) {
         Transition<T, R, S> transition = new Transition<T, R, S>(state, other);
         System.out.println("adding " + transition);
@@ -68,7 +68,7 @@ public final class StateMachine<T> {
         return this;
     }
 
-    <S extends Event<? super T>> StateMachine<T> addInitialTransition(State<T, S> other) {
+    <S extends Event<? super T>> StateMachineDefinition<T> addInitialTransition(State<T, S> other) {
         Transition<T, EventVoid, S> transition = new Transition<T, EventVoid, S>(initialState,
                 other);
         System.out.println("adding " + transition);

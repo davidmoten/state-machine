@@ -10,18 +10,18 @@ import com.github.davidmoten.fsm.example.microwave.DoorOpened;
 import com.github.davidmoten.fsm.example.microwave.Microwave;
 import com.github.davidmoten.fsm.example.microwave.TimerTimesOut;
 import com.github.davidmoten.fsm.model.State;
-import com.github.davidmoten.fsm.model.StateMachine;
+import com.github.davidmoten.fsm.model.StateMachineDefinition;
 
-public class StateMachines implements Supplier<List<StateMachine<?>>> {
+public class StateMachines implements Supplier<List<StateMachineDefinition<?>>> {
 
     @Override
-    public List<StateMachine<?>> get() {
+    public List<StateMachineDefinition<?>> get() {
         return Arrays.asList(createMicrowaveStateMachine());
 
     }
 
-    private static StateMachine<Microwave> createMicrowaveStateMachine() {
-        StateMachine<Microwave> m = StateMachine.create(Microwave.class);
+    private static StateMachineDefinition<Microwave> createMicrowaveStateMachine() {
+        StateMachineDefinition<Microwave> m = StateMachineDefinition.create(Microwave.class);
         State<Microwave, DoorClosed> readyToCook = m.createState("Ready to Cook", DoorClosed.class)
                 .documentation("<pre>entry/\nturn light off;</pre>");
         State<Microwave, DoorOpened> doorOpen = m.createState("Door Open", DoorOpened.class)
