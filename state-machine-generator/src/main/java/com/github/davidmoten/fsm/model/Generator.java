@@ -332,6 +332,17 @@ public final class Generator<T> {
                 out.format("%s}\n", indent.left());
                 out.println();
             }
+
+            // withSearch()
+            out.format("%spublic static <T> %s<T> withSearch(%s search) {\n", indent,
+                    stateMachineClassSimpleName(), imports.add(Search.class));
+            out.format(
+                    "%sreturn new %s<T>(instanceName(), id, behaviour, previousState, state, transitionOccurred, signalsToSelf, signalsToOther, search, clock);\n",
+                    indent.right());
+            out.format("%s}\n", indent.left());
+            out.println();
+
+            // States
             out.format("%spublic static enum State implements %s<%s> {\n", indent,
                     imports.add(EntityState.class), imports.add(cls));
             indent.right();

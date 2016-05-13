@@ -16,4 +16,6 @@ public interface EntityStateMachine<T> extends ObjectState<T> {
     List<Signal<?, ?>> signalsToOther();
 
     Class<T> cls();
+
+    EntityStateMachine<T> withSearch(Search<?> search);
 }
