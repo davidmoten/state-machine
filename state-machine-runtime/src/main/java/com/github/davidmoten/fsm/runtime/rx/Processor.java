@@ -30,11 +30,11 @@ import rx.subjects.PublishSubject;
 
 public final class Processor<Id> {
 
-    private final Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory;
+    private final Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory;
     private final PublishSubject<Signal<?, Id>> subject;
     private final Scheduler signalScheduler;
     private final Scheduler processingScheduler;
-    private final Map<ClassId<?, Id>, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
+    private final Map<ClassId<?, Id>, EntityStateMachine<?, Id>> stateMachines = new ConcurrentHashMap<>();
     private final Map<ClassIdPair<Id>, Subscription> subscriptions = new ConcurrentHashMap<>();
     private final Search<Id> search = new Search<Id>() {
         @Override
@@ -43,7 +43,7 @@ public final class Processor<Id> {
         }
     };
 
-    private Processor(Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
+    private Processor(Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory,
             Scheduler processingScheduler, Scheduler signalScheduler) {
         Preconditions.checkNotNull(stateMachineFactory);
         Preconditions.checkNotNull(signalScheduler);
@@ -54,7 +54,7 @@ public final class Processor<Id> {
     }
 
     public static <Id> Builder<Id> stateMachineFactory(
-            Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory) {
+            Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory) {
         return new Builder<Id>().stateMachineFactory(stateMachineFactory);
     }
 
@@ -68,7 +68,7 @@ public final class Processor<Id> {
 
     public static class Builder<Id> {
 
-        private Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory;
+        private Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory;
         private Scheduler signalScheduler = Schedulers.computation();
         private Scheduler processingScheduler = Schedulers.immediate();
 
@@ -76,7 +76,7 @@ public final class Processor<Id> {
         }
 
         public Builder<Id> stateMachineFactory(
-                Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory) {
+                Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory) {
             this.stateMachineFactory = stateMachineFactory;
             return this;
         }
@@ -98,8 +98,8 @@ public final class Processor<Id> {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public Observable<EntityStateMachine<?>> observable(Observable<Signal<?, Id>> signals,
-            Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?>>, Observable<EntityStateMachine<?>>> entityTransform) {
+    public Observable<EntityStateMachine<?, Id>> observable(Observable<Signal<?, Id>> signals,
+            Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform) {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
             return subject.toSerialized() //
@@ -107,7 +107,7 @@ public final class Processor<Id> {
                     .doOnUnsubscribe(() -> worker.unsubscribe()) //
                     .groupBy(signal -> new ClassId(signal.cls(), signal.id())) //
                     .flatMap(g -> {
-                Observable<EntityStateMachine<?>> obs = g //
+                Observable<EntityStateMachine<?, Id>> obs = g //
                         .flatMap(processLambda(worker, g)) //
                         .doOnNext(m -> stateMachines.put(g.getKey(), m)) //
                         .subscribeOn(processingScheduler); //
@@ -116,16 +116,16 @@ public final class Processor<Id> {
         });
     }
 
-    public Observable<EntityStateMachine<?>> observable(Observable<Signal<?, Id>> signals) {
+    public Observable<EntityStateMachine<?, Id>> observable(Observable<Signal<?, Id>> signals) {
         return observable(signals, o -> o);
     }
 
-    public Observable<EntityStateMachine<?>> observable() {
+    public Observable<EntityStateMachine<?, Id>> observable() {
         return observable(Observable.empty(), o -> o);
     }
 
     @SuppressWarnings("unchecked")
-    private Func1<? super Signal<?, Id>, Observable<EntityStateMachine<?>>> processLambda(
+    private Func1<? super Signal<?, Id>, Observable<EntityStateMachine<?, Id>>> processLambda(
             Worker worker,
             @SuppressWarnings("rawtypes") GroupedObservable<ClassId, Signal<?, Id>> g) {
         return x -> process(g.getKey(), x.event(), worker);
@@ -136,10 +136,10 @@ public final class Processor<Id> {
         final Deque<Signal<?, Id>> signalsToOther = new ArrayDeque<>();
     }
 
-    private <R> Observable<EntityStateMachine<?>> process(ClassId<R, Id> cid, Event<R> x,
+    private <R> Observable<EntityStateMachine<?, Id>> process(ClassId<R, Id> cid, Event<R> x,
             Worker worker) {
 
-        return Observable.create(new SyncOnSubscribe<Signals<Id>, EntityStateMachine<?>>() {
+        return Observable.create(new SyncOnSubscribe<Signals<Id>, EntityStateMachine<?, Id>>() {
 
             @Override
             protected Signals<Id> generateState() {
@@ -150,9 +150,9 @@ public final class Processor<Id> {
 
             @Override
             protected Signals<Id> next(Signals<Id> signals,
-                    Observer<? super EntityStateMachine<?>> observer) {
+                    Observer<? super EntityStateMachine<?, Id>> observer) {
                 @SuppressWarnings("unchecked")
-                EntityStateMachine<Object> m = (EntityStateMachine<Object>) getStateMachine(
+                EntityStateMachine<Object, Id> m = (EntityStateMachine<Object, Id>) getStateMachine(
                         cid.cls(), cid.id());
                 @SuppressWarnings("unchecked")
                 Event<Object> event = (Event<Object>) signals.signalsToSelf.pollLast();
@@ -167,8 +167,8 @@ public final class Processor<Id> {
 
             @SuppressWarnings("unchecked")
             private <T> void applySignalToSelf(Signals<Id> signals,
-                    Observer<? super EntityStateMachine<?>> observer, EntityStateMachine<T> m,
-                    Event<T> event) {
+                    Observer<? super EntityStateMachine<?, Id>> observer,
+                    EntityStateMachine<T, Id> m, Event<T> event) {
                 m = m.signal(event);
                 // stateMachines.put(id, m);
                 observer.onNext(m);
@@ -238,10 +238,10 @@ public final class Processor<Id> {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> EntityStateMachine<T> getStateMachine(Class<T> cls, Id id) {
-        return (EntityStateMachine<T>) stateMachines //
+    private <T> EntityStateMachine<T, Id> getStateMachine(Class<T> cls, Id id) {
+        return (EntityStateMachine<T, Id>) stateMachines //
                 .computeIfAbsent(new ClassId<T, Id>(cls, id),
-                        clsId -> (EntityStateMachine<T>) stateMachineFactory.call(cls, id)
+                        clsId -> (EntityStateMachine<T, Id>) stateMachineFactory.call(cls, id)
                                 .withSearch(search));
     }
 
@@ -263,7 +263,7 @@ public final class Processor<Id> {
 
     @SuppressWarnings("unchecked")
     public <T> ObjectState<T> get(Class<T> cls, Id id) {
-        return (EntityStateMachine<T>) stateMachines.get(new ClassId<T, Id>(cls, id));
+        return (EntityStateMachine<T, Id>) stateMachines.get(new ClassId<T, Id>(cls, id));
     }
 
     public void onCompleted() {

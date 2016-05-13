@@ -37,7 +37,7 @@ public class ProcessorTest {
         Processor<String> processor = createProcessor(signalScheduler);
 
         // do some tests with the processor
-        TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
+        TestSubscriber<EntityStateMachine<?, String>> ts = TestSubscriber.create();
         processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
 
         ClassId<Microwave, String> microwave = ClassId.create(Microwave.class, "1");
@@ -55,7 +55,7 @@ public class ProcessorTest {
         ts.assertNoErrors();
         ts.assertValueCount(2);
         {
-            List<EntityStateMachine<?>> list = ts.getOnNextEvents();
+            List<EntityStateMachine<?, String>> list = ts.getOnNextEvents();
             assertEquals(MicrowaveStateMachine.State.COOKING, list.get(0).state());
             assertEquals(MicrowaveStateMachine.State.COOKING_COMPLETE, list.get(1).state());
         }
@@ -70,7 +70,7 @@ public class ProcessorTest {
         {
             // should not be a transition
             ts.assertValueCount(4);
-            List<EntityStateMachine<?>> list = ts.getOnNextEvents();
+            List<EntityStateMachine<?, String>> list = ts.getOnNextEvents();
             assertEquals(MicrowaveStateMachine.State.DOOR_OPEN, list.get(3).state());
             assertFalse(list.get(3).transitionOccurred());
         }
@@ -89,7 +89,7 @@ public class ProcessorTest {
         Processor<String> processor = createProcessor(signalScheduler);
 
         // do some tests with the processor
-        TestSubscriber<EntityStateMachine<?>> ts = TestSubscriber.create();
+        TestSubscriber<EntityStateMachine<?, String>> ts = TestSubscriber.create();
         processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
 
         ClassId<Microwave, String> microwave = ClassId.create(Microwave.class, "1");
@@ -119,7 +119,7 @@ public class ProcessorTest {
         MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
 
         // define how to instantiate state machines from identifiers
-        Func2<Class<?>, String, EntityStateMachine<?>> stateMachineFactory = StateMachineFactory
+        Func2<Class<?>, String, EntityStateMachine<?, String>> stateMachineFactory = StateMachineFactory
                 .cls(Microwave.class)
                 .<String> hasFactory(id -> MicrowaveStateMachine.create(Microwave.fromId(id), id,
                         behaviour, MicrowaveStateMachine.State.READY_TO_COOK,
@@ -136,8 +136,8 @@ public class ProcessorTest {
     private static MicrowaveBehaviourBase<String> createMicrowaveBehaviour() {
         return new MicrowaveBehaviourBase<String>() {
             @Override
-            public Microwave onEntry_Cooking(Signaller<Microwave> signaller, Microwave microwave,
-                    String id, ButtonPressed event) {
+            public Microwave onEntry_Cooking(Signaller<Microwave, String> signaller,
+                    Microwave microwave, String id, ButtonPressed event) {
                 signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
                 return microwave;
             }

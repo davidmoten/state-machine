@@ -3,13 +3,13 @@ package com.github.davidmoten.fsm.runtime;
 import java.util.List;
 import java.util.Optional;
 
-public interface EntityStateMachine<T> extends ObjectState<T> {
+public interface EntityStateMachine<T, Id> extends ObjectState<T> {
 
     boolean transitionOccurred();
 
     Optional<? extends EntityState<T>> previousState();
 
-    EntityStateMachine<T> signal(Event<? super T> event);
+    EntityStateMachine<T, Id> signal(Event<? super T> event);
 
     List<Event<? super T>> signalsToSelf();
 
@@ -17,5 +17,5 @@ public interface EntityStateMachine<T> extends ObjectState<T> {
 
     Class<T> cls();
 
-    EntityStateMachine<T> withSearch(Search<?> search);
+    EntityStateMachine<T, Id> withSearch(Search<Id> search);
 }
