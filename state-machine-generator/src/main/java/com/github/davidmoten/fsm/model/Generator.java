@@ -239,18 +239,18 @@ public final class Generator<T> {
             out.format("%sprivate final %s<%s<?, ?>> signalsToOther;\n", indent,
                     imports.add(List.class), imports.add(Signal.class));
             out.format("%sprivate final %s clock;\n", indent, imports.add(Clock.class));
-            out.format("%sprivate final %s<T> search;\n", indent, imports.add(Search.class));
+            out.format("%sprivate final %s<Object> search;\n", indent, imports.add(Search.class));
 
             out.println();
 
             // Constructor
             out.format(
-                    "%sprivate %s(%s %s, T id, %s<T> behaviour, %s<State> previousState, State state, boolean transitionOccurred, %s<%s<? super %s>> signalsToSelf, %s<%s<?, ?>> signalsToOther, %s<T> search, %s clock) {\n",
+                    "%sprivate %s(%s %s, T id, %s<T> behaviour, %s<State> previousState, State state, boolean transitionOccurred, %s<%s<? super %s>> signalsToSelf, %s<%s<?, ?>> signalsToOther, %s<%s> search, %s clock) {\n",
                     indent, stateMachineClassSimpleName(), imports.add(cls), instanceName(),
                     imports.add(behaviourClassName()), imports.add(Optional.class),
                     imports.add(List.class), imports.add(Event.class), imports.add(cls),
                     imports.add(List.class), imports.add(Signal.class), imports.add(Search.class),
-                    imports.add(Clock.class));
+                    imports.add(Object.class), imports.add(Clock.class));
             out.format("%s%s.checkNotNull(behaviour, \"behaviour cannot be null\");\n",
                     indent.right(), imports.add(Preconditions.class));
             out.format("%s%s.checkNotNull(id, \"id cannot be null\");\n", indent,
@@ -525,10 +525,19 @@ public final class Generator<T> {
             out.format("%s}\n", indent.left());
             out.println();
 
-            // Class<T> cls()
+            // long now()
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic long now() {\n", indent);
             out.format("%sreturn clock.now();\n", indent.right());
+            out.format("%s}\n", indent.left());
+            out.println();
+
+            // Optional<R> search()
+            out.format("%s@%s\n", indent, imports.add(Override.class));
+            out.format("%spublic <R> %s<R> search(%s<R> cls, %s id) {\n", indent,
+                    imports.add(Optional.class), imports.add(Class.class),
+                    imports.add(Object.class));
+            out.format("%sreturn search.search(cls, id);\n", indent.right());
             out.format("%s}\n", indent.left());
             out.println();
 

@@ -1,5 +1,7 @@
 package com.github.davidmoten.fsm.runtime;
 
+import java.util.Optional;
+
 public class SearchUnsupported<Id> implements Search<Id> {
 
     private static final SearchUnsupported<Object> INSTANCE = new SearchUnsupported<>();
@@ -10,7 +12,7 @@ public class SearchUnsupported<Id> implements Search<Id> {
     }
 
     @Override
-    public <T> T search(Class<T> cls, Id id) {
+    public <T> Optional<T> search(Class<T> cls, Id id) {
         throw new UnsupportedOperationException("search is not supported");
     }
 

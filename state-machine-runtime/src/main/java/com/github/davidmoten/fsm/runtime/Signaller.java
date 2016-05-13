@@ -2,7 +2,7 @@ package com.github.davidmoten.fsm.runtime;
 
 import java.util.concurrent.TimeUnit;
 
-public interface Signaller<T> {
+public interface Signaller<T> extends Search<Object> {
 
     void signalToSelf(Event<? super T> event);
 

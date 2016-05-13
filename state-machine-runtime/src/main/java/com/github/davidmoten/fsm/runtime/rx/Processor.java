@@ -12,6 +12,7 @@ import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.ObjectState;
+import com.github.davidmoten.fsm.runtime.Search;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.guavamini.Preconditions;
 
@@ -35,6 +36,12 @@ public final class Processor<Id> {
     private final Scheduler processingScheduler;
     private final Map<ClassId<?, Id>, EntityStateMachine<?>> stateMachines = new ConcurrentHashMap<>();
     private final Map<ClassIdPair<Id>, Subscription> subscriptions = new ConcurrentHashMap<>();
+    private final Search<Id> search = new Search<Id>() {
+        @Override
+        public <T> Optional<T> search(Class<T> cls, Id id) {
+            return getStateMachine(cls, id).get();
+        }
+    };
 
     private Processor(Func2<Class<?>, Id, EntityStateMachine<?>> stateMachineFactory,
             Scheduler processingScheduler, Scheduler signalScheduler) {
@@ -232,12 +239,10 @@ public final class Processor<Id> {
 
     @SuppressWarnings("unchecked")
     private <T> EntityStateMachine<T> getStateMachine(Class<T> cls, Id id) {
-        EntityStateMachine<T> m = (EntityStateMachine<T>) stateMachines
-                .get(new ClassId<T, Id>(cls, id));
-        if (m == null) {
-            m = (EntityStateMachine<T>) stateMachineFactory.call(cls, id);
-        }
-        return m;
+        return (EntityStateMachine<T>) stateMachines //
+                .computeIfAbsent(new ClassId<T, Id>(cls, id),
+                        clsId -> (EntityStateMachine<T>) stateMachineFactory.call(cls, id)
+                                .withSearch(search));
     }
 
     public <T> Optional<T> getObject(Class<T> cls, Id id) {

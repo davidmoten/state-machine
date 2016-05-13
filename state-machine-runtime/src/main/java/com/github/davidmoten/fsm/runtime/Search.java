@@ -1,7 +1,10 @@
 package com.github.davidmoten.fsm.runtime;
 
+import java.util.Optional;
+
+@FunctionalInterface
 public interface Search<Id> {
 
-    <T> T search(Class<T> cls, Id id);
+    <T> Optional<T> search(Class<T> cls, Id id);
 
 }
