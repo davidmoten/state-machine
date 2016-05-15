@@ -17,6 +17,7 @@ import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.guavamini.Preconditions;
 
 import rx.Observable;
+import rx.Observable.Transformer;
 import rx.Observer;
 import rx.Scheduler;
 import rx.Scheduler.Worker;
@@ -99,12 +100,14 @@ public final class Processor<Id> {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Observable<EntityStateMachine<?, Id>> observable(Observable<Signal<?, Id>> signals,
-            Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform) {
+            Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, 
+            Observable<EntityStateMachine<?, Id>>> entityTransform, Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy) {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
             return subject.toSerialized() //
                     .mergeWith(signals) //
                     .doOnUnsubscribe(() -> worker.unsubscribe()) //
+                    .compose(preGroupBy)
                     .groupBy(signal -> new ClassId(signal.cls(), signal.id())) //
                     .flatMap(g -> {
                 Observable<EntityStateMachine<?, Id>> obs = g //
@@ -117,11 +120,11 @@ public final class Processor<Id> {
     }
 
     public Observable<EntityStateMachine<?, Id>> observable(Observable<Signal<?, Id>> signals) {
-        return observable(signals, o -> o);
+        return observable(signals, o -> o, o->o);
     }
 
     public Observable<EntityStateMachine<?, Id>> observable() {
-        return observable(Observable.empty(), o -> o);
+        return observable(Observable.empty(), o -> o, o->o);
     }
 
     @SuppressWarnings("unchecked")
