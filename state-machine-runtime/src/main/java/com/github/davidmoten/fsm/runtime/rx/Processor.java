@@ -120,11 +120,11 @@ public final class Processor<Id> {
     }
 
     public Observable<EntityStateMachine<?, Id>> observable(Observable<Signal<?, Id>> signals) {
-        return observable(signals, o -> o, o->o);
+        return observable(signals, o -> o, o -> o);
     }
 
     public Observable<EntityStateMachine<?, Id>> observable() {
-        return observable(Observable.empty(), o -> o, o->o);
+        return observable(Observable.empty(), o -> o, o -> o);
     }
 
     @SuppressWarnings("unchecked")
