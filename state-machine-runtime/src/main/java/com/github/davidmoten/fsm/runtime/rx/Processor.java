@@ -15,6 +15,7 @@ import com.github.davidmoten.fsm.runtime.ObjectState;
 import com.github.davidmoten.fsm.runtime.Search;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.guavamini.Preconditions;
+import com.github.davidmoten.rx.Transformers;
 
 import rx.Observable;
 import rx.Observable.Transformer;
@@ -22,6 +23,7 @@ import rx.Observer;
 import rx.Scheduler;
 import rx.Scheduler.Worker;
 import rx.Subscription;
+import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.observables.GroupedObservable;
@@ -100,16 +102,22 @@ public final class Processor<Id> {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Observable<EntityStateMachine<?, Id>> observable(Observable<Signal<?, Id>> signals,
-            Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, 
-            Observable<EntityStateMachine<?, Id>>> entityTransform, Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy) {
+            Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform,
+            Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
+            Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory // nullable
+    ) {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
-            return subject.toSerialized() //
+            Observable<Signal<?, Id>> o1 = subject.toSerialized() //
                     .mergeWith(signals) //
                     .doOnUnsubscribe(() -> worker.unsubscribe()) //
-                    .compose(preGroupBy)
-                    .groupBy(signal -> new ClassId(signal.cls(), signal.id())) //
-                    .flatMap(g -> {
+                    .compose(preGroupBy); //
+
+            Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o2 = o1.compose(
+                    Transformers.<Signal<?, Id>, ClassId<?, Id>, Signal<?, Id>> groupByEvicting(
+                            signal -> new ClassId(signal.cls(), signal.id()), x -> x, mapFactory));
+
+            return o2.flatMap(g -> {
                 Observable<EntityStateMachine<?, Id>> obs = g //
                         .flatMap(processLambda(worker, g)) //
                         .doOnNext(m -> stateMachines.put(g.getKey(), m)) //
@@ -119,18 +127,32 @@ public final class Processor<Id> {
         });
     }
 
+    private static class DefaultMapFactoryHolder {
+
+        private static final Func1<Action1<Object>, Map<Object, Object>> DEFAULT_INSTANCE = new Func1<Action1<Object>, Map<Object, Object>>() {
+
+            @Override
+            public Map<Object, Object> call(Action1<Object> t) {
+                return new ConcurrentHashMap<Object, Object>();
+            }
+        };
+
+        @SuppressWarnings("unchecked")
+        static <T> Func1<Action1<T>, Map<T, Object>> instance() {
+            return (Func1<Action1<T>, Map<T, Object>>) (Func1<?, ?>) DEFAULT_INSTANCE;
+        }
+    }
+
     public Observable<EntityStateMachine<?, Id>> observable(Observable<Signal<?, Id>> signals) {
-        return observable(signals, o -> o, o -> o);
+        return observable(signals, o -> o, o -> o, DefaultMapFactoryHolder.instance());
     }
 
     public Observable<EntityStateMachine<?, Id>> observable() {
-        return observable(Observable.empty(), o -> o, o -> o);
+        return observable(Observable.empty(), o -> o, o -> o, DefaultMapFactoryHolder.instance());
     }
 
-    @SuppressWarnings("unchecked")
     private Func1<? super Signal<?, Id>, Observable<EntityStateMachine<?, Id>>> processLambda(
-            Worker worker,
-            @SuppressWarnings("rawtypes") GroupedObservable<ClassId, Signal<?, Id>> g) {
+            Worker worker, GroupedObservable<ClassId<?, Id>, Signal<?, Id>> g) {
         return x -> process(g.getKey(), x.event(), worker);
     }
 
@@ -139,7 +161,7 @@ public final class Processor<Id> {
         final Deque<Signal<?, Id>> signalsToOther = new ArrayDeque<>();
     }
 
-    private <R> Observable<EntityStateMachine<?, Id>> process(ClassId<R, Id> cid, Event<R> x,
+    private Observable<EntityStateMachine<?, Id>> process(ClassId<?, Id> cid, Event<?> x,
             Worker worker) {
 
         return Observable.create(new SyncOnSubscribe<Signals<Id>, EntityStateMachine<?, Id>>() {
