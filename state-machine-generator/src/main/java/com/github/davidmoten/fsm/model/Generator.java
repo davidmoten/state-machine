@@ -25,6 +25,7 @@ import com.github.davidmoten.fsm.runtime.Search;
 import com.github.davidmoten.fsm.runtime.SearchUnsupported;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.fsm.runtime.Signaller;
+import com.github.davidmoten.fsm.runtime.SignallerWithAsync;
 import com.github.davidmoten.guavamini.Preconditions;
 
 public final class Generator<T> {
@@ -220,9 +221,10 @@ public final class Generator<T> {
             Indent indent = new Indent();
 
             // Class Declaration
-            out.format("public final class %s<T> implements %s<%s, T>, %s<%s, T> {\n",
+            out.format("public final class %s<T> implements %s<%s, T>, %s<%s, T>, %s<%s, T> {\n",
                     stateMachineClassSimpleName(), imports.add(EntityStateMachine.class),
-                    imports.add(cls), imports.add(Signaller.class), imports.add(cls));
+                    imports.add(cls), imports.add(Signaller.class), imports.add(cls),
+                    imports.add(SignallerWithAsync.class), imports.add(cls));
             indent.right();
             out.println();
 
@@ -559,9 +561,17 @@ public final class Generator<T> {
             out.println();
 
             // AsyncSignaller<Id> async()
-            // out.format("%s@%s\n", indent, imports.add(Override.class));
+            out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic %s<T> async() {\n", indent, imports.add(AsyncSignaller.class));
             out.format("%sreturn async;\n", indent.right());
+            out.format("%s}\n", indent.left());
+            out.println();
+
+            // Signaller<%s, Id> sync()
+            out.format("%s@%s\n", indent, imports.add(Override.class));
+            out.format("%spublic %s<%s, T> sync() {\n", indent, imports.add(Signaller.class),
+                    imports.add(cls));
+            out.format("%sreturn this;\n", indent.right());
             out.format("%s}\n", indent.left());
             out.println();
 
