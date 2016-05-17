@@ -100,7 +100,6 @@ public final class Processor<Id> {
 
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Observable<EntityStateMachine<?, Id>> observable(Observable<Signal<?, Id>> signals,
             Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform,
             Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
@@ -108,6 +107,7 @@ public final class Processor<Id> {
     ) {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
+            @SuppressWarnings({ "unchecked", "rawtypes" })
             Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o1 = subject.toSerialized() //
                     .mergeWith(signals) //
                     .doOnUnsubscribe(() -> worker.unsubscribe()) //
