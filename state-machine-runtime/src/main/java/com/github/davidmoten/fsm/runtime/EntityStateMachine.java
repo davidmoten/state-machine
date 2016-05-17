@@ -18,4 +18,6 @@ public interface EntityStateMachine<T, Id> extends ObjectState<T> {
     Class<T> cls();
 
     EntityStateMachine<T, Id> withSearch(Search<Id> search);
+
+    EntityStateMachine<T, Id> withAsyncSignaller(AsyncSignaller<Id> asyncSignaller);
 }

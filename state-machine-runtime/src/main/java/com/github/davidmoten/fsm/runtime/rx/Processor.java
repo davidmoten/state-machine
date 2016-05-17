@@ -8,13 +8,13 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import com.github.davidmoten.fsm.runtime.AsyncSignaller;
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.ObjectState;
 import com.github.davidmoten.fsm.runtime.Search;
 import com.github.davidmoten.fsm.runtime.Signal;
-import com.github.davidmoten.fsm.runtime.SignallerAsync;
 import com.github.davidmoten.guavamini.Preconditions;
 import com.github.davidmoten.rx.Transformers;
 
@@ -32,7 +32,7 @@ import rx.observables.SyncOnSubscribe;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
-public final class Processor<Id> implements SignallerAsync<Id> {
+public final class Processor<Id> implements AsyncSignaller<Id> {
 
     private final Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory;
     private final PublishSubject<Signal<?, Id>> subject;
@@ -149,7 +149,8 @@ public final class Processor<Id> implements SignallerAsync<Id> {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o1 = subject.toSerialized() //
+            Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o1 = //
+            subject.toSerialized() //
                     .mergeWith(signals) //
                     .doOnUnsubscribe(() -> worker.unsubscribe()) //
                     .compose(preGroupBy) //
@@ -283,8 +284,10 @@ public final class Processor<Id> implements SignallerAsync<Id> {
     private <T> EntityStateMachine<T, Id> getStateMachine(Class<T> cls, Id id) {
         return (EntityStateMachine<T, Id>) stateMachines //
                 .computeIfAbsent(new ClassId<T, Id>(cls, id),
-                        clsId -> (EntityStateMachine<T, Id>) stateMachineFactory.call(cls, id)
-                                .withSearch(search));
+                        clsId -> (EntityStateMachine<T, Id>) stateMachineFactory //
+                                .call(cls, id) //
+                                .withSearch(search) //
+                                .withAsyncSignaller(this));
     }
 
     public <T> Optional<T> getObject(Class<T> cls, Id id) {
