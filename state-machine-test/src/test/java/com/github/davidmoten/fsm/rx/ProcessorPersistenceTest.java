@@ -17,7 +17,7 @@ import com.github.davidmoten.fsm.example.microwave.Microwave;
 import com.github.davidmoten.fsm.example.microwave.TimerTimesOut;
 import com.github.davidmoten.fsm.runtime.Clock;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
-import com.github.davidmoten.fsm.runtime.Signaller;
+import com.github.davidmoten.fsm.runtime.SignallerWithAsync;
 import com.github.davidmoten.fsm.runtime.rx.ClassId;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 import com.github.davidmoten.fsm.runtime.rx.StateMachineFactory;
@@ -104,9 +104,9 @@ public class ProcessorPersistenceTest {
     private static MicrowaveBehaviourBase<String> createMicrowaveBehaviour() {
         return new MicrowaveBehaviourBase<String>() {
             @Override
-            public Microwave onEntry_Cooking(Signaller<Microwave, String> signaller,
+            public Microwave onEntry_Cooking(SignallerWithAsync<Microwave, String> signaller,
                     Microwave microwave, String id, ButtonPressed event) {
-                signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
+                signaller.sync().signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
                 return microwave;
             }
         };
