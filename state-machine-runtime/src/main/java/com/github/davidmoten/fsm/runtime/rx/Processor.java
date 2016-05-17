@@ -14,6 +14,7 @@ import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.ObjectState;
 import com.github.davidmoten.fsm.runtime.Search;
 import com.github.davidmoten.fsm.runtime.Signal;
+import com.github.davidmoten.fsm.runtime.SignallerAsync;
 import com.github.davidmoten.guavamini.Preconditions;
 import com.github.davidmoten.rx.Transformers;
 
@@ -31,7 +32,7 @@ import rx.observables.SyncOnSubscribe;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
-public final class Processor<Id> {
+public final class Processor<Id> implements SignallerAsync<Id> {
 
     private final Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory;
     private final PublishSubject<Signal<?, Id>> subject;
@@ -294,12 +295,24 @@ public final class Processor<Id> {
         subject.onNext(signal);
     }
 
+    @Override
     public <T> void signal(Class<T> cls, Id id, Event<? super T> event) {
         subject.onNext(Signal.create(cls, id, event));
     }
 
     public <T> void signal(ClassId<T, Id> cid, Event<? super T> event) {
         subject.onNext(Signal.create(cid.cls(), cid.id(), event));
+    }
+
+    @Override
+    public <R> void signal(Class<R> cls, Id id, Event<? super R> event, long delay, TimeUnit unit) {
+        long t = signalScheduler.now() + unit.toMillis(delay);
+        subject.onNext(Signal.create(cls, id, event, t));
+    }
+
+    @Override
+    public long now() {
+        return signalScheduler.now();
     }
 
     @SuppressWarnings("unchecked")
