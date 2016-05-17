@@ -43,6 +43,7 @@ public final class Processor<Id> {
     private final Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform;
     private final Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy;
     private final Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
+
     private final Search<Id> search = new Search<Id>() {
         @Override
         public <T> Optional<T> search(Class<T> cls, Id id) {
