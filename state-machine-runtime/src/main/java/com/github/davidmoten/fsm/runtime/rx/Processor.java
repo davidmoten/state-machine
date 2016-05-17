@@ -108,16 +108,16 @@ public final class Processor<Id> {
     ) {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
-            Observable<Signal<?, Id>> o1 = subject.toSerialized() //
+            Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o1 = subject.toSerialized() //
                     .mergeWith(signals) //
                     .doOnUnsubscribe(() -> worker.unsubscribe()) //
-                    .compose(preGroupBy); //
+                    .compose(preGroupBy) //
+                    .compose(Transformers
+                            .<Signal<?, Id>, ClassId<?, Id>, Signal<?, Id>> groupByEvicting(
+                                    signal -> new ClassId(signal.cls(), signal.id()), x -> x,
+                                    mapFactory));
 
-            Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o2 = o1.compose(
-                    Transformers.<Signal<?, Id>, ClassId<?, Id>, Signal<?, Id>> groupByEvicting(
-                            signal -> new ClassId(signal.cls(), signal.id()), x -> x, mapFactory));
-
-            return o2.flatMap(g -> {
+            return o1.flatMap(g -> {
                 Observable<EntityStateMachine<?, Id>> obs = g //
                         .flatMap(processLambda(worker, g)) //
                         .doOnNext(m -> stateMachines.put(g.getKey(), m)) //
