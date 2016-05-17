@@ -39,6 +39,10 @@ public final class Processor<Id> {
     private final Scheduler processingScheduler;
     private final Map<ClassId<?, Id>, EntityStateMachine<?, Id>> stateMachines = new ConcurrentHashMap<>();
     private final Map<ClassIdPair<Id>, Subscription> subscriptions = new ConcurrentHashMap<>();
+    private final Observable<Signal<?, Id>> signals;
+    private final Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform;
+    private final Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy;
+    private final Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
     private final Search<Id> search = new Search<Id>() {
         @Override
         public <T> Optional<T> search(Class<T> cls, Id id) {
@@ -47,13 +51,25 @@ public final class Processor<Id> {
     };
 
     private Processor(Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory,
-            Scheduler processingScheduler, Scheduler signalScheduler) {
+            Scheduler processingScheduler, Scheduler signalScheduler,
+            Observable<Signal<?, Id>> signals,
+            Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform,
+            Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
+            Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory) {
         Preconditions.checkNotNull(stateMachineFactory);
         Preconditions.checkNotNull(signalScheduler);
+        Preconditions.checkNotNull(signals);
+        Preconditions.checkNotNull(entityTransform);
+        Preconditions.checkNotNull(preGroupBy);
+        // mapFactory is nullable
         this.stateMachineFactory = stateMachineFactory;
         this.signalScheduler = signalScheduler;
         this.processingScheduler = processingScheduler;
         this.subject = PublishSubject.create();
+        this.signals = signals;
+        this.entityTransform = entityTransform;
+        this.preGroupBy = preGroupBy;
+        this.mapFactory = mapFactory;
     }
 
     public static <Id> Builder<Id> stateMachineFactory(
@@ -74,6 +90,10 @@ public final class Processor<Id> {
         private Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory;
         private Scheduler signalScheduler = Schedulers.computation();
         private Scheduler processingScheduler = Schedulers.immediate();
+        private Observable<Signal<?, Id>> signals = Observable.empty();
+        private Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform = g -> g;
+        private Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy = x -> x;
+        private Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
 
         private Builder() {
         }
@@ -94,17 +114,36 @@ public final class Processor<Id> {
             return this;
         }
 
+        public Builder<Id> signals(Observable<Signal<?, Id>> signals) {
+            this.signals = signals;
+            return this;
+        }
+
+        public Builder<Id> entityTransform(
+                Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform) {
+            this.entityTransform = entityTransform;
+            return this;
+        }
+
+        public Builder<Id> preGroupBy(Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy) {
+            this.preGroupBy = preGroupBy;
+            return this;
+        }
+
+        public Builder<Id> mapFactory(
+                Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory) {
+            this.mapFactory = mapFactory;
+            return this;
+        }
+
         public Processor<Id> build() {
-            return new Processor<Id>(stateMachineFactory, processingScheduler, signalScheduler);
+            return new Processor<Id>(stateMachineFactory, processingScheduler, signalScheduler,
+                    signals, entityTransform, preGroupBy, mapFactory);
         }
 
     }
 
-    public Observable<EntityStateMachine<?, Id>> observable(Observable<Signal<?, Id>> signals,
-            Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform,
-            Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
-            Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory // nullable
-    ) {
+    public Observable<EntityStateMachine<?, Id>> observable() {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
             @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -125,30 +164,6 @@ public final class Processor<Id> {
                 return entityTransform.call(GroupedObservable.from(g.getKey(), obs));
             });
         });
-    }
-
-    private static class DefaultMapFactoryHolder {
-
-        private static final Func1<Action1<Object>, Map<Object, Object>> DEFAULT_INSTANCE = new Func1<Action1<Object>, Map<Object, Object>>() {
-
-            @Override
-            public Map<Object, Object> call(Action1<Object> t) {
-                return new ConcurrentHashMap<Object, Object>();
-            }
-        };
-
-        @SuppressWarnings("unchecked")
-        static <T> Func1<Action1<T>, Map<T, Object>> instance() {
-            return (Func1<Action1<T>, Map<T, Object>>) (Func1<?, ?>) DEFAULT_INSTANCE;
-        }
-    }
-
-    public Observable<EntityStateMachine<?, Id>> observable(Observable<Signal<?, Id>> signals) {
-        return observable(signals, o -> o, o -> o, DefaultMapFactoryHolder.instance());
-    }
-
-    public Observable<EntityStateMachine<?, Id>> observable() {
-        return observable(Observable.empty(), o -> o, o -> o, DefaultMapFactoryHolder.instance());
     }
 
     private Func1<? super Signal<?, Id>, Observable<EntityStateMachine<?, Id>>> processLambda(
