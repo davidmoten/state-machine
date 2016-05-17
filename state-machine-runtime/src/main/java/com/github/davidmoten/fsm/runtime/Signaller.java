@@ -14,6 +14,8 @@ public interface Signaller<T, Id> extends Search<Id> {
 
     void cancelSignal(Class<?> fromClass, Id fromId, Class<?> toClass, Id toId);
 
+    void cancelSignalToSelf();
+
     long now();
 
 }

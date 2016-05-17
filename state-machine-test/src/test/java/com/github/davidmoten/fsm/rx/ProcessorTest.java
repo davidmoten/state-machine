@@ -135,7 +135,8 @@ public class ProcessorTest {
         Processor<String> processor = Processor //
                 .stateMachineFactory(stateMachineFactory) //
                 .processingScheduler(Schedulers.immediate()) //
-                .signalScheduler(signalScheduler).build();
+                .signalScheduler(signalScheduler) //
+                .build();
         return processor;
     }
 

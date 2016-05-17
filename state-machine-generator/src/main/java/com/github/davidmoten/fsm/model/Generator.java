@@ -450,7 +450,7 @@ public final class Generator<T> {
             out.format("%s}\n", indent.left());
 
             out.println();
-            // List<Event<?>> signalsToSelf();
+            // void signalToSelf(event);
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic void signalToSelf(%s<? super %s> event) {\n", indent,
                     imports.add(Event.class), imports.add(cls));
@@ -484,8 +484,7 @@ public final class Generator<T> {
             out.format("%s}\n", indent.left());
             out.println();
 
-            // <T> void signal(T object, Event<?> event, long delay, TimeUnit
-            // unit);
+            // <T> void signalToSelf(Event<?> event, long delay, TimeUnit unit);
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic void signalToSelf(%s<? super %s> event, long delay, %s unit) {\n",
                     indent, imports.add(Event.class), imports.add(cls),
@@ -511,6 +510,15 @@ public final class Generator<T> {
             out.format(
                     "%ssignalsToOther.add(%s.create(toClass, toId, new %s<T>(fromClass, fromId)));\n",
                     indent.right(), imports.add(Signal.class),
+                    imports.add(CancelTimedSignal.class));
+            out.format("%s}\n", indent.left());
+            out.println();
+
+            // void cancelSignalToSelf();
+            out.format("%s@%s\n", indent, imports.add(Override.class));
+            out.format("%spublic void cancelSignalToSelf() {\n", indent, imports.add(Class.class),
+                    imports.add(Class.class));
+            out.format("%ssignalsToSelf.add(new %s<T>(cls(), id));\n", indent.right(),
                     imports.add(CancelTimedSignal.class));
             out.format("%s}\n", indent.left());
             out.println();
