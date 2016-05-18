@@ -149,13 +149,13 @@ public final class Generator<T> {
                 if (state.isCreationDestination()) {
                     out.format("%s%s %s(%s<%s, T> signaller, T id, %s event);\n", indent,
                             imports.add(cls), onEntryMethodName(state),
-                            imports.add(SignallerWithAsync.class), imports.add(cls),
+                            imports.add(Signaller.class), imports.add(cls),
                             imports.add(state.eventClass()));
                 } else {
                     out.format("%s%s %s(%s<%s, T> signaller, %s %s, T id, %s event);\n", indent,
                             imports.add(cls), onEntryMethodName(state),
-                            imports.add(SignallerWithAsync.class), imports.add(cls),
-                            imports.add(cls), instanceName(), imports.add(state.eventClass()));
+                            imports.add(Signaller.class), imports.add(cls), imports.add(cls),
+                            instanceName(), imports.add(state.eventClass()));
                 }
                 out.println();
             });
@@ -191,8 +191,8 @@ public final class Generator<T> {
                     out.format("%s@%s\n", indent, imports.add(Override.class));
                     out.format("%spublic %s %s(%s<%s, T> signaller, %s %s, T id, %s event) {\n",
                             indent, imports.add(cls), onEntryMethodName(state),
-                            imports.add(SignallerWithAsync.class), imports.add(cls),
-                            imports.add(cls), instanceName(), imports.add(state.eventClass()));
+                            imports.add(Signaller.class), imports.add(cls), imports.add(cls),
+                            instanceName(), imports.add(state.eventClass()));
                     out.format("%sreturn %s;\n", indent.right(), instanceName());
                     out.format("%s}\n", indent.left());
                     out.println();
