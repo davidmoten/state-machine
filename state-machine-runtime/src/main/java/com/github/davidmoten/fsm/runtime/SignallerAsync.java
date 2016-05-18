@@ -2,7 +2,7 @@ package com.github.davidmoten.fsm.runtime;
 
 import java.util.concurrent.TimeUnit;
 
-public interface AsyncSignaller<Id> {
+public interface SignallerAsync<Id> {
 
     <R> void signal(Class<R> cls, Id id, Event<? super R> event);
 

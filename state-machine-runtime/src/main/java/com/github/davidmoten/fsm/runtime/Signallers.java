@@ -4,6 +4,6 @@ public interface Signallers<T, Id> {
 
     Signaller<T, Id> sync();
 
-    AsyncSignaller<Id> async();
+    SignallerAsync<Id> async();
 
 }
