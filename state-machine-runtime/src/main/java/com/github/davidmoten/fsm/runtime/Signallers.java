@@ -1,6 +1,6 @@
 package com.github.davidmoten.fsm.runtime;
 
-public interface SignallerWithAsync<T, Id> {
+public interface Signallers<T, Id> {
 
     Signaller<T, Id> sync();
 
