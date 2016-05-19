@@ -240,17 +240,20 @@ public final class Generator<T> {
                     imports.add(List.class), imports.add(Signal.class));
             out.format("%sprivate final %s clock;\n", indent, imports.add(Clock.class));
             out.format("%sprivate final %s<T> search;\n", indent, imports.add(Search.class));
+            out.format("%sprivate final %s<%s<? super %s>> _event;\n", indent,
+                    imports.add(Optional.class), imports.add(Event.class), imports.add(cls));
 
             out.println();
 
             // Constructor
             out.format(
-                    "%sprivate %s(%s %s, T id, %s<T> behaviour, %s<State> previousState, State state, boolean transitionOccurred, %s<%s<? super %s>> signalsToSelf, %s<%s<?, T>> signalsToOther, %s<T> search, %s clock) {\n",
+                    "%sprivate %s(%s %s, T id, %s<T> behaviour, %s<State> previousState, State state, boolean transitionOccurred, %s<%s<? super %s>> signalsToSelf, %s<%s<?, T>> signalsToOther, %s<T> search, %s clock, %s<%s<? super %s>> _event) {\n",
                     indent, stateMachineClassSimpleName(), imports.add(cls), instanceName(),
                     imports.add(behaviourClassName()), imports.add(Optional.class),
                     imports.add(List.class), imports.add(Event.class), imports.add(cls),
                     imports.add(List.class), imports.add(Signal.class), imports.add(Search.class),
-                    imports.add(Clock.class));
+                    imports.add(Clock.class), imports.add(Optional.class), imports.add(Event.class),
+                    imports.add(cls));
             out.format("%s%s.checkNotNull(behaviour, \"behaviour cannot be null\");\n",
                     indent.right(), imports.add(Preconditions.class));
             out.format("%s%s.checkNotNull(id, \"id cannot be null\");\n", indent,
@@ -267,6 +270,8 @@ public final class Generator<T> {
                     imports.add(Preconditions.class));
             out.format("%s%s.checkNotNull(clock, \"clock cannot be null\");\n", indent,
                     imports.add(Preconditions.class));
+            out.format("%s%s.checkNotNull(_event, \"event cannot be null\");\n", indent,
+                    imports.add(Preconditions.class));
             out.format("%sthis.%s = %s;\n", indent, instanceName(), instanceName());
             out.format("%sthis.id = id;\n", indent);
             out.format("%sthis.behaviour = behaviour;\n", indent);
@@ -277,6 +282,7 @@ public final class Generator<T> {
             out.format("%sthis.signalsToOther = signalsToOther;\n", indent);
             out.format("%sthis.search = search;\n", indent);
             out.format("%sthis.clock = clock;\n", indent);
+            out.format("%sthis._event = _event;\n", indent);
             out.format("%s}\n", indent.left());
             out.println();
             out.format(
@@ -285,12 +291,12 @@ public final class Generator<T> {
                     imports.add(behaviourClassName()));
             indent.right();
             out.format(
-                    "%sreturn new %s<T>(%s, id, behaviour, %s.empty(), state, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), %s.instance());\n",
+                    "%sreturn new %s<T>(%s, id, behaviour, %s.empty(), state, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), %s.instance(), %s.empty());\n",
                     indent, stateMachineClassSimpleName(), instanceName(),
                     imports.add(Optional.class), imports.add(ArrayList.class),
                     imports.add(Event.class), imports.add(cls), imports.add(ArrayList.class),
                     imports.add(Signal.class), imports.add(SearchUnsupported.class),
-                    imports.add(ClockDefault.class));
+                    imports.add(ClockDefault.class), imports.add(Optional.class));
             out.format("%s}\n", indent.left());
             out.println();
 
@@ -300,11 +306,12 @@ public final class Generator<T> {
                     imports.add(behaviourClassName()), imports.add(Clock.class));
             indent.right();
             out.format(
-                    "%sreturn new %s<T>(%s, id, behaviour, %s.empty(), state, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), clock);\n",
+                    "%sreturn new %s<T>(%s, id, behaviour, %s.empty(), state, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), clock, %s.empty());\n",
                     indent, stateMachineClassSimpleName(), instanceName(),
                     imports.add(Optional.class), imports.add(ArrayList.class),
                     imports.add(Event.class), imports.add(cls), imports.add(ArrayList.class),
-                    imports.add(Signal.class), imports.add(SearchUnsupported.class));
+                    imports.add(Signal.class), imports.add(SearchUnsupported.class),
+                    imports.add(Optional.class));
             out.format("%s}\n", indent.left());
             out.println();
 
@@ -312,11 +319,12 @@ public final class Generator<T> {
                 out.format("%spublic static <T> %s<T> create(T id, %s<T> behaviour) {\n", indent,
                         stateMachineClassSimpleName(), imports.add(behaviourClassName()));
                 out.format(
-                        "%sreturn new %s<T>(null, id, behaviour, %s.empty(), State.INITIAL, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), %s.instance());\n",
+                        "%sreturn new %s<T>(null, id, behaviour, %s.empty(), State.INITIAL, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), %s.instance(), %s.empty());\n",
                         indent.right(), stateMachineClassSimpleName(), imports.add(Optional.class),
                         imports.add(ArrayList.class), imports.add(Event.class), imports.add(cls),
                         imports.add(ArrayList.class), imports.add(Signal.class),
-                        imports.add(SearchUnsupported.class), imports.add(ClockDefault.class));
+                        imports.add(SearchUnsupported.class), imports.add(ClockDefault.class),
+                        imports.add(Optional.class));
                 out.format("%s}\n", indent.left());
                 out.println();
 
@@ -324,11 +332,11 @@ public final class Generator<T> {
                         indent, stateMachineClassSimpleName(), imports.add(behaviourClassName()),
                         imports.add(Clock.class));
                 out.format(
-                        "%sreturn new %s<T>(null, id, behaviour, %s.empty(), State.INITIAL, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), clock);\n",
+                        "%sreturn new %s<T>(null, id, behaviour, %s.empty(), State.INITIAL, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), clock, %s.empty());\n",
                         indent.right(), stateMachineClassSimpleName(), imports.add(Optional.class),
                         imports.add(ArrayList.class), imports.add(Event.class), imports.add(cls),
                         imports.add(ArrayList.class), imports.add(Signal.class),
-                        imports.add(SearchUnsupported.class));
+                        imports.add(SearchUnsupported.class), imports.add(Optional.class));
                 out.format("%s}\n", indent.left());
                 out.println();
             }
@@ -337,7 +345,7 @@ public final class Generator<T> {
             out.format("%spublic %s<T> withSearch(%s<T> search) {\n", indent,
                     stateMachineClassSimpleName(), imports.add(Search.class));
             out.format(
-                    "%sreturn new %s<T>(%s, id, behaviour, previousState, state, transitionOccurred, signalsToSelf, signalsToOther, search, clock);\n",
+                    "%sreturn new %s<T>(%s, id, behaviour, previousState, state, transitionOccurred, signalsToSelf, signalsToOther, search, clock, _event);\n",
                     indent.right(), stateMachineClassSimpleName(), instanceName());
             out.format("%s}\n", indent.left());
             out.println();
@@ -395,23 +403,26 @@ public final class Generator<T> {
                             imports.add(t.to().eventClass()));
                 }
                 out.format(
-                        "%sreturn new %s<T>(nextObject, this.id, behaviour, %s.of(state), nextState, true, signalsToSelf, signalsToOther, search, clock);\n",
-                        indent, stateMachineClassSimpleName(), imports.add(Optional.class));
+                        "%sreturn new %s<T>(nextObject, this.id, behaviour, %s.of(state), nextState, true, signalsToSelf, signalsToOther, search, clock, %s.of(event));\n",
+                        indent, stateMachineClassSimpleName(), imports.add(Optional.class),
+                        imports.add(Optional.class));
                 indent.left();
             }
             if (!first) {
                 // transitions exist
                 out.format("%s} else {\n", indent);
                 out.format(
-                        "%sreturn new %s<T>(%s, this.id, behaviour, previousState, state, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), search, clock);\n",
+                        "%sreturn new %s<T>(%s, this.id, behaviour, previousState, state, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), search, clock, %s.of(event));\n",
                         indent.right(), stateMachineClassSimpleName(), instanceName(),
                         imports.add(ArrayList.class), imports.add(Event.class), imports.add(cls),
-                        imports.add(ArrayList.class), imports.add(Signal.class));
+                        imports.add(ArrayList.class), imports.add(Signal.class),
+                        imports.add(Optional.class));
                 out.format("%s}\n", indent.left());
             } else {
                 out.format(
-                        "%sreturn new %s<T>(%s, this.id, behaviour, previousState, state, false, signalsToSelf, signalsToOther, search, clock);\n",
-                        indent, stateMachineClassSimpleName(), instanceName());
+                        "%sreturn new %s<T>(%s, this.id, behaviour, previousState, state, false, signalsToSelf, signalsToOther, search, clock, %s.of(event));\n",
+                        indent, stateMachineClassSimpleName(), instanceName(),
+                        imports.add(Optional.class));
             }
             out.format("%s}\n", indent.left());
             out.println();
@@ -551,6 +562,13 @@ public final class Generator<T> {
             out.format("%spublic %s<State> previousState() {\n", indent,
                     imports.add(Optional.class));
             out.format("%sreturn previousState;\n", indent.right());
+            out.format("%s}\n", indent.left());
+            out.println();
+
+            // Optional<Event<Microwave>>> event()
+            out.format("%spublic %s<%s<? super %s>> event() {\n", indent,
+                    imports.add(Optional.class), imports.add(Event.class), imports.add(cls));
+            out.format("%sreturn _event;\n", indent.right());
             out.format("%s}\n", indent.left());
             out.println();
 
