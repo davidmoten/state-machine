@@ -572,6 +572,11 @@ public final class Generator<T> {
             out.format("%s}\n", indent.left());
             out.println();
 
+            out.format("%spublic T id() {\n", indent);
+            out.format("%sreturn id;\n", indent.right());
+            out.format("%s}\n", indent.left());
+            out.println();
+
             out.format("%s}", indent.left());
         }
         try (PrintStream out = new PrintStream(stateMachineClassFile())) {
