@@ -25,6 +25,11 @@ public final class Signal<T, Id> {
         return new Signal<T, Id>(cls, id, event, Optional.of(time));
     }
 
+    public static <T, Id> Signal<T, Id> create(Class<T> cls, Id id, Event<? super T> event,
+            Optional<Long> time) {
+        return new Signal<T, Id>(cls, id, event, time);
+    }
+
     public Class<T> cls() {
         return cls;
     }
