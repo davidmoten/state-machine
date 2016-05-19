@@ -566,12 +566,15 @@ public final class Generator<T> {
             out.println();
 
             // Optional<Event<Microwave>>> event()
+            out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic %s<%s<? super %s>> event() {\n", indent,
                     imports.add(Optional.class), imports.add(Event.class), imports.add(cls));
             out.format("%sreturn _event;\n", indent.right());
             out.format("%s}\n", indent.left());
             out.println();
 
+            // T id()
+            out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic T id() {\n", indent);
             out.format("%sreturn id;\n", indent.right());
             out.format("%s}\n", indent.left());
