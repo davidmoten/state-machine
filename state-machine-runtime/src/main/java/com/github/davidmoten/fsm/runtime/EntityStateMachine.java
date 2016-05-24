@@ -22,4 +22,6 @@ public interface EntityStateMachine<T, Id> extends ObjectState<T> {
     Optional<Event<? super T>> event();
 
     Id id();
+
+    EntityStateMachine<T, Id> replaying();
 }
