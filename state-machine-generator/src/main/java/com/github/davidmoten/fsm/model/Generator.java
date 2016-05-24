@@ -490,6 +490,7 @@ public final class Generator<T> {
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic <R> void signal(%s<R> cls, T id, %s<? super R> event) {\n", indent,
                     imports.add(Class.class), imports.add(Event.class));
+            out.format("%sif (isReplay) return;", indent);
             out.format("%ssignalsToOther.add(%s.create(cls, id, event));\n", indent.right(),
                     imports.add(Signal.class));
             out.format("%s}\n", indent.left());
@@ -505,6 +506,7 @@ public final class Generator<T> {
                     imports.add(TimeUnit.class));
             out.format("%s%s.checkNotNull(unit, \"unit cannot be null\");\n", indent.right(),
                     imports.add(Preconditions.class));
+            out.format("%sif (isReplay) return;", indent);
             out.format("%slong time = clock.now() + unit.toMillis(delay);\n", indent);
             out.format("%ssignalsToOther.add(%s.create(cls, id, event, time));\n", indent,
                     imports.add(Signal.class));
