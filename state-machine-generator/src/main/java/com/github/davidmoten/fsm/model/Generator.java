@@ -481,8 +481,8 @@ public final class Generator<T> {
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic void signalToSelf(%s<? super %s> event) {\n", indent,
                     imports.add(Event.class), imports.add(cls));
-            out.format("%ssignalsToSelf.add(event);\n", indent.right(),
-                    imports.add(ArrayList.class));
+            out.format("%sif (isReplay) return;", indent.right());
+            out.format("%ssignalsToSelf.add(event);\n", indent, imports.add(ArrayList.class));
             out.format("%s}\n", indent.left());
             out.println();
 
@@ -490,8 +490,8 @@ public final class Generator<T> {
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic <R> void signal(%s<R> cls, T id, %s<? super R> event) {\n", indent,
                     imports.add(Class.class), imports.add(Event.class));
-            out.format("%sif (isReplay) return;", indent);
-            out.format("%ssignalsToOther.add(%s.create(cls, id, event));\n", indent.right(),
+            out.format("%sif (isReplay) return;", indent.right());
+            out.format("%ssignalsToOther.add(%s.create(cls, id, event));\n", indent,
                     imports.add(Signal.class));
             out.format("%s}\n", indent.left());
             out.println();
@@ -520,6 +520,7 @@ public final class Generator<T> {
                     imports.add(TimeUnit.class));
             out.format("%s%s.checkNotNull(unit, \"unit cannot be null\");\n", indent.right(),
                     imports.add(Preconditions.class));
+            out.format("%sif (isReplay) return;", indent);
             out.format("%sif (delay <= 0) {\n", indent);
             out.format("%ssignalToSelf(event);\n", indent.right());
             out.format("%s} else {\n", indent.left());
