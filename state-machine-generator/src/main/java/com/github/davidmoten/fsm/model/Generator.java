@@ -185,9 +185,8 @@ public final class Generator<T> {
             out.println();
             Indent indent = new Indent();
 
-            out.format("public abstract %sclass %s<Id> implements %s<Id> {\n",
-                    hasCreationTransition() ? "abstract " : "", behaviourBaseClassSimpleName(),
-                    imports.add(behaviourClassName()));
+            out.format("public abstract class %s<Id> implements %s<Id> {\n",
+                    behaviourBaseClassSimpleName(), imports.add(behaviourClassName()));
             out.println();
             indent.right();
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
