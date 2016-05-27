@@ -169,7 +169,9 @@ public final class Processor<Id> {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o1 = subject.toSerialized() //
+            Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o1 = subject //
+                    .toSerialized() //
+                    .onBackpressureBuffer() //
                     .mergeWith(signals) //
                     .doOnUnsubscribe(() -> worker.unsubscribe()) //
                     .compose(preGroupBy) //
