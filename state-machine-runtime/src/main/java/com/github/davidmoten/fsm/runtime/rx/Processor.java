@@ -2,6 +2,7 @@ package com.github.davidmoten.fsm.runtime.rx;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -9,6 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
+import com.github.davidmoten.fsm.runtime.Clock;
+import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.ObjectState;
@@ -25,7 +28,6 @@ import rx.Scheduler.Worker;
 import rx.Subscription;
 import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.functions.Func2;
 import rx.observables.GroupedObservable;
 import rx.observables.SyncOnSubscribe;
 import rx.schedulers.Schedulers;
@@ -33,7 +35,7 @@ import rx.subjects.PublishSubject;
 
 public final class Processor<Id> {
 
-    private final Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory;
+    private final Func1<Class<?>, EntityBehaviour<?, Id>> behaviourFactory;
     private final PublishSubject<Signal<?, Id>> subject;
     private final Scheduler signalScheduler;
     private final Scheduler processingScheduler;
@@ -43,6 +45,7 @@ public final class Processor<Id> {
     private final Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform;
     private final Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy;
     private final Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
+    private final Clock signallerClock;
 
     private final Search<Id> search = new Search<Id>() {
         @Override
@@ -51,19 +54,19 @@ public final class Processor<Id> {
         }
     };
 
-    private Processor(Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory,
+    private Processor(Func1<Class<?>, EntityBehaviour<?, Id>> behaviourFactory,
             Scheduler processingScheduler, Scheduler signalScheduler,
             Observable<Signal<?, Id>> signals,
             Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform,
             Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
             Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory) {
-        Preconditions.checkNotNull(stateMachineFactory);
+        Preconditions.checkNotNull(behaviourFactory);
         Preconditions.checkNotNull(signalScheduler);
         Preconditions.checkNotNull(signals);
         Preconditions.checkNotNull(entityTransform);
         Preconditions.checkNotNull(preGroupBy);
         // mapFactory is nullable
-        this.stateMachineFactory = stateMachineFactory;
+        this.behaviourFactory = behaviourFactory;
         this.signalScheduler = signalScheduler;
         this.processingScheduler = processingScheduler;
         this.subject = PublishSubject.create();
@@ -71,11 +74,16 @@ public final class Processor<Id> {
         this.entityTransform = entityTransform;
         this.preGroupBy = preGroupBy;
         this.mapFactory = mapFactory;
+        this.signallerClock = Clock.from(signalScheduler);
     }
 
-    public static <Id> Builder<Id> stateMachineFactory(
-            Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory) {
-        return new Builder<Id>().stateMachineFactory(stateMachineFactory);
+    public static <Id> Builder<Id> behaviourFactory(
+            Func1<Class<?>, EntityBehaviour<?, Id>> behaviourFactory) {
+        return new Builder<Id>().behaviourFactory(behaviourFactory);
+    }
+
+    public static <T, Id> Builder<Id> behaviour(Class<T> cls, EntityBehaviour<T, Id> behaviour) {
+        return new Builder<Id>().behaviour(cls, behaviour);
     }
 
     public static <Id> Builder<Id> signalScheduler(Scheduler signalScheduler) {
@@ -88,20 +96,26 @@ public final class Processor<Id> {
 
     public static class Builder<Id> {
 
-        private Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory;
+        private Func1<Class<?>, EntityBehaviour<?, Id>> behaviourFactory;
         private Scheduler signalScheduler = Schedulers.computation();
         private Scheduler processingScheduler = Schedulers.immediate();
         private Observable<Signal<?, Id>> signals = Observable.empty();
         private Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform = g -> g;
         private Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy = x -> x;
         private Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
+        private final Map<Class<?>, EntityBehaviour<?, Id>> behaviours = new HashMap<>();
 
         private Builder() {
         }
 
-        public Builder<Id> stateMachineFactory(
-                Func2<Class<?>, Id, EntityStateMachine<?, Id>> stateMachineFactory) {
-            this.stateMachineFactory = stateMachineFactory;
+        public <T> Builder<Id> behaviour(Class<T> cls, EntityBehaviour<T, Id> behaviour) {
+            behaviours.put(cls, behaviour);
+            return this;
+        }
+
+        public Builder<Id> behaviourFactory(
+                Func1<Class<?>, EntityBehaviour<?, Id>> behaviourFactory) {
+            this.behaviourFactory = behaviourFactory;
             return this;
         }
 
@@ -138,7 +152,14 @@ public final class Processor<Id> {
         }
 
         public Processor<Id> build() {
-            return new Processor<Id>(stateMachineFactory, processingScheduler, signalScheduler,
+            Preconditions.checkArgument(behaviourFactory != null || !behaviours.isEmpty(),
+                    "one of behaviourFactory or multiple calls to behaviour must be made (behaviour must be specified)");
+            Preconditions.checkArgument(behaviourFactory == null || behaviours.isEmpty(),
+                    "cannot specify both behaviourFactory and behaviour");
+            if (!behaviours.isEmpty()) {
+                behaviourFactory = cls -> behaviours.get(cls);
+            }
+            return new Processor<Id>(behaviourFactory, processingScheduler, signalScheduler,
                     signals, entityTransform, preGroupBy, mapFactory);
         }
 
@@ -282,8 +303,10 @@ public final class Processor<Id> {
     private <T> EntityStateMachine<T, Id> getStateMachine(Class<T> cls, Id id) {
         return (EntityStateMachine<T, Id>) stateMachines //
                 .computeIfAbsent(new ClassId<T, Id>(cls, id),
-                        clsId -> (EntityStateMachine<T, Id>) stateMachineFactory.call(cls, id)
-                                .withSearch(search));
+                        clsId -> (EntityStateMachine<T, Id>) behaviourFactory.call(cls) //
+                                .create(id) //
+                                .withSearch(search) //
+                                .withClock(signallerClock));
     }
 
     public <T> Optional<T> getObject(Class<T> cls, Id id) {
@@ -299,7 +322,7 @@ public final class Processor<Id> {
     }
 
     public <T> void signal(ClassId<T, Id> cid, Event<? super T> event) {
-        subject.onNext(Signal.create(cid.cls(), cid.id(), event));
+        signal(cid.cls(), cid.id(), event);
     }
 
     @SuppressWarnings("unchecked")

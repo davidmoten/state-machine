@@ -4,16 +4,16 @@ import rx.Scheduler;
 
 public interface Clock {
 
-	long now();
+    long now();
 
-	public static Clock from(Scheduler scheduler) {
-		return new Clock() {
-			@Override
-			public long now() {
-				return scheduler.now();
-			}
-		};
+    public static Clock from(Scheduler scheduler) {
+        return new Clock() {
+            @Override
+            public long now() {
+                return scheduler.now();
+            }
+        };
 
-	}
+    }
 
 }

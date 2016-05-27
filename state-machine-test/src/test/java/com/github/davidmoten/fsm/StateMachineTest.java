@@ -17,11 +17,15 @@ public class StateMachineTest {
 
     @Test
     public void testMicrowaveRuntime() {
-        Microwave microwave = new Microwave(1);
-        MicrowaveBehaviour<String> behaviour = new MicrowaveBehaviourBase<String>();
-        MicrowaveStateMachine<String> m = MicrowaveStateMachine.create(microwave,
-                Microwave.idFromSerialNumber(1), behaviour,
-                MicrowaveStateMachine.State.READY_TO_COOK);
+        MicrowaveBehaviour<String> behaviour = new MicrowaveBehaviourBase<String>() {
+
+            @Override
+            public MicrowaveStateMachine<String> create(String id) {
+                return MicrowaveStateMachine.create(Microwave.fromId(id), id, this,
+                        MicrowaveStateMachine.State.READY_TO_COOK);
+            }
+        };
+        MicrowaveStateMachine<String> m = behaviour.create("1");
         assertFalse(m.transitionOccurred());
         assertFalse(m.previousState().isPresent());
 

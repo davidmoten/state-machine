@@ -20,14 +20,11 @@ import com.github.davidmoten.fsm.example.microwave.ButtonPressed;
 import com.github.davidmoten.fsm.example.microwave.DoorOpened;
 import com.github.davidmoten.fsm.example.microwave.Microwave;
 import com.github.davidmoten.fsm.example.microwave.TimerTimesOut;
-import com.github.davidmoten.fsm.runtime.Clock;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.rx.ClassId;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
-import com.github.davidmoten.fsm.runtime.rx.StateMachineFactory;
 
-import rx.functions.Func2;
 import rx.observers.TestSubscriber;
 import rx.schedulers.Schedulers;
 import rx.schedulers.TestScheduler;
@@ -123,17 +120,9 @@ public class ProcessorTest {
     private static Processor<String> createProcessor(TestScheduler signalScheduler) {
         MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
 
-        // define how to instantiate state machines from identifiers
-        Func2<Class<?>, String, EntityStateMachine<?, String>> stateMachineFactory = StateMachineFactory
-                .cls(Microwave.class)
-                .<String> hasFactory(id -> MicrowaveStateMachine.create(Microwave.fromId(id), id,
-                        behaviour, MicrowaveStateMachine.State.READY_TO_COOK,
-                        Clock.from(signalScheduler)))
-                .build();
-
         // build a processor
         Processor<String> processor = Processor //
-                .stateMachineFactory(stateMachineFactory) //
+                .behaviour(Microwave.class, behaviour) //
                 .processingScheduler(Schedulers.immediate()) //
                 .signalScheduler(signalScheduler) //
                 .build();
@@ -142,12 +131,20 @@ public class ProcessorTest {
 
     private static MicrowaveBehaviourBase<String> createMicrowaveBehaviour() {
         return new MicrowaveBehaviourBase<String>() {
+
+            @Override
+            public MicrowaveStateMachine<String> create(String id) {
+                return MicrowaveStateMachine.create(Microwave.fromId(id), id, this,
+                        MicrowaveStateMachine.State.READY_TO_COOK);
+            }
+
             @Override
             public Microwave onEntry_Cooking(Signaller<Microwave, String> signaller,
                     Microwave microwave, String id, ButtonPressed event, boolean isReplay) {
                 signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
                 return microwave;
             }
+
         };
     }
 

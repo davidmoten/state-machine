@@ -19,9 +19,14 @@ public interface EntityStateMachine<T, Id> extends ObjectState<T> {
 
     EntityStateMachine<T, Id> withSearch(Search<Id> search);
 
+    EntityStateMachine<T, Id> withClock(Clock clock);
+
+    Clock clock();
+
     Optional<Event<? super T>> event();
 
     Id id();
 
     EntityStateMachine<T, Id> replaying();
+
 }
