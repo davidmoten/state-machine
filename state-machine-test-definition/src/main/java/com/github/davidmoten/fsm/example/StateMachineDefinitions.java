@@ -12,7 +12,7 @@ import com.github.davidmoten.fsm.example.microwave.TimerTimesOut;
 import com.github.davidmoten.fsm.model.State;
 import com.github.davidmoten.fsm.model.StateMachineDefinition;
 
-public class StateMachines implements Supplier<List<StateMachineDefinition<?>>> {
+public class StateMachineDefinitions implements Supplier<List<StateMachineDefinition<?>>> {
 
     @Override
     public List<StateMachineDefinition<?>> get() {
