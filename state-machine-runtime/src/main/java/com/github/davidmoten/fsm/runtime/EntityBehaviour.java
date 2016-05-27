@@ -1,5 +1,5 @@
 package com.github.davidmoten.fsm.runtime;
 
-public interface EntityBehaviour<T> {
+public interface EntityBehaviour<T, Id> {
 
 }

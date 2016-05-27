@@ -139,19 +139,20 @@ public final class Generator<T> {
             out.println("<IMPORTS>");
             out.println();
             Indent indent = new Indent();
-            out.format("public interface %s<T> extends %s<%s<T>>{\n", behaviourClassSimpleName(),
-                    imports.add(EntityBehaviour.class), behaviourClassSimpleName());
+            out.format("public interface %s<Id> extends %s<%s, Id>{\n", behaviourClassSimpleName(),
+                    imports.add(EntityBehaviour.class), imports.add(cls));
             out.println();
             indent.right();
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
                 if (state.isCreationDestination()) {
-                    out.format("%s%s %s(%s<%s, T> signaller, T id, %s event, boolean isReplay);\n",
+                    out.format(
+                            "%s%s %s(%s<%s, Id> signaller, Id id, %s event, boolean replaying);\n",
                             indent, imports.add(cls), onEntryMethodName(state),
                             imports.add(Signaller.class), imports.add(cls),
                             imports.add(state.eventClass()));
                 } else {
                     out.format(
-                            "%s%s %s(%s<%s, T> signaller, %s %s, T id, %s event, boolean isReplay);\n",
+                            "%s%s %s(%s<%s, Id> signaller, %s %s, Id id, %s event, boolean replaying);\n",
                             indent, imports.add(cls), onEntryMethodName(state),
                             imports.add(Signaller.class), imports.add(cls), imports.add(cls),
                             instanceName(), imports.add(state.eventClass()));
@@ -180,7 +181,7 @@ public final class Generator<T> {
             out.println();
             Indent indent = new Indent();
 
-            out.format("public %sclass %s<T> implements %s<T> {\n",
+            out.format("public %sclass %s<Id> implements %s<Id> {\n",
                     hasCreationTransition() ? "abstract " : "", behaviourBaseClassSimpleName(),
                     imports.add(behaviourClassName()));
             out.println();
@@ -189,7 +190,7 @@ public final class Generator<T> {
                 if (!state.isCreationDestination()) {
                     out.format("%s@%s\n", indent, imports.add(Override.class));
                     out.format(
-                            "%spublic %s %s(%s<%s, T> signaller, %s %s, T id, %s event, boolean isReplay) {\n",
+                            "%spublic %s %s(%s<%s, Id> signaller, %s %s, Id id, %s event, boolean replaying) {\n",
                             indent, imports.add(cls), onEntryMethodName(state),
                             imports.add(Signaller.class), imports.add(cls), imports.add(cls),
                             instanceName(), imports.add(state.eventClass()));
@@ -244,13 +245,13 @@ public final class Generator<T> {
             out.format("%sprivate final %s<T> search;\n", indent, imports.add(Search.class));
             out.format("%sprivate final %s<%s<? super %s>> _event;\n", indent,
                     imports.add(Optional.class), imports.add(Event.class), imports.add(cls));
-            out.format("%sprivate final boolean isReplay;\n", indent);
+            out.format("%sprivate final boolean replaying;\n", indent);
 
             out.println();
 
             // Constructor
             out.format(
-                    "%sprivate %s(%s %s, T id, %s<T> behaviour, %s<State> previousState, State state, boolean transitionOccurred, %s<%s<? super %s>> signalsToSelf, %s<%s<?, T>> signalsToOther, %s<T> search, %s clock, %s<%s<? super %s>> _event, boolean isReplay) {\n",
+                    "%sprivate %s(%s %s, T id, %s<T> behaviour, %s<State> previousState, State state, boolean transitionOccurred, %s<%s<? super %s>> signalsToSelf, %s<%s<?, T>> signalsToOther, %s<T> search, %s clock, %s<%s<? super %s>> _event, boolean replaying) {\n",
                     indent, stateMachineClassSimpleName(), imports.add(cls), instanceName(),
                     imports.add(behaviourClassName()), imports.add(Optional.class),
                     imports.add(List.class), imports.add(Event.class), imports.add(cls),
@@ -286,7 +287,7 @@ public final class Generator<T> {
             out.format("%sthis.search = search;\n", indent);
             out.format("%sthis.clock = clock;\n", indent);
             out.format("%sthis._event = _event;\n", indent);
-            out.format("%sthis.isReplay = isReplay;\n", indent);
+            out.format("%sthis.replaying = replaying;\n", indent);
             out.format("%s}\n", indent.left());
             out.println();
             out.format(
@@ -350,7 +351,7 @@ public final class Generator<T> {
             out.format("%spublic %s<T> withSearch(%s<T> search) {\n", indent,
                     stateMachineClassSimpleName(), imports.add(Search.class));
             out.format(
-                    "%sreturn new %s<T>(%s, id, behaviour, previousState, state, transitionOccurred, signalsToSelf, signalsToOther, search, clock, _event, isReplay);\n",
+                    "%sreturn new %s<T>(%s, id, behaviour, previousState, state, transitionOccurred, signalsToSelf, signalsToOther, search, clock, _event, replaying);\n",
                     indent.right(), stateMachineClassSimpleName(), instanceName());
             out.format("%s}\n", indent.left());
             out.println();
@@ -409,17 +410,17 @@ public final class Generator<T> {
                         stateConstant(t.to()));
                 if (t.from().name().equals("Initial")) {
                     out.format(
-                            "%s%s nextObject = behaviour.%s(this, this.id, (%s) event, isReplay);\n",
+                            "%s%s nextObject = behaviour.%s(this, this.id, (%s) event, replaying);\n",
                             indent, imports.add(cls), onEntryMethodName(t.to()),
                             imports.add(t.to().eventClass()));
                 } else {
                     out.format(
-                            "%s%s nextObject = behaviour.%s(this, %s, this.id, (%s) event, isReplay);\n",
+                            "%s%s nextObject = behaviour.%s(this, %s, this.id, (%s) event, replaying);\n",
                             indent, imports.add(cls), onEntryMethodName(t.to()), instanceName(),
                             imports.add(t.to().eventClass()));
                 }
                 out.format(
-                        "%sreturn new %s<T>(nextObject, this.id, behaviour, %s.of(state), nextState, true, signalsToSelf, signalsToOther, search, clock, %s.of(event), isReplay);\n",
+                        "%sreturn new %s<T>(nextObject, this.id, behaviour, %s.of(state), nextState, true, signalsToSelf, signalsToOther, search, clock, %s.of(event), replaying);\n",
                         indent, stateMachineClassSimpleName(), imports.add(Optional.class),
                         imports.add(Optional.class));
                 indent.left();
@@ -428,7 +429,7 @@ public final class Generator<T> {
                 // transitions exist
                 out.format("%s} else {\n", indent);
                 out.format(
-                        "%sreturn new %s<T>(%s, this.id, behaviour, previousState, state, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), search, clock, %s.of(event), isReplay);\n",
+                        "%sreturn new %s<T>(%s, this.id, behaviour, previousState, state, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), search, clock, %s.of(event), replaying);\n",
                         indent.right(), stateMachineClassSimpleName(), instanceName(),
                         imports.add(ArrayList.class), imports.add(Event.class), imports.add(cls),
                         imports.add(ArrayList.class), imports.add(Signal.class),
@@ -436,7 +437,7 @@ public final class Generator<T> {
                 out.format("%s}\n", indent.left());
             } else {
                 out.format(
-                        "%sreturn new %s<T>(%s, this.id, behaviour, previousState, state, false, signalsToSelf, signalsToOther, search, clock, %s.of(event), isReplay);\n",
+                        "%sreturn new %s<T>(%s, this.id, behaviour, previousState, state, false, signalsToSelf, signalsToOther, search, clock, %s.of(event), replaying);\n",
                         indent, stateMachineClassSimpleName(), instanceName(),
                         imports.add(Optional.class));
             }
@@ -481,7 +482,7 @@ public final class Generator<T> {
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic void signalToSelf(%s<? super %s> event) {\n", indent,
                     imports.add(Event.class), imports.add(cls));
-            out.format("%sif (isReplay) return;", indent.right());
+            out.format("%sif (replaying) return;", indent.right());
             out.format("%ssignalsToSelf.add(event);\n", indent, imports.add(ArrayList.class));
             out.format("%s}\n", indent.left());
             out.println();
@@ -490,7 +491,7 @@ public final class Generator<T> {
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic <R> void signal(%s<R> cls, T id, %s<? super R> event) {\n", indent,
                     imports.add(Class.class), imports.add(Event.class));
-            out.format("%sif (isReplay) return;", indent.right());
+            out.format("%sif (replaying) return;", indent.right());
             out.format("%ssignalsToOther.add(%s.create(cls, id, event));\n", indent,
                     imports.add(Signal.class));
             out.format("%s}\n", indent.left());
@@ -506,7 +507,7 @@ public final class Generator<T> {
                     imports.add(TimeUnit.class));
             out.format("%s%s.checkNotNull(unit, \"unit cannot be null\");\n", indent.right(),
                     imports.add(Preconditions.class));
-            out.format("%sif (isReplay) return;", indent);
+            out.format("%sif (replaying) return;", indent);
             out.format("%slong time = clock.now() + unit.toMillis(delay);\n", indent);
             out.format("%ssignalsToOther.add(%s.create(cls, id, event, time));\n", indent,
                     imports.add(Signal.class));
@@ -520,7 +521,7 @@ public final class Generator<T> {
                     imports.add(TimeUnit.class));
             out.format("%s%s.checkNotNull(unit, \"unit cannot be null\");\n", indent.right(),
                     imports.add(Preconditions.class));
-            out.format("%sif (isReplay) return;", indent);
+            out.format("%sif (replaying) return;", indent);
             out.format("%sif (delay <= 0) {\n", indent);
             out.format("%ssignalToSelf(event);\n", indent.right());
             out.format("%s} else {\n", indent.left());
