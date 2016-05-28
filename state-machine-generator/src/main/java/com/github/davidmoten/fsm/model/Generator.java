@@ -477,7 +477,7 @@ public final class Generator<T> {
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic void signalToSelf(%s<? super %s> event) {\n", indent,
                     imports.add(Event.class), imports.add(cls));
-            out.format("%sif (replaying) return;\n", indent.right());
+            addIfReplayReturn(out, indent.right());
             out.format("%ssignalsToSelf.add(event);\n", indent, imports.add(ArrayList.class));
             out.format("%s}\n", indent.left());
             out.println();
@@ -486,7 +486,7 @@ public final class Generator<T> {
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic <R> void signal(%s<R> cls, T id, %s<? super R> event) {\n", indent,
                     imports.add(Class.class), imports.add(Event.class));
-            out.format("%sif (replaying) return;\n", indent.right());
+            addIfReplayReturn(out, indent.right());
             out.format("%ssignalsToOther.add(%s.create(cls, id, event));\n", indent,
                     imports.add(Signal.class));
             out.format("%s}\n", indent.left());
@@ -502,7 +502,7 @@ public final class Generator<T> {
                     imports.add(TimeUnit.class));
             out.format("%s%s.checkNotNull(unit, \"unit cannot be null\");\n", indent.right(),
                     imports.add(Preconditions.class));
-            out.format("%sif (replaying) return;\n", indent);
+            addIfReplayReturn(out, indent);
             out.format("%slong time = clock.now() + unit.toMillis(delay);\n", indent);
             out.format("%ssignalsToOther.add(%s.create(cls, id, event, time));\n", indent,
                     imports.add(Signal.class));
@@ -516,7 +516,7 @@ public final class Generator<T> {
                     imports.add(TimeUnit.class));
             out.format("%s%s.checkNotNull(unit, \"unit cannot be null\");\n", indent.right(),
                     imports.add(Preconditions.class));
-            out.format("%sif (replaying) return;\n", indent);
+            addIfReplayReturn(out, indent);
             out.format("%sif (delay <= 0) {\n", indent);
             out.format("%ssignalToSelf(event);\n", indent.right());
             out.format("%s} else {\n", indent.left());
@@ -533,7 +533,7 @@ public final class Generator<T> {
             out.format(
                     "%spublic void cancelSignal(%s<?> fromClass, T fromId, %s<?> toClass, T toId) {\n",
                     indent, imports.add(Class.class), imports.add(Class.class));
-            out.format("%sif (replaying) return;\n", indent.right());
+            addIfReplayReturn(out, indent.right());
             out.format(
                     "%ssignalsToOther.add(%s.create(toClass, toId, new %s<T>(fromClass, fromId)));\n",
                     indent, imports.add(Signal.class), imports.add(CancelTimedSignal.class));
@@ -544,7 +544,7 @@ public final class Generator<T> {
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%spublic void cancelSignalToSelf() {\n", indent, imports.add(Class.class),
                     imports.add(Class.class));
-            out.format("%sif (replaying) return;\n", indent.right());
+            addIfReplayReturn(out, indent.right());
             out.format("%ssignalsToSelf.add(new %s<T>(cls(), id));\n", indent,
                     imports.add(CancelTimedSignal.class));
             out.format("%s}\n", indent.left());
@@ -605,6 +605,12 @@ public final class Generator<T> {
             throw new RuntimeException(e);
         }
     }
+
+	private void addIfReplayReturn(PrintStream out, Indent indent) {
+		out.format("%sif (replaying) {\n", indent);
+		out.format("%sreturn;\n", indent.right());
+		out.format("%s}\n", indent.left());
+	}
 
     private String classSimpleName() {
         return cls.getSimpleName();
