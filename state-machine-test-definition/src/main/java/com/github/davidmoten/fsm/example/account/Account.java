@@ -11,5 +11,16 @@ public final class Account {
 		this.id = id;
 		this.balance = balance;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		b.append("Account [id=");
+		b.append(id);
+		b.append(", balance=");
+		b.append(balance);
+		b.append("]");
+		return b.toString();
+	}
 	
 }
