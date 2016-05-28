@@ -15,6 +15,7 @@ import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 
+import rx.observers.TestSubscriber;
 import rx.schedulers.Schedulers;
 
 public class AccountTest {
@@ -25,12 +26,14 @@ public class AccountTest {
 
 			@Override
 			public AccountStateMachine<String> create(String id) {
+				System.out.println("created empty state machine");
 				return AccountStateMachine.create(id, this);
 			}
 
 			@Override
 			public Account onEntry_Created(Signaller<Account, String> signaller, String id, Create event,
 					boolean replaying) {
+				System.out.println("created event");
 				return new Account(id, BigDecimal.ZERO);
 			}
 
@@ -51,18 +54,27 @@ public class AccountTest {
 		};
 		Processor<String> processor = Processor //
 				.behaviour(Account.class, behaviour) //
-				.processingScheduler(Schedulers.computation()) //
+				.signalScheduler(Schedulers.computation())
+				.processingScheduler(Schedulers.trampoline()) //
+				.preGroupBy(o -> o.doOnNext(System.out::println)) //
+				.entityTransform(g -> g.doOnNext(System.out::println)) //
 				.build();
 
+		TestSubscriber<Object> ts = TestSubscriber.create();
+		
 		processor.observable() //
 		        .doOnNext(System.out::println) //
-				.subscribeOn(Schedulers.io()) //
-				.subscribe();
+				.subscribe(ts);
 		
 		processor.signal(Account.class, "1", new Create());
 		processor.signal(Account.class, "1", new Deposit(BigDecimal.valueOf(100)));
 		
-		Thread.sleep(1000);
+		ts.assertValueCount(2);
+		ts.assertNoErrors();
+		
+		processor.onCompleted();
+		ts.assertCompleted();
+		
 
 	}
 

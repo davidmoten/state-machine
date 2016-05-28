@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 import com.github.davidmoten.guavamini.Preconditions;
 
-public final class Deposit extends ChangeBalance{
+public final class Deposit extends ChangeBalance {
 
 	public Deposit(BigDecimal amount) {
 		super(amount);
