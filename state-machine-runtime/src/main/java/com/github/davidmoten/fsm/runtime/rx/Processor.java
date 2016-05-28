@@ -225,7 +225,7 @@ public final class Processor<Id> {
 			private <T> void applySignalToSelf(Signals<Id> signals,
 					Observer<? super EntityStateMachine<?, Id>> observer, EntityStateMachine<T, Id> m, Event<T> event) {
 				m = m.signal(event);
-				// stateMachines.put(id, m);
+				// downstream synchronously updates the stateMachines
 				observer.onNext(m);
 				List<Event<? super T>> list = m.signalsToSelf();
 				for (int i = list.size() - 1; i >= 0; i--) {
