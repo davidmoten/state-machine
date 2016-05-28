@@ -98,7 +98,7 @@ public final class Processor<Id> {
 
         private Func1<Class<?>, EntityBehaviour<?, Id>> behaviourFactory;
         private Scheduler signalScheduler = Schedulers.computation();
-        private Scheduler processingScheduler = Schedulers.immediate();
+        private Scheduler processingScheduler = Schedulers.trampoline();
         private Observable<Signal<?, Id>> signals = Observable.empty();
         private Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform = g -> g;
         private Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy = x -> x;
