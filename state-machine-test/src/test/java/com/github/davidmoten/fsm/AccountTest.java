@@ -56,8 +56,6 @@ public class AccountTest {
 				.behaviour(Account.class, behaviour) //
 				.signalScheduler(Schedulers.computation())
 				.processingScheduler(Schedulers.trampoline()) //
-				.preGroupBy(o -> o.doOnNext(System.out::println)) //
-				.entityTransform(g -> g.doOnNext(System.out::println)) //
 				.build();
 
 		TestSubscriber<Object> ts = TestSubscriber.create();
@@ -68,8 +66,11 @@ public class AccountTest {
 		
 		processor.signal(Account.class, "1", new Create());
 		processor.signal(Account.class, "1", new Deposit(BigDecimal.valueOf(100)));
-		
 		ts.assertValueCount(2);
+
+		processor.signal(Account.class, "1", new Transfer(BigDecimal.valueOf(10), "2"));
+		
+		ts.assertValueCount(5);
 		ts.assertNoErrors();
 		
 		processor.onCompleted();
