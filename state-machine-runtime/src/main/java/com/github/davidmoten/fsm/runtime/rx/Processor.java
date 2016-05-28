@@ -182,7 +182,7 @@ public final class Processor<Id> {
 
             return o1.flatMap(g -> {
                 Observable<EntityStateMachine<?, Id>> obs = g //
-                        .flatMap(processLambda(worker, g)) //
+                        .flatMap(processLambda(worker, g.getKey())) //
                         .doOnNext(m -> stateMachines.put(g.getKey(), m)) //
                         .subscribeOn(processingScheduler); //
                 return entityTransform.call(GroupedObservable.from(g.getKey(), obs));
@@ -191,8 +191,8 @@ public final class Processor<Id> {
     }
 
     private Func1<? super Signal<?, Id>, Observable<EntityStateMachine<?, Id>>> processLambda(
-            Worker worker, GroupedObservable<ClassId<?, Id>, Signal<?, Id>> g) {
-        return x -> process(g.getKey(), x.event(), worker);
+            Worker worker, ClassId<?, Id> classId) {
+        return x -> process(classId, x.event(), worker);
     }
 
     private static final class Signals<Id> {
@@ -200,7 +200,7 @@ public final class Processor<Id> {
         final Deque<Signal<?, Id>> signalsToOther = new ArrayDeque<>();
     }
 
-    private Observable<EntityStateMachine<?, Id>> process(ClassId<?, Id> cid, Event<?> x,
+    private Observable<EntityStateMachine<?, Id>> process(ClassId<?, Id> cid, Event<?> ev,
             Worker worker) {
 
         return Observable.create(new SyncOnSubscribe<Signals<Id>, EntityStateMachine<?, Id>>() {
@@ -208,7 +208,7 @@ public final class Processor<Id> {
             @Override
             protected Signals<Id> generateState() {
                 Signals<Id> signals = new Signals<>();
-                signals.signalsToSelf.offerFirst(x);
+                signals.signalsToSelf.offerFirst(ev);
                 return signals;
             }
 
