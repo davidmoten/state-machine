@@ -191,3 +191,14 @@ Given a stream of events to the state machine,
 * optionally supplement persisted events with a sample of the incoming stream (so that if state machine rules change we can replay). That sample may of course be the full resolution stream.
 * periodically persist the entities in the case when replay using full history of events could be very time-consuming
 
+
+Event Sourcing and Guaranteed Delivery
+----------------------------------------
+The term Event Sourcing might be better described as Signal Sourcing when one thinks of a system of state machines rathen than a single state machine.
+
+To this end, let's consider a Signal Source. So some selection (perhaps all) of the signals sent from outside a system are persisted retaining order. 
+Actually it's more complicated than that because the system itself sends signals internally as well (perhaps as a result of signal from outside).
+
+
+
+
