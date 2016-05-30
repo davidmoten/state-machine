@@ -18,6 +18,7 @@ import com.github.davidmoten.fsm.runtime.ObjectState;
 import com.github.davidmoten.fsm.runtime.Search;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.guavamini.Preconditions;
+import com.github.davidmoten.rx.Functions;
 import com.github.davidmoten.rx.Transformers;
 
 import rx.Observable;
@@ -171,8 +172,8 @@ public final class Processor<Id> {
 					.mergeWith(signals) //
 					.doOnUnsubscribe(() -> worker.unsubscribe()) //
 					.compose(preGroupBy) //
-					.compose(Transformers.groupByEvicting(
-							signal -> new ClassId(signal.cls(), signal.id()), x -> x, mapFactory));
+					.compose(Transformers.groupByEvicting(signal -> new ClassId(signal.cls(), signal.id()), x -> x,
+							mapFactory));
 
 			return o1.flatMap(g -> {
 				Observable<EntityStateMachine<?, Id>> obs = g //
@@ -186,7 +187,7 @@ public final class Processor<Id> {
 
 	private Func1<? super Signal<?, Id>, Observable<EntityStateMachine<?, Id>>> processSignalsToSelfAndSendSignalsToOthers(
 			Worker worker, ClassId<?, Id> classId) {
-		return signal -> process(classId, signal.event(), worker);
+		return signal -> process(classId, signal.event(), worker).toList().flatMapIterable(Functions.identity());
 	}
 
 	private static final class Signals<Id> {
@@ -198,6 +199,10 @@ public final class Processor<Id> {
 
 		return Observable.create(new SyncOnSubscribe<Signals<Id>, EntityStateMachine<?, Id>>() {
 
+			@SuppressWarnings("unchecked")
+			EntityStateMachine<Object, Id> machine = (EntityStateMachine<Object, Id>) getStateMachine(cid.cls(),
+					cid.id());
+
 			@Override
 			protected Signals<Id> generateState() {
 				Signals<Id> signals = new Signals<>();
@@ -208,12 +213,9 @@ public final class Processor<Id> {
 			@Override
 			protected Signals<Id> next(Signals<Id> signals, Observer<? super EntityStateMachine<?, Id>> observer) {
 				@SuppressWarnings("unchecked")
-				EntityStateMachine<Object, Id> m = (EntityStateMachine<Object, Id>) getStateMachine(cid.cls(),
-						cid.id());
-				@SuppressWarnings("unchecked")
 				Event<Object> event = (Event<Object>) signals.signalsToSelf.pollLast();
 				if (event != null) {
-					applySignalToSelf(signals, observer, m, event);
+					applySignalToSelf(signals, observer, event);
 				} else {
 					applySignalsToOthers(cid, worker, signals);
 					observer.onCompleted();
@@ -223,15 +225,15 @@ public final class Processor<Id> {
 
 			@SuppressWarnings("unchecked")
 			private <T> void applySignalToSelf(Signals<Id> signals,
-					Observer<? super EntityStateMachine<?, Id>> observer, EntityStateMachine<T, Id> m, Event<T> event) {
-				m = m.signal(event);
+					Observer<? super EntityStateMachine<?, Id>> observer, Event<T> event) {
+				machine = machine.signal((Event<Object>) event);
 				// downstream synchronously updates the stateMachines
-				observer.onNext(m);
-				List<Event<? super T>> list = m.signalsToSelf();
+				observer.onNext(machine);
+				List<Event<? super T>> list = (List<Event<? super T>>) (List<?>) machine.signalsToSelf();
 				for (int i = list.size() - 1; i >= 0; i--) {
 					signals.signalsToSelf.offerLast(list.get(i));
 				}
-				for (Signal<?, ?> signal : m.signalsToOther()) {
+				for (Signal<?, ?> signal : machine.signalsToOther()) {
 					signals.signalsToOther.offerFirst((Signal<?, Id>) signal);
 				}
 			}
