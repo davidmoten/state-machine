@@ -4,19 +4,23 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
-import com.github.davidmoten.fsm.example.microwave.ButtonPressed;
-import com.github.davidmoten.fsm.example.microwave.DoorClosed;
-import com.github.davidmoten.fsm.example.microwave.DoorOpened;
+import com.github.davidmoten.fsm.example.account.Account;
+import com.github.davidmoten.fsm.example.account.event.ChangeBalance;
+import com.github.davidmoten.fsm.example.account.event.Transfer;
 import com.github.davidmoten.fsm.example.microwave.Microwave;
-import com.github.davidmoten.fsm.example.microwave.TimerTimesOut;
+import com.github.davidmoten.fsm.example.microwave.event.ButtonPressed;
+import com.github.davidmoten.fsm.example.microwave.event.DoorClosed;
+import com.github.davidmoten.fsm.example.microwave.event.DoorOpened;
+import com.github.davidmoten.fsm.example.microwave.event.TimerTimesOut;
 import com.github.davidmoten.fsm.model.State;
 import com.github.davidmoten.fsm.model.StateMachineDefinition;
+import com.github.davidmoten.fsm.runtime.Create;
 
-public class StateMachines implements Supplier<List<StateMachineDefinition<?>>> {
+public class StateMachineDefinitions implements Supplier<List<StateMachineDefinition<?>>> {
 
     @Override
     public List<StateMachineDefinition<?>> get() {
-        return Arrays.asList(createMicrowaveStateMachine());
+        return Arrays.asList(createMicrowaveStateMachine(), createAccountStateMachine());
 
     }
 
@@ -40,6 +44,15 @@ public class StateMachines implements Supplier<List<StateMachineDefinition<?>>> 
                 readyToCook.from(doorOpen.from(readyToCook).from(cookingComplete.from(cooking))));
 
         return m;
+    }
+    
+    private static StateMachineDefinition<Account> createAccountStateMachine() {
+    	StateMachineDefinition<Account> m = StateMachineDefinition.create(Account.class);
+    	State<Account, Create> created = m.createState("Created", Create.class);
+    	State<Account, ChangeBalance> changed = m.createState("Changed", ChangeBalance.class);
+    	State<Account, Transfer> transferred = m.createState("Transferred", Transfer.class);
+    	created.initial().to(changed).to(changed).to(transferred).to(changed);
+    	return m;
     }
 
 }

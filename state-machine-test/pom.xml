@@ -72,7 +72,7 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<supplierClass>com.github.davidmoten.fsm.example.StateMachines</supplierClass>
+							<supplierClass>com.github.davidmoten.fsm.example.StateMachineDefinitions</supplierClass>
 							<packageName>com.github.davidmoten.fsm.example.generated</packageName>
 							<stateMachines>
 								<Microwave.nodeWidth>280</Microwave.nodeWidth>
