@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.Clock;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
+import com.github.davidmoten.fsm.runtime.EntityState;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.ObjectState;
@@ -29,6 +30,7 @@ import rx.Scheduler;
 import rx.Scheduler.Worker;
 import rx.Subscription;
 import rx.functions.Action1;
+import rx.functions.Action2;
 import rx.functions.Func1;
 import rx.observables.GroupedObservable;
 import rx.observables.SyncOnSubscribe;
@@ -49,6 +51,7 @@ public final class Processor<Id> {
     private final Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
     private final Clock signallerClock;
     private final Action1<? super EntityStateMachine<?, Id>> postTransitionAction;
+    private final Action2<? super EntityStateMachine<?, Id>, ? super EntityState<?>> preTransitionAction;
 
     private final Search<Id> search = new Search<Id>() {
         @Override
@@ -63,12 +66,14 @@ public final class Processor<Id> {
             Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform,
             Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
             Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory,
+            Action2<? super EntityStateMachine<?, Id>, ? super EntityState<?>> preTransitionAction,
             Action1<? super EntityStateMachine<?, Id>> postTransitionAction) {
         Preconditions.checkNotNull(behaviourFactory);
         Preconditions.checkNotNull(signalScheduler);
         Preconditions.checkNotNull(signals);
         Preconditions.checkNotNull(entityTransform);
         Preconditions.checkNotNull(preGroupBy);
+        Preconditions.checkNotNull(preTransitionAction);
         Preconditions.checkNotNull(postTransitionAction);
         // mapFactory is nullable
         this.behaviourFactory = behaviourFactory;
@@ -80,6 +85,7 @@ public final class Processor<Id> {
         this.preGroupBy = preGroupBy;
         this.mapFactory = mapFactory;
         this.signallerClock = Clock.from(signalScheduler);
+        this.preTransitionAction = preTransitionAction;
         this.postTransitionAction = postTransitionAction;
     }
 
@@ -109,6 +115,8 @@ public final class Processor<Id> {
         private Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform = g -> g;
         private Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy = x -> x;
         private Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
+        private Action2<? super EntityStateMachine<?, Id>, ? super EntityState<?>> preTransitionAction = Actions
+                .doNothing2();
         private Action1<? super EntityStateMachine<?, Id>> postTransitionAction = Actions
                 .doNothing1();
         private final Map<Class<?>, EntityBehaviour<?, Id>> behaviours = new HashMap<>();
@@ -159,6 +167,12 @@ public final class Processor<Id> {
             return this;
         }
 
+        public Builder<Id> preTransition(
+                Action2<? super EntityStateMachine<?, Id>, ? super EntityState<?>> action) {
+            this.preTransitionAction = action;
+            return this;
+        }
+
         public Builder<Id> postTransition(Action1<? super EntityStateMachine<?, Id>> action) {
             this.postTransitionAction = action;
             return this;
@@ -173,7 +187,8 @@ public final class Processor<Id> {
                 behaviourFactory = cls -> behaviours.get(cls);
             }
             return new Processor<Id>(behaviourFactory, processingScheduler, signalScheduler,
-                    signals, entityTransform, preGroupBy, mapFactory, postTransitionAction);
+                    signals, entityTransform, preGroupBy, mapFactory, preTransitionAction,
+                    postTransitionAction);
         }
 
     }
@@ -322,7 +337,8 @@ public final class Processor<Id> {
                         clsId -> (EntityStateMachine<T, Id>) behaviourFactory.call(cls) //
                                 .create(id) //
                                 .withSearch(search) //
-                                .withClock(signallerClock));
+                                .withClock(signallerClock) //
+                                .withPreTransition(preTransitionAction));
     }
 
     public <T> Optional<T> getObject(Class<T> cls, Id id) {
