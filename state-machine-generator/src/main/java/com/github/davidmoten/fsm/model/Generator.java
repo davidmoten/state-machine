@@ -440,6 +440,7 @@ public final class Generator<T> {
                         stateConstant(t.from()), imports.add(t.to().eventClass()));
                 out.format("%sState nextState = State.%s;\n", indent.right(),
                         stateConstant(t.to()));
+                out.format("%spreTransition.call(this, nextState);\n", indent);
                 if (t.from().name().equals("Initial")) {
                     out.format(
                             "%s%s nextObject = behaviour.%s(this, this.id, (%s) event, replaying);\n",
