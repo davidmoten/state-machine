@@ -3,7 +3,7 @@ package com.github.davidmoten.fsm.runtime;
 import java.util.List;
 import java.util.Optional;
 
-import rx.functions.Action2;
+import rx.functions.Action3;
 
 public interface EntityStateMachine<T, Id> extends ObjectState<T> {
 
@@ -32,6 +32,6 @@ public interface EntityStateMachine<T, Id> extends ObjectState<T> {
     EntityStateMachine<T, Id> replaying();
 
     EntityStateMachine<T, Id> withPreTransition(
-            Action2<? super EntityStateMachine<T, Id>, ? super EntityState<T>> action);
+            Action3<? super EntityStateMachine<T, Id>, ? super Event<? super T>, ? super EntityState<T>> action);
 
 }
