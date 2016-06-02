@@ -3,6 +3,8 @@ package com.github.davidmoten.fsm.runtime;
 import java.util.List;
 import java.util.Optional;
 
+import rx.functions.Action2;
+
 public interface EntityStateMachine<T, Id> extends ObjectState<T> {
 
     boolean transitionOccurred();
@@ -28,5 +30,8 @@ public interface EntityStateMachine<T, Id> extends ObjectState<T> {
     Id id();
 
     EntityStateMachine<T, Id> replaying();
+
+    EntityStateMachine<T, Id> withPreTransition(
+            Action2<? super EntityStateMachine<T, Id>, ? super EntityState<T>> action);
 
 }
