@@ -108,11 +108,19 @@ public final class Generator<T> {
 
     private static Set<String> reservedWords = Sets.newHashSet("behaviour", "state", "clock", "id",
             "previousState", "transitionOccurred", "signalsToSelf", "signalsToOther", "search",
-            "_event", "repaying");
+            "_event", "repaying", "preTransition");
+
+    private static Set<String> javaReservedWords = Sets.newHashSet("abstract", "assert", "boolean",
+            "break", "byte", "case", "catch", "char", "class", "const", "continue", "default", "do",
+            "double", "else", "extends", "false", "final", "finally", "float", "for", "goto", "if",
+            "implements", "import", "instanceof", "int", "interface", "long", "native", "new",
+            "null", "package", "private", "protected", "public", "return", "short", "static",
+            "strictfp", "super", "switch", "synchronized", "this", "throw", "throws", "transient",
+            "true", "try", "void", "volatile", "while");
 
     private String instanceName() {
         String candidate = Util.lowerFirst(classSimpleName());
-        while (reservedWords.contains(candidate)) {
+        while (reservedWords.contains(candidate) || javaReservedWords.contains(candidate)) {
             candidate = "_" + candidate;
         }
         return candidate;
