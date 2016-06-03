@@ -125,7 +125,9 @@ public class ProcessorTest {
                 .behaviour(Microwave.class, behaviour) //
                 .processingScheduler(Schedulers.immediate()) //
                 .signalScheduler(signalScheduler) //
-                .build();
+                .preTransition((m, event, state) -> System.out.println("[preTransition] "
+                        + event.getClass().getSimpleName() + ": " + m.state() + " -> " + state)) //
+                .postTransition(m -> System.out.println("[postTransition] " + m.state())).build();
         return processor;
     }
 
