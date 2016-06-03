@@ -130,7 +130,7 @@ When a transition occurs in a state machine from state A to state B, the transit
 MicrowaveBehaviour<String> behaviour = new MicrowaveBehaviourBase<String>() {
     @Override
     public Microwave onEntry_Cooking(Signaller<Microwave, String> signaller, Microwave microwave,
-            String id, ButtonPressed event) {
+            String id, ButtonPressed event, boolean replaying) {
         signaller.signalToSelf(new TimerTimesOut(), 30, TimeUnit.SECONDS);
         return microwave;
     }
@@ -162,19 +162,19 @@ At any one time there should only be one outstanding scheduled (non-immediate) s
 
 Signals to self are actioned synchronously but signals to others may be actioned asynchronously.
 
+You may note that a parameter passed to each behaviour method is `replaying`. When replaying events you should not make any calls to external entities. Any calls to other entities using `signaller` will be automatically suppressed but if in the entry procedure you make a call to `service.sendEmail(...)` for instance then you should check the value of `replaying` before calling it:
+
+```java 
+if (!replaying) {
+    service.sendEmail(...);
+}
+```
+
 Rx processing of signals
 -------------------------
-The runtime artifact has optional support for a reactive implementation of the processing of signals using [RxJava](https://github.com/ReactiveX/RxJava).
+The runtime artifact has support by default for a reactive implementation of the processing of signals using [RxJava](https://github.com/ReactiveX/RxJava).
 
-Add this artifact to your runtime pom.xml:
-
-```xml
-<dependency>
-    <groupId>io.reactivex</groupId>
-    <artifactId>rxjava</artifactId>
-    <version>1.x.x</version>
-</dependency>
-```
+If you don't need rx support then add an exclude to your maven dependency.
 
 [ProcessorTest.java](state-machine-test/src/test/java/com/github/davidmoten/fsm/rx/ProcessorTest.java) demonstrates usage of an Rx processor for a state machine (or set of state machines).
 
