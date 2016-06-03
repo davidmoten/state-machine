@@ -50,8 +50,8 @@ public final class Processor<Id> {
     private final Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy;
     private final Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
     private final Clock signallerClock;
+    private final Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction;
     private final Action1<? super EntityStateMachine<?, Id>> postTransitionAction;
-    private final Action3<? super EntityStateMachine<?, Id>, ? super Optional<Event<?>>, ? super EntityState<?>> preTransitionAction;
 
     private final Search<Id> search = new Search<Id>() {
         @Override
@@ -66,7 +66,7 @@ public final class Processor<Id> {
             Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform,
             Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
             Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory,
-            Action3<? super EntityStateMachine<?, Id>, ? super Optional<Event<?>>, ? super EntityState<?>> preTransitionAction,
+            Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction,
             Action1<? super EntityStateMachine<?, Id>> postTransitionAction) {
         Preconditions.checkNotNull(behaviourFactory);
         Preconditions.checkNotNull(signalScheduler);
@@ -115,7 +115,7 @@ public final class Processor<Id> {
         private Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform = g -> g;
         private Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy = x -> x;
         private Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
-        private Action3<? super EntityStateMachine<?, Id>, ? super Optional<Event<?>>, ? super EntityState<?>> preTransitionAction = Actions
+        private Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction = Actions
                 .doNothing3();
         private Action1<? super EntityStateMachine<?, Id>> postTransitionAction = Actions
                 .doNothing1();
@@ -168,7 +168,7 @@ public final class Processor<Id> {
         }
 
         public Builder<Id> preTransition(
-                Action3<? super EntityStateMachine<?, Id>, ? super Optional<Event<?>>, ? super EntityState<?>> action) {
+                Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> action) {
             this.preTransitionAction = action;
             return this;
         }
@@ -330,7 +330,7 @@ public final class Processor<Id> {
 
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     private <T> EntityStateMachine<T, Id> getStateMachine(Class<T> cls, Id id) {
         return (EntityStateMachine<T, Id>) stateMachines //
                 .computeIfAbsent(new ClassId<T, Id>(cls, id),
@@ -338,7 +338,7 @@ public final class Processor<Id> {
                                 .create(id) //
                                 .withSearch(search) //
                                 .withClock(signallerClock) //
-                                .withPreTransition((Action3) preTransitionAction));
+                                .withPreTransition(preTransitionAction));
     }
 
     public <T> Optional<T> getObject(Class<T> cls, Id id) {
