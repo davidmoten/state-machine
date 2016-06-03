@@ -176,6 +176,8 @@ The runtime artifact has support by default for a reactive implementation of the
 
 If you don't need rx support then add an exclude to your maven dependency.
 
+Processing signals in parallel demands that entities are thread-safe. Immutability is recommended for this case.
+
 [ProcessorTest.java](state-machine-test/src/test/java/com/github/davidmoten/fsm/rx/ProcessorTest.java) demonstrates usage of an Rx processor for a state machine (or set of state machines).
 
 Persistence
