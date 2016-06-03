@@ -196,7 +196,7 @@ Event Sourcing and CQRS and Guaranteed Delivery
 ----------------------------------------
 The term Event Sourcing might be better described as Signal Sourcing when one thinks of a system of state machines rathen than a single state machine.
 
-To this end, let's consider a Signal Source. So some selection (perhaps all) of the signals sent from outside a system are persisted retaining order. 
+To this end, let's consider a Signal Source. Some selection (perhaps all) of the signals sent from outside a system are persisted retaining order. 
 Actually it's more complicated than that because the system itself sends signals internally as well (perhaps as a result of signal from outside).
 A signal should only be persisted to the Signal Source when the transition(s) associated with the signal have completed including the persisting of signals
 to others from the onEntry procedures. Note that one signal may bring about multiple transitions within the same state machine because onEntry procedures
