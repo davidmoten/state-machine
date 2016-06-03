@@ -156,7 +156,7 @@ public interface Signaller<T, Id> {
 }
 ```
 
-When the *entry procedure* is run all signals to self and to others are collected. Upon completion the signals to self are run first in order they were called in the procedure and then the signals to others are run. A signal to self may invoke a transition which in turn generates signals to self and signals to others, and continue recursively. All self transitions are performed and then signals to others are sent in the order they were called from the entry procedures. 
+When the *entry procedure* is run all signals to self and to others are collected. Once the entry procedure completes the signals to self are actioned each of which may invoke a transition that sends more signals. Signals to self are invoked synchronously but the signals to others are collected in a queue till all transitions due to signals to self have completed. The signals to others are then invoked (usually asynchronously though signals to the same entity will be serial).
 
 At any one time there should only be one outstanding scheduled (non-immediate) signal between object 1 and object 2. This is clearly a pre-requisite for `cancelSignal` to make sense in its present form and is a nice simplification generally.
 
