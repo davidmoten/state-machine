@@ -18,6 +18,58 @@
    sodipodi:docname="collaboration-diagram.svg">
   <defs
      id="defs4">
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lend"
+       style="overflow:visible;">
+      <path
+         id="path4917"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lstart"
+       style="overflow:visible">
+      <path
+         id="path7771"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.8) translate(12.5,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Mstart"
+       style="overflow:visible">
+      <path
+         id="path4920"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.4) translate(10,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Mend"
+       style="overflow:visible;">
+      <path
+         id="path4923"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         transform="scale(0.4) rotate(180) translate(10,0)" />
+    </marker>
     <inkscape:perspective
        sodipodi:type="inkscape:persp3d"
        inkscape:vp_x="17.835737 : 355.02222 : 1"
@@ -783,6 +835,247 @@
          offset="1"
          id="stop4464" />
     </linearGradient>
+    <clipPath
+       id="clipPath6054-2-1"
+       clipPathUnits="userSpaceOnUse">
+      <rect
+         transform="matrix(0.9545455,0,0,0.89256196,-4.6363639,-1.3719273)"
+         y="-6"
+         x="-126"
+         height="22"
+         width="48"
+         id="rect6056-7-8"
+         style="fill:#a40000;fill-opacity:1;stroke:none;display:inline" />
+    </clipPath>
+    <filter
+       color-interpolation-filters="sRGB"
+       height="1.6873863"
+       y="-0.34369317"
+       width="1.1309307"
+       x="-0.065465368"
+       id="filter4938-1-3"
+       inkscape:collect="always">
+      <feGaussianBlur
+         id="feGaussianBlur4940-7-0"
+         stdDeviation="1.1456439"
+         inkscape:collect="always" />
+    </filter>
+    <linearGradient
+       id="linearGradient_SkyBlue-7-3">
+      <stop
+         style="stop-color:#e7e7e7;stop-opacity:1;"
+         offset="0"
+         id="stop3832-0-7" />
+      <stop
+         style="stop-color:#c0c0c0;stop-opacity:1;"
+         offset="1"
+         id="stop3834-2-3" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3820-0-9">
+      <stop
+         id="stop3823-4-8"
+         offset="0"
+         style="stop-color:#dcdcdc;stop-opacity:1;" />
+      <stop
+         id="stop3825-6-9"
+         offset="1"
+         style="stop-color:#545454;stop-opacity:1;" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3829-6-8">
+      <stop
+         id="stop3831-3-6"
+         offset="0"
+         style="stop-color:#ffffff;stop-opacity:0.60000002;" />
+      <stop
+         id="stop3833-9-9"
+         offset="1"
+         style="stop-color:#ffffff;stop-opacity:0.20784314;" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4365-0-6">
+      <stop
+         style="stop-color:#000000;stop-opacity:0.80000001;"
+         offset="0"
+         id="stop4367-0-3" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0.15384616;"
+         offset="1"
+         id="stop4369-5-5" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4675">
+      <stop
+         style="stop-color:#e7e7e7;stop-opacity:1;"
+         offset="0"
+         id="stop4677" />
+      <stop
+         style="stop-color:#c0c0c0;stop-opacity:1;"
+         offset="1"
+         id="stop4679" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4682">
+      <stop
+         id="stop4684"
+         offset="0"
+         style="stop-color:#dcdcdc;stop-opacity:1;" />
+      <stop
+         id="stop4686"
+         offset="1"
+         style="stop-color:#545454;stop-opacity:1;" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4689">
+      <stop
+         id="stop4691"
+         offset="0"
+         style="stop-color:#ffffff;stop-opacity:0.60000002;" />
+      <stop
+         id="stop4693"
+         offset="1"
+         style="stop-color:#ffffff;stop-opacity:0.20784314;" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4696">
+      <stop
+         style="stop-color:#000000;stop-opacity:0.80000001;"
+         offset="0"
+         id="stop4698" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0.15384616;"
+         offset="1"
+         id="stop4700" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4703">
+      <stop
+         style="stop-color:#e7e7e7;stop-opacity:1;"
+         offset="0"
+         id="stop4705" />
+      <stop
+         style="stop-color:#c0c0c0;stop-opacity:1;"
+         offset="1"
+         id="stop4707" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4710">
+      <stop
+         id="stop4712"
+         offset="0"
+         style="stop-color:#dcdcdc;stop-opacity:1;" />
+      <stop
+         id="stop4714"
+         offset="1"
+         style="stop-color:#545454;stop-opacity:1;" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4717">
+      <stop
+         id="stop4719"
+         offset="0"
+         style="stop-color:#ffffff;stop-opacity:0.60000002;" />
+      <stop
+         id="stop4721"
+         offset="1"
+         style="stop-color:#ffffff;stop-opacity:0.20784314;" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4724">
+      <stop
+         style="stop-color:#000000;stop-opacity:0.80000001;"
+         offset="0"
+         id="stop4726" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0.15384616;"
+         offset="1"
+         id="stop4728" />
+    </linearGradient>
+    <marker
+       inkscape:stockid="Arrow1Mstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mstart-6"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4920-2"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(0.4,0,0,0.4,4,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mend-5"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4923-9"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mend-0"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4923-1"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mend-57"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4923-0"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mstart-6-1"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4920-2-2"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(0.4,0,0,0.4,4,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Lend-7"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4917-4"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
+    </marker>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -791,8 +1084,8 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.2334786"
-     inkscape:cx="451.10256"
+     inkscape:zoom="1"
+     inkscape:cx="450.10256"
      inkscape:cy="381.39015"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -846,18 +1139,18 @@
        id="rect3797-4"
        width="123.22873"
        height="109.44657"
-       x="419.13983"
-       y="435.81317" />
+       x="420.76129"
+       y="435.00244" />
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       x="481.80469"
-       y="482.83472"
+       x="482.61542"
+       y="476.349"
        id="text3799-3"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         x="481.80469"
-         y="482.83472"
+         x="482.61542"
+         y="476.349"
          id="tspan4372">Processor</tspan></text>
     <rect
        style="fill:#f7e9e9;fill-opacity:1;stroke:#040101;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
@@ -886,18 +1179,18 @@
        id="rect3797-9-5"
        width="123.22873"
        height="109.44657"
-       x="750.72241"
-       y="618.22412" />
+       x="748.72241"
+       y="714.22412" />
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       x="810.14441"
-       y="658.75995"
+       x="808.14441"
+       y="754.75995"
        id="text3799-4-8"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         x="810.14441"
-         y="658.75995"
+         x="808.14441"
+         y="754.75995"
          id="tspan3803-1-2">Replayer</tspan></text>
     <flowRoot
        xml:space="preserve"
@@ -911,39 +1204,21 @@
            y="389.00116" /></flowRegion><flowPara
          id="flowPara3880"></flowPara></flowRoot>    <rect
        style="fill:#f7e9e9;fill-opacity:1;stroke:#040101;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
-       id="rect3797-9-5-8"
-       width="123.22873"
-       height="109.44657"
-       x="751.53308"
-       y="803.87793" />
-    <text
-       xml:space="preserve"
-       style="font-size:16px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       x="815.00867"
-       y="833.87445"
-       id="text3799-4-8-1"
-       sodipodi:linespacing="125%"><tspan
-         sodipodi:role="line"
-         x="815.00867"
-         y="833.87445"
-         id="tspan3803-1-2-5">Entity State</tspan></text>
-    <rect
-       style="fill:#f7e9e9;fill-opacity:1;stroke:#040101;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect3797-9-5-9"
        width="123.22873"
        height="109.44657"
-       x="421.57199"
-       y="621.46698" />
+       x="425.57199"
+       y="718.46698" />
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       x="485.85828"
-       y="649.03137"
+       x="489.85828"
+       y="746.03137"
        id="text3799-4-8-6"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         x="485.85828"
-         y="649.03137"
+         x="489.85828"
+         y="746.03137"
          id="tspan3803-1-2-7">Signal Store</tspan></text>
     <rect
        style="fill:#f7e9e9;fill-opacity:1;stroke:#040101;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
@@ -1122,7 +1397,7 @@
          id="tspan3803-7">Persistence</tspan></text>
     <g
        id="g4320-6"
-       transform="translate(453.13276,670.26992)">
+       transform="translate(457.13276,767.26992)">
       <g
          transform="translate(128,32.9872)"
          style="display:none"
@@ -1277,5 +1552,117 @@
            style="fill:url(#linearGradient5507-5);fill-opacity:1;stroke:none" />
       </g>
     </g>
-  </g>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.99573159000000000px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart);marker-end:none"
+       d="m 214.20891,467.02573 203.12233,-0.81167"
+       id="path4908"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="271"
+       y="458.36218"
+       id="text5354"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5356"
+         x="271"
+         y="458.36218">1: get signal</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.99573159000000000px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Lend)"
+       d="m 214.81223,499.64429 203.12233,-0.81167"
+       id="path4908-1"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="280.6033"
+       y="491.98074"
+       id="text5354-7"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5356-7"
+         x="280.6033"
+         y="491.98074">2: signal</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.99573159000000000px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Lend)"
+       d="m 543.06544,451.02626 203.12233,-0.81167"
+       id="path4908-1-8"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="580.85651"
+       y="443.3627"
+       id="text5354-7-3"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5356-7-6"
+         x="580.85651"
+         y="443.3627">3: get state machine</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.99573159000000000px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart);marker-end:none"
+       d="M 545.06544,489.02627 748.18777,488.2146"
+       id="path4908-1-8-2"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="582.85651"
+       y="481.3627"
+       id="text5354-7-3-7"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5356-7-6-1"
+         x="582.85651"
+         y="481.3627">10: state machine</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.99573159000000000px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Lend)"
+       d="M 545.06544,523.02627 748.18777,522.2146"
+       id="path4908-1-8-3"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="576.85651"
+       y="515.36267"
+       id="text5354-7-3-0"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan5356-7-6-7"
+         x="576.85651"
+         y="515.36267">14: put state machine</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend)"
+       d="m 777,541.36218 0,172"
+       id="path7380"
+       inkscape:connector-curvature="0" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot9353"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       transform="matrix(0,-1,1,0,461.67866,1543.4347)"><flowRegion
+         id="flowRegion9355"><rect
+           id="rect9357"
+           width="131"
+           height="26"
+           x="856"
+           y="292.09448" /></flowRegion><flowPara
+         id="flowPara9359">4: get state machine</flowPara></flowRoot>    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:none;marker-start:url(#Arrow1Lstart)"
+       d="m 845.94189,543.36218 0,172"
+       id="path7380-7"
+       inkscape:connector-curvature="0" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot9353-0"
+       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       transform="matrix(0,-1,1,0,532.62055,1537.4347)"><flowRegion
+         id="flowRegion9355-3"><rect
+           id="rect9357-0"
+           width="131"
+           height="26"
+           x="856"
+           y="292.09448" /></flowRegion><flowPara
+         id="flowPara9359-7">9: state machine</flowPara></flowRoot>  </g>
 </svg>
