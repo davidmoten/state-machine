@@ -1710,34 +1710,12 @@
        d="m 801,587.36218 0,172"
        id="path7380"
        inkscape:connector-curvature="0" />
-    <flowRoot
-       xml:space="preserve"
-       id="flowRoot9353"
-       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       transform="matrix(0,-1,1,0,485.67866,1589.4347)"><flowRegion
-         id="flowRegion9355"><rect
-           id="rect9357"
-           width="131"
-           height="26"
-           x="856"
-           y="292.09448" /></flowRegion><flowPara
-         id="flowPara9359">4: get state machine</flowPara></flowRoot>    <path
+    <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart);marker-end:none"
        d="m 869.94189,589.36218 0,172"
        id="path7380-7"
        inkscape:connector-curvature="0" />
-    <flowRoot
-       xml:space="preserve"
-       id="flowRoot9353-0"
-       style="font-size:12px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       transform="matrix(0,-1,1,0,556.62055,1583.4347)"><flowRegion
-         id="flowRegion9355-3"><rect
-           id="rect9357-0"
-           width="131"
-           height="26"
-           x="856"
-           y="292.09448" /></flowRegion><flowPara
-         id="flowPara9359-7">9: state machine</flowPara></flowRoot>    <path
+    <path
        style="fill:none;stroke:#000000;stroke-width:0.99573159px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Lend)"
        d="m 568.43883,837.89018 203.12234,-0.81167"
        id="path4908-1-8-3-6"
@@ -1865,5 +1843,29 @@
            height="15"
            x="16"
            y="11.094482" /></flowRegion><flowPara
-         id="flowPara11089"></flowPara></flowRoot>  </g>
+         id="flowPara11089"></flowPara></flowRoot>    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="-677.46179"
+       y="788.81055"
+       id="text5354-4-7-1"
+       sodipodi:linespacing="125%"
+       transform="matrix(0,-1,1,0,0,0)"><tspan
+         sodipodi:role="line"
+         x="-677.46179"
+         y="788.81055"
+         id="tspan11128">4: get state machine</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="-677.46179"
+       y="861.81055"
+       id="text5354-4-7-6"
+       sodipodi:linespacing="125%"
+       transform="matrix(0,-1,1,0,0,0)"><tspan
+         sodipodi:role="line"
+         x="-677.46179"
+         y="861.81055"
+         id="tspan11073-14">9: state machine</tspan></text>
+  </g>
 </svg>
