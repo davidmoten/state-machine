@@ -15,7 +15,10 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="collaboration-diagram.svg">
+   sodipodi:docname="collaboration-diagram.svg"
+   inkscape:export-filename="/home/dave/Development/ide/eclipse/workspace-4.3/state-machine/src/docs/collaboration-diagram.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs4">
     <marker
@@ -1839,7 +1842,7 @@
          sodipodi:role="line"
          x="-677.72546"
          y="488.81055"
-         id="tspan11073">optional)</tspan></text>
+         id="tspan11073">(optional)</tspan></text>
     <flowRoot
        xml:space="preserve"
        id="flowRoot11075"
