@@ -205,6 +205,8 @@ to others from the onEntry procedures. Note that one signal may bring about mult
 may send signals to self. Signals to self are always run before signals to others. The signals to others are accumulated across multiple signals to self transitions
 and then sent.
 
+<img src="state-machine-test/src/docs/collaboration-diagram.png?raw=true" />
+
 
 
 
