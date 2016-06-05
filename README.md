@@ -188,17 +188,11 @@ Having had scaling problems with a system that persisted every signal and state 
 
 A popular strategy for dealing with this issue is to use [Event Sourcing](http://martinfowler.com/eaaDev/EventSourcing.html) and [CQRS](http://martinfowler.com/bliki/CQRS.html). 
 
-Given a stream of events to the state machine, 
-* persist only those events that bring about a transition in the state machine
-* optionally supplement persisted events with a sample of the incoming stream (so that if state machine rules change we can replay). That sample may of course be the full resolution stream.
-* periodically persist the entities in the case when replay using full history of events could be very time-consuming
-
-
 Event Sourcing and CQRS and Guaranteed Delivery
 ----------------------------------------
 The term Event Sourcing might be better described as Signal Sourcing when one thinks of a system of state machines rathen than a single state machine.
 
-Incoming signals to a system are placed on a *Command Queue* and the processed. The diagram below indicates the path taken on restart of a system. 
+Incoming signals to a system are placed on a *Command Queue* and then processed. The diagram below indicates the path taken on restart of a system. 
 For each domain object state machines need to be refreshed from the *Event Source* (which we are calling a *Signal Store*).
 <br/>
 <br/>
@@ -212,9 +206,9 @@ A scalable implementation of this architecture might use:
 To leverage the performance benefits of eventual consistency the state machines must be designed so
 that *at least once* delivery of events does not break business logic. Not every problem will be suited to this but many scenarios can be solved this way. Remember to consider:
 
-* code defensively in expectation of &gt; 1
-* calculate probabilities of &gt; 1 delivery of events to state machines with critical roles 
-* consider using consistent write/reads (available in DynamoDB) for state machines with critical roles
+* code defensively in expectation of more-than-once events
+* consider probabilities of more-than-once delivery to state machines with critical roles 
+* consider using consistent write/reads to the Signal Store for state machines with critical roles
 
 
 
