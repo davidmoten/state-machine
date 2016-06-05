@@ -152,7 +152,6 @@ public interface Signaller<T, Id> {
 	
     void cancelSignal(Class<?> fromClass, Id fromId, Class<?> toClass, Id toId);
 
-    <R> Optional<R> search(Class<R> cls, Id id);
 }
 ```
 
