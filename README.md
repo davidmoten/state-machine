@@ -209,6 +209,12 @@ that *at least once* delivery of events does not break business logic. Not every
 * consider probabilities of more-than-once delivery to state machines with critical roles 
 * consider using consistent write/reads to the Signal Store for state machines with critical roles
 
+A basic implementation of the architecture might use:
+
+* JSON for deserialization
+* *BigQueue* for the *Command Queue*
+* Local flat files per state machine for the *Event Stores* (together comprising a *Signal Store*)
+
 
 
 
