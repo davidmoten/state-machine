@@ -152,6 +152,10 @@ public interface Signaller<T, Id> {
 	
     void cancelSignal(Class<?> fromClass, Id fromId, Class<?> toClass, Id toId);
 
+    void cancelSignalToSelf();
+
+    long now();
+
 }
 ```
 
