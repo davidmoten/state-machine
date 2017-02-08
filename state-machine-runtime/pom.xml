@@ -28,7 +28,7 @@
         <dependency>
             <groupId>com.github.davidmoten</groupId>
             <artifactId>rxjava-extras</artifactId>
-            <version>0.7.9.4</version>
+            <version>0.8.0.5</version>
         </dependency>
 
         <!-- Test Dependencies -->

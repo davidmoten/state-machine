@@ -193,19 +193,23 @@ public final class Processor<Id> {
 
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Observable<EntityStateMachine<?, Id>> observable() {
         return Observable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
-            @SuppressWarnings({ "unchecked", "rawtypes" })
-            Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o1 = subject //
+            Observable<Signal<?, Id>> o0 = subject //
                     .toSerialized() //
                     .onBackpressureBuffer() //
                     .mergeWith(signals) //
                     .doOnUnsubscribe(() -> worker.unsubscribe()) //
-                    .compose(preGroupBy) //
-                    .compose(Transformers.groupByEvicting(
-                            signal -> new ClassId(signal.cls(), signal.id()), x -> x, mapFactory));
-
+                    .compose(preGroupBy);
+            Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o1;
+            if (mapFactory != null) {
+                o1 = o0.groupBy(signal -> new ClassId(signal.cls(), signal.id()), x -> x,
+                        mapFactory);
+            } else {
+                o1 = o0.groupBy(signal -> new ClassId(signal.cls(), signal.id()), x -> x);
+            }
             return o1.flatMap(g -> {
                 Observable<EntityStateMachine<?, Id>> obs = g //
                         .flatMap(processSignalsToSelfAndSendSignalsToOthers(worker, g.getKey())) //
