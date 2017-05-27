@@ -14,7 +14,7 @@ to state diagrams (one Event type for each State)
 * Not coupled to a storage mechanism (both a feature and a non-feature!)
 * optional reactive API using [RxJava](https://github.com/ReactiveX/RxJava) (very useful for asynchronous coordination and for extensions like storage if desired)
 
-Status: *alpha*
+Status: *beta*
 
 Example State Diagram
 ------------------------
