@@ -6,9 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import com.github.davidmoten.fsm.runtime.Action3;
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.Clock;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
@@ -19,39 +21,40 @@ import com.github.davidmoten.fsm.runtime.ObjectState;
 import com.github.davidmoten.fsm.runtime.Search;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.guavamini.Preconditions;
-import com.github.davidmoten.rx.Actions;
-import com.github.davidmoten.rx.Functions;
-import com.github.davidmoten.rx.Transformers;
 
-import rx.Observable;
-import rx.Observable.Transformer;
-import rx.Observer;
-import rx.Scheduler;
-import rx.Scheduler.Worker;
-import rx.Subscription;
-import rx.functions.Action1;
-import rx.functions.Action3;
-import rx.functions.Func1;
-import rx.observables.GroupedObservable;
-import rx.observables.SyncOnSubscribe;
-import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Emitter;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableTransformer;
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.Scheduler;
+import io.reactivex.Scheduler.Worker;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.flowables.GroupedFlowable;
+import io.reactivex.functions.BiConsumer;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.internal.functions.Functions;
+import io.reactivex.observables.GroupedObservable;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 
 public final class Processor<Id> {
 
-    private final Func1<Class<?>, EntityBehaviour<?, Id>> behaviourFactory;
+    private final Function<Class<?>, EntityBehaviour<?, Id>> behaviourFactory;
     private final PublishSubject<Signal<?, Id>> subject;
     private final Scheduler signalScheduler;
     private final Scheduler processingScheduler;
     private final Map<ClassId<?, Id>, EntityStateMachine<?, Id>> stateMachines = new ConcurrentHashMap<>();
-    private final Map<ClassIdPair<Id>, Subscription> subscriptions = new ConcurrentHashMap<>();
-    private final Observable<Signal<?, Id>> signals;
-    private final Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform;
-    private final Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy;
-    private final Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
+    private final Map<ClassIdPair<Id>, Disposable> subscriptions = new ConcurrentHashMap<>();
+    private final Flowable<Signal<?, Id>> signals;
+    private final Function<GroupedFlowable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Flowable<EntityStateMachine<?, Id>>> entityTransform;
+    private final FlowableTransformer<Signal<?, Id>, Signal<?, Id>> preGroupBy;
+    private final Function<Consumer<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
     private final Clock signallerClock;
     private final Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction;
-    private final Action1<? super EntityStateMachine<?, Id>> postTransitionAction;
+    private final Consumer<? super EntityStateMachine<?, Id>> postTransitionAction;
 
     private final Search<Id> search = new Search<Id>() {
         @Override
@@ -60,14 +63,13 @@ public final class Processor<Id> {
         }
     };
 
-    private Processor(Func1<Class<?>, EntityBehaviour<?, Id>> behaviourFactory,
-            Scheduler processingScheduler, Scheduler signalScheduler,
-            Observable<Signal<?, Id>> signals,
-            Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform,
-            Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
-            Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory,
+    private Processor(Function<Class<?>, EntityBehaviour<?, Id>> behaviourFactory, Scheduler processingScheduler,
+            Scheduler signalScheduler, Flowable<Signal<?, Id>> signals,
+            Function<GroupedFlowable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Flowable<EntityStateMachine<?, Id>>> entityTransform,
+            FlowableTransformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
+            Function<Consumer<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory,
             Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction,
-            Action1<? super EntityStateMachine<?, Id>> postTransitionAction) {
+            Consumer<? super EntityStateMachine<?, Id>> postTransitionAction) {
         Preconditions.checkNotNull(behaviourFactory);
         Preconditions.checkNotNull(signalScheduler);
         Preconditions.checkNotNull(signals);
@@ -89,8 +91,7 @@ public final class Processor<Id> {
         this.postTransitionAction = postTransitionAction;
     }
 
-    public static <Id> Builder<Id> behaviourFactory(
-            Func1<Class<?>, EntityBehaviour<?, Id>> behaviourFactory) {
+    public static <Id> Builder<Id> behaviourFactory(Function<Class<?>, EntityBehaviour<?, Id>> behaviourFactory) {
         return new Builder<Id>().behaviourFactory(behaviourFactory);
     }
 
@@ -108,17 +109,18 @@ public final class Processor<Id> {
 
     public static class Builder<Id> {
 
-        private Func1<Class<?>, EntityBehaviour<?, Id>> behaviourFactory;
+        private Function<Class<?>, EntityBehaviour<?, Id>> behaviourFactory;
         private Scheduler signalScheduler = Schedulers.computation();
         private Scheduler processingScheduler = Schedulers.trampoline();
-        private Observable<Signal<?, Id>> signals = Observable.empty();
-        private Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform = g -> g;
-        private Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy = x -> x;
-        private Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
-        private Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction = Actions
-                .doNothing3();
-        private Action1<? super EntityStateMachine<?, Id>> postTransitionAction = Actions
-                .doNothing1();
+        private Flowable<Signal<?, Id>> signals = Flowable.empty();
+        private Function<GroupedFlowable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Flowable<EntityStateMachine<?, Id>>> entityTransform = g -> g;
+        private FlowableTransformer<Signal<?, Id>, Signal<?, Id>> preGroupBy = x -> x;
+        private Function<Consumer<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
+        private Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction = (
+                x, y, z) -> {
+        };
+        private Consumer<? super EntityStateMachine<?, Id>> postTransitionAction = x -> {
+        };
         private final Map<Class<?>, EntityBehaviour<?, Id>> behaviours = new HashMap<>();
 
         private Builder() {
@@ -129,8 +131,7 @@ public final class Processor<Id> {
             return this;
         }
 
-        public Builder<Id> behaviourFactory(
-                Func1<Class<?>, EntityBehaviour<?, Id>> behaviourFactory) {
+        public Builder<Id> behaviourFactory(Function<Class<?>, EntityBehaviour<?, Id>> behaviourFactory) {
             this.behaviourFactory = behaviourFactory;
             return this;
         }
@@ -145,24 +146,23 @@ public final class Processor<Id> {
             return this;
         }
 
-        public Builder<Id> signals(Observable<Signal<?, Id>> signals) {
+        public Builder<Id> signals(Flowable<Signal<?, Id>> signals) {
             this.signals = signals;
             return this;
         }
 
         public Builder<Id> entityTransform(
-                Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform) {
+                Function<GroupedFlowable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Flowable<EntityStateMachine<?, Id>>> entityTransform) {
             this.entityTransform = entityTransform;
             return this;
         }
 
-        public Builder<Id> preGroupBy(Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy) {
+        public Builder<Id> preGroupBy(FlowableTransformer<Signal<?, Id>, Signal<?, Id>> preGroupBy) {
             this.preGroupBy = preGroupBy;
             return this;
         }
 
-        public Builder<Id> mapFactory(
-                Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory) {
+        public Builder<Id> mapFactory(Function<Consumer<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory) {
             this.mapFactory = mapFactory;
             return this;
         }
@@ -173,7 +173,7 @@ public final class Processor<Id> {
             return this;
         }
 
-        public Builder<Id> postTransition(Action1<? super EntityStateMachine<?, Id>> action) {
+        public Builder<Id> postTransition(Consumer<? super EntityStateMachine<?, Id>> action) {
             this.postTransitionAction = action;
             return this;
         }
@@ -186,43 +186,46 @@ public final class Processor<Id> {
             if (!behaviours.isEmpty()) {
                 behaviourFactory = cls -> behaviours.get(cls);
             }
-            return new Processor<Id>(behaviourFactory, processingScheduler, signalScheduler,
-                    signals, entityTransform, preGroupBy, mapFactory, preTransitionAction,
-                    postTransitionAction);
+            return new Processor<Id>(behaviourFactory, processingScheduler, signalScheduler, signals, entityTransform,
+                    preGroupBy, mapFactory, preTransitionAction, postTransitionAction);
         }
 
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public Observable<EntityStateMachine<?, Id>> observable() {
-        return Observable.defer(() -> {
+    public Flowable<EntityStateMachine<?, Id>> flowable() {
+        return Flowable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
-            Observable<Signal<?, Id>> o0 = subject //
+            Flowable<Signal<?, Id>> o0 = subject //
                     .toSerialized() //
-                    .onBackpressureBuffer() //
+                    .toFlowable(BackpressureStrategy.BUFFER) //
                     .mergeWith(signals) //
-                    .doOnUnsubscribe(() -> worker.unsubscribe()) //
+                    .doOnCancel(() -> worker.dispose()) //
                     .compose(preGroupBy);
-            Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o1;
+            Flowable<GroupedFlowable<ClassId<?, Id>, Signal<?, Id>>> o;
             if (mapFactory != null) {
-                o1 = o0.groupBy(signal -> new ClassId(signal.cls(), signal.id()), x -> x,
-                        mapFactory);
+                throw new UnsupportedOperationException(
+                        "cannot use mapFactory in RxJava2, author will need to get API supplemented in RxJava2");
+                // o1 = o0.groupBy(signal -> new ClassId(signal.cls(),
+                // signal.id()), x -> x, mapFactory);
             } else {
-                o1 = o0.groupBy(signal -> new ClassId(signal.cls(), signal.id()), x -> x);
+                o = o0.groupBy(signal -> new ClassId(signal.cls(), signal.id()), Functions.identity());
             }
-            return o1.flatMap(g -> {
-                Observable<EntityStateMachine<?, Id>> obs = g //
+            return o.flatMap(g -> {
+                Flowable<EntityStateMachine<?, Id>> obs = g //
                         .flatMap(processSignalsToSelfAndSendSignalsToOthers(worker, g.getKey())) //
                         .doOnNext(m -> stateMachines.put(g.getKey(), m)) //
                         .subscribeOn(processingScheduler); //
-                return entityTransform.call(GroupedObservable.from(g.getKey(), obs));
+                return entityTransform.call(obs.groupBy(x -> g.getKey()));
             });
         });
     }
 
-    private Func1<? super Signal<?, Id>, Observable<EntityStateMachine<?, Id>>> processSignalsToSelfAndSendSignalsToOthers(
+    private Function<? super Signal<?, Id>, Flowable<EntityStateMachine<?, Id>>> processSignalsToSelfAndSendSignalsToOthers(
             Worker worker, ClassId<?, Id> classId) {
-        return signal -> process(classId, signal.event(), worker).toList()
+        return signal -> process(classId, signal.event(), worker) //
+                .toList() //
+                .toFlowable()
                 .flatMapIterable(Functions.identity());
     }
 
@@ -231,45 +234,38 @@ public final class Processor<Id> {
         final Deque<Signal<?, Id>> signalsToOther = new ArrayDeque<>();
     }
 
-    private Observable<EntityStateMachine<?, Id>> process(ClassId<?, Id> cid, Event<?> ev,
-            Worker worker) {
+    private Flowable<EntityStateMachine<?, Id>> process(ClassId<?, Id> cid, Event<?> ev, Worker worker) {
 
-        return Observable.create(new SyncOnSubscribe<Signals<Id>, EntityStateMachine<?, Id>>() {
+        @SuppressWarnings("unchecked")
+        EntityStateMachine<Object, Id> machine = (EntityStateMachine<Object, Id>) getStateMachine(cid.cls(), cid.id());
 
-            @SuppressWarnings("unchecked")
-            EntityStateMachine<Object, Id> machine = (EntityStateMachine<Object, Id>) getStateMachine(
-                    cid.cls(), cid.id());
-
-            @Override
-            protected Signals<Id> generateState() {
-                Signals<Id> signals = new Signals<>();
-                signals.signalsToSelf.offerFirst(ev);
-                return signals;
-            }
+        Callable<Signals<Id>> initialState = () -> {
+            Signals<Id> signals = new Signals<>();
+            signals.signalsToSelf.offerFirst(ev);
+            return signals;
+        };
+        BiConsumer<Signals<Id>, Emitter<EntityStateMachine<?, Id>>> consumer = new BiConsumer<Signals<Id>, Emitter<EntityStateMachine<?, Id>>>() {
 
             @Override
-            protected Signals<Id> next(Signals<Id> signals,
-                    Observer<? super EntityStateMachine<?, Id>> observer) {
+            public void accept(Signals<Id> signals, Emitter<EntityStateMachine<?, Id>> observer) throws Exception {
                 @SuppressWarnings("unchecked")
                 Event<Object> event = (Event<Object>) signals.signalsToSelf.pollLast();
                 if (event != null) {
                     applySignalToSelf(signals, observer, event);
                 } else {
                     applySignalsToOthers(cid, worker, signals);
-                    observer.onCompleted();
+                    observer.onComplete();
                 }
-                return signals;
             }
 
             @SuppressWarnings("unchecked")
-            private <T> void applySignalToSelf(Signals<Id> signals,
-                    Observer<? super EntityStateMachine<?, Id>> observer, Event<T> event) {
+            private <T> void applySignalToSelf(Signals<Id> signals, Emitter<? super EntityStateMachine<?, Id>> observer,
+                    Event<T> event) {
                 machine = machine.signal((Event<Object>) event);
-                postTransitionAction.call(machine);
+                postTransitionAction.accept(machine);
                 // downstream synchronously updates the stateMachines
                 observer.onNext(machine);
-                List<Event<? super T>> list = (List<Event<? super T>>) (List<?>) machine
-                        .signalsToSelf();
+                List<Event<? super T>> list = (List<Event<? super T>>) (List<?>) machine.signalsToSelf();
                 for (int i = list.size() - 1; i >= 0; i--) {
                     signals.signalsToSelf.offerLast(list.get(i));
                 }
@@ -278,8 +274,7 @@ public final class Processor<Id> {
                 }
             }
 
-            private void applySignalsToOthers(ClassId<?, Id> cid, Worker worker,
-                    Signals<Id> signals) {
+            private void applySignalsToOthers(ClassId<?, Id> cid, Worker worker, Signals<Id> signals) {
                 Signal<?, Id> signal;
                 while ((signal = signals.signalsToOther.pollLast()) != null) {
                     Signal<?, Id> s = signal;
@@ -288,7 +283,7 @@ public final class Processor<Id> {
                     } else if (signal.event() instanceof CancelTimedSignal) {
                         cancel(signal);
                     } else {
-                        long delayMs = signal.time().get() - worker.now();
+                        long delayMs = signal.time().get() - worker.now(TimeUnit.MILLISECONDS);
                         if (delayMs <= 0) {
                             subject.onNext(signal);
                         } else {
@@ -302,43 +297,43 @@ public final class Processor<Id> {
                 @SuppressWarnings("unchecked")
                 CancelTimedSignal<Id> s = ((CancelTimedSignal<Id>) signal.event());
                 @SuppressWarnings({ "unchecked", "rawtypes" })
-                Subscription sub = subscriptions
-                        .remove(new ClassIdPair<Id>(new ClassId(s.fromClass(), s.fromId()),
-                                new ClassId(signal.cls(), signal.id())));
+                Disposable sub = subscriptions.remove(new ClassIdPair<Id>(new ClassId(s.fromClass(), s.fromId()),
+                        new ClassId(signal.cls(), signal.id())));
                 if (sub != null) {
-                    sub.unsubscribe();
+                    sub.dispose();
                 }
             }
 
-            private void scheduleSignal(ClassId<?, Id> from, Worker worker, Signal<?, Id> signal,
-                    Signal<?, Id> s, long delayMs) {
+            private void scheduleSignal(ClassId<?, Id> from, Worker worker, Signal<?, Id> signal, Signal<?, Id> s,
+                    long delayMs) {
                 // record pairwise signal so we can cancel it if
                 // desired
                 @SuppressWarnings({ "unchecked", "rawtypes" })
-                ClassIdPair<Id> idPair = new ClassIdPair<Id>(from,
-                        new ClassId(signal.cls(), signal.id()));
-                long t1 = signalScheduler.now();
-                Subscription subscription = worker.schedule(() -> {
+                ClassIdPair<Id> idPair = new ClassIdPair<Id>(from, new ClassId(signal.cls(), signal.id()));
+                long t1 = signalScheduler.now(TimeUnit.MILLISECONDS);
+                Disposable subscription = worker.schedule(() -> {
                     subject.onNext(s.now());
-                } , delayMs, TimeUnit.MILLISECONDS);
-                long t2 = signalScheduler.now();
+                }, delayMs, TimeUnit.MILLISECONDS);
+                long t2 = signalScheduler.now(TimeUnit.MILLISECONDS);
                 worker.schedule(() -> {
                     subscriptions.remove(idPair);
-                } , delayMs - (t2 - t1), TimeUnit.MILLISECONDS);
-                Subscription previous = subscriptions.put(idPair, subscription);
+                }, delayMs - (t2 - t1), TimeUnit.MILLISECONDS);
+                Disposable previous = subscriptions.put(idPair, subscription);
                 if (previous != null) {
-                    previous.unsubscribe();
+                    previous.dispose();
                 }
             }
-        });
 
+        };
+
+        return Flowable.generate(initialState, consumer);
     }
 
     @SuppressWarnings({ "unchecked" })
     private <T> EntityStateMachine<T, Id> getStateMachine(Class<T> cls, Id id) {
         return (EntityStateMachine<T, Id>) stateMachines //
                 .computeIfAbsent(new ClassId<T, Id>(cls, id),
-                        clsId -> (EntityStateMachine<T, Id>) behaviourFactory.call(cls) //
+                        clsId -> (EntityStateMachine<T, Id>) behaviourFactory.apply(cls) //
                                 .create(id) //
                                 .withSearch(search) //
                                 .withClock(signallerClock) //
@@ -367,15 +362,15 @@ public final class Processor<Id> {
     }
 
     public void onCompleted() {
-        subject.onCompleted();
+        subject.onComplete();
     }
 
     public void cancelSignal(Class<?> fromClass, Id fromId, Class<?> toClass, Id toId) {
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        Subscription subscription = subscriptions.remove(
-                new ClassIdPair<Id>(new ClassId(fromClass, fromId), new ClassId(toClass, toId)));
+        Disposable subscription = subscriptions
+                .remove(new ClassIdPair<Id>(new ClassId(fromClass, fromId), new ClassId(toClass, toId)));
         if (subscription != null) {
-            subscription.unsubscribe();
+            subscription.dispose();
         }
     }
 
