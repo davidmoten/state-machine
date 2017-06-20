@@ -16,7 +16,7 @@ import com.github.davidmoten.fsm.model.State;
 import com.github.davidmoten.fsm.model.StateMachineDefinition;
 import com.github.davidmoten.fsm.runtime.Create;
 
-public class StateMachineDefinitions implements Supplier<List<StateMachineDefinition<?>>> {
+public final class StateMachineDefinitions implements Supplier<List<StateMachineDefinition<?>>> {
 
     @Override
     public List<StateMachineDefinition<?>> get() {
