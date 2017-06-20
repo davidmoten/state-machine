@@ -61,8 +61,8 @@ public class StreamingTest {
         // wait for processing to finish (is running asynchronously using the
         // scheduler)
         Thread.sleep(1000);
-        
-        //assert that things happened as we expected
+
+        // assert that things happened as we expected
         ts.assertValues( //
                 MicrowaveStateMachine.State.COOKING,
                 MicrowaveStateMachine.State.COOKING_INTERRUPTED,
