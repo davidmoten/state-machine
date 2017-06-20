@@ -259,6 +259,7 @@ public final class Processor<Id> {
         return Flowable.generate(generator, generator);
     }
 
+    // note has access to surrounding classes' state because is not static
     private final class Generator implements Callable<Signals<Id>>,
             BiConsumer<Signals<Id>, Emitter<EntityStateMachine<?, Id>>> {
 
