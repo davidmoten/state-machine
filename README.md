@@ -12,7 +12,7 @@ immutability (though is not opinionated in the sense that if you want to mutate 
 to state diagrams (one Event type for each State)
 * Maven plugin
 * Not coupled to a storage mechanism (both a feature and a non-feature!)
-* optional reactive API using [RxJava](https://github.com/ReactiveX/RxJava) (very useful for asynchronous coordination and for extensions like storage if desired)
+* optional reactive API using [RxJava 2](https://github.com/ReactiveX/RxJava) (very useful for asynchronous coordination and for extensions like storage if desired)
 
 Status: *beta*
 
@@ -114,6 +114,7 @@ In the example below the documentation is a pseudo-code description of the *entr
 Here's a more complex one:
 
 <img src="src/docs/complex-state-diagram.png?raw=true" />
+
 On my linux machine I have a command line alias for *yEd* 
 
 ```bash
