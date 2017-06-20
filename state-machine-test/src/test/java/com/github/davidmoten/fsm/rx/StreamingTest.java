@@ -55,7 +55,8 @@ public class StreamingTest {
                 .subscribe(ts);
 
         Thread.sleep(1000);
-        ts.assertValues(MicrowaveStateMachine.State.COOKING,
+        ts.assertValues( //
+                MicrowaveStateMachine.State.COOKING,
                 MicrowaveStateMachine.State.COOKING_INTERRUPTED,
                 MicrowaveStateMachine.State.COOKING_INTERRUPTED);
 
