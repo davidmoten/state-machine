@@ -255,13 +255,22 @@ public final class Processor<Id> {
             Worker worker) {
 
         EntityStateMachine<?, Id> machine = getStateMachine(classId.cls(), classId.id());
-        Generator generator = new Generator(classId, event, worker, machine);
-        return Flowable.generate(generator, generator);
+        TransitionHandler handler = new TransitionHandler(classId, event, worker, machine);
+        return Flowable.generate(handler, handler);
     }
 
-    // note has access to surrounding classes' state because is not static
-    private final class Generator implements Callable<Signals<Id>>,
+    /**
+     * Combines the state creation and transition operations into the one class.
+     * Implements the transition rules of an Executable UML state machine in
+     * that for an entry procedure all signals to self are emitted before
+     * signals to others. Signals to self are actioned synchronously but signals
+     * to others may be actioned asynchronously.
+     */
+    private final class TransitionHandler implements Callable<Signals<Id>>,
             BiConsumer<Signals<Id>, Emitter<EntityStateMachine<?, Id>>> {
+
+        // note has access to surrounding classes' state because is not
+        // static
 
         private final Event<?> event;
         private final ClassId<?, Id> classId;
@@ -270,7 +279,7 @@ public final class Processor<Id> {
         // mutable
         EntityStateMachine<?, Id> machine;
 
-        Generator(ClassId<?, Id> classId, Event<?> event, Worker worker,
+        TransitionHandler(ClassId<?, Id> classId, Event<?> event, Worker worker,
                 EntityStateMachine<?, Id> machine) {
             this.classId = classId;
             this.event = event;
@@ -279,8 +288,8 @@ public final class Processor<Id> {
         }
 
         @Override
-        // generate state
         public Signals<Id> call() throws Exception {
+            // generate initial state
             Signals<Id> signals = new Signals<>();
             signals.signalsToSelf.offerFirst(event);
             return signals;
@@ -303,6 +312,8 @@ public final class Processor<Id> {
         private <T> void applySignalToSelf(Signals<Id> signals,
                 Emitter<? super EntityStateMachine<?, Id>> observer, Event<T> event)
                         throws Exception {
+            // run the entry procedure if a transition occurs
+            // and record signals to self and to others
             machine = machine.signal((Event<Object>) event);
             postTransitionAction.accept(machine);
             // downstream synchronously updates the stateMachines
