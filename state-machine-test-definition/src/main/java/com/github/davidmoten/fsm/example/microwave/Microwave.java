@@ -1,6 +1,6 @@
 package com.github.davidmoten.fsm.example.microwave;
 
-public class Microwave {
+public final class Microwave {
 
     private final int serialNumber;
 
