@@ -251,30 +251,28 @@ public final class Processor<Id> {
         final Deque<Signal<?, Id>> signalsToOther = new ArrayDeque<>();
     }
 
-    private Flowable<EntityStateMachine<?, Id>> process(ClassId<?, Id> cid, Event<?> ev,
+    private Flowable<EntityStateMachine<?, Id>> process(ClassId<?, Id> classId, Event<?> event,
             Worker worker) {
 
-        EntityStateMachine<Object, Id> machine = (EntityStateMachine<Object, Id>) getStateMachine(
-                cid.cls(), cid.id());
-        Generator generator = new Generator(cid, ev, worker, machine);
+        EntityStateMachine<?, Id> machine = getStateMachine(classId.cls(), classId.id());
+        Generator generator = new Generator(classId, event, worker, machine);
         return Flowable.generate(generator, generator);
     }
 
     private final class Generator implements Callable<Signals<Id>>,
             BiConsumer<Signals<Id>, Emitter<EntityStateMachine<?, Id>>> {
 
-        private final Event<?> ev;
-        private final ClassId<?, Id> cid;
+        private final Event<?> event;
+        private final ClassId<?, Id> classId;
         private final Worker worker;
 
         // mutable
-        @SuppressWarnings("unchecked")
-        EntityStateMachine<Object, Id> machine;
+        EntityStateMachine<?, Id> machine;
 
-        Generator(ClassId<?, Id> cid, Event<?> ev, Worker worker,
-                EntityStateMachine<Object, Id> machine) {
-            this.cid = cid;
-            this.ev = ev;
+        Generator(ClassId<?, Id> classId, Event<?> event, Worker worker,
+                EntityStateMachine<?, Id> machine) {
+            this.classId = classId;
+            this.event = event;
             this.worker = worker;
             this.machine = machine;
         }
@@ -283,7 +281,7 @@ public final class Processor<Id> {
         // generate state
         public Signals<Id> call() throws Exception {
             Signals<Id> signals = new Signals<>();
-            signals.signalsToSelf.offerFirst(ev);
+            signals.signalsToSelf.offerFirst(event);
             return signals;
         }
 
@@ -295,7 +293,7 @@ public final class Processor<Id> {
             if (event != null) {
                 applySignalToSelf(signals, observer, event);
             } else {
-                applySignalsToOthers(cid, worker, signals);
+                applySignalsToOthers(classId, worker, signals);
                 observer.onComplete();
             }
         }
