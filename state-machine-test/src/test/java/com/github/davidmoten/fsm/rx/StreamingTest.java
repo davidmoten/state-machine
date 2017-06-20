@@ -29,6 +29,9 @@ public class StreamingTest {
     @Test
     public void testJsonInputToStateMachineIssue1() throws InterruptedException {
 
+        // JSON source stream (could contain other messages about other
+        // Microwaves with different ids which will be processed concurrently by
+        // the Processor)
         Observable<String> messages = Observable.just(
                 "{\"cls\": \"Microwave\", \"id\": \"1\",\"event\": \"ButtonPressed\"}",
                 "{\"cls\": \"Microwave\", \"id\": \"1\",\"event\": \"DoorOpened\"}",
@@ -51,6 +54,7 @@ public class StreamingTest {
         // signals stream
         processor //
                 .observable() //
+                //just output the states
                 .map(esm -> esm.state()) //
                 .subscribe(ts);
 
