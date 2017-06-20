@@ -2,7 +2,7 @@ state-machine
 ==============
 <a href="https://travis-ci.org/davidmoten/state-machine"><img src="https://travis-ci.org/davidmoten/state-machine.svg"/></a><br/>
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.davidmoten/state-machine-runtime/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/com.github.davidmoten/state-machine-runtime)<br/>
-<!--[![Dependency Status](https://gemnasium.com/com.github.davidmoten/state-machine.svg)](https://gemnasium.com/com.github.davidmoten/state-machine)-->
+[![codecov](https://codecov.io/gh/davidmoten/subethasmtp/branch/master/graph/badge.svg)](https://codecov.io/gh/davidmoten/subethasmtp)<br/>
 
 Generates java classes to handle state transitions based on a state machine defined with type safety in java. Supports 
 immutability (though is not opinionated in the sense that if you want to mutate your objects you can).
