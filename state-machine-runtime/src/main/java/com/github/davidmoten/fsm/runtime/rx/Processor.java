@@ -210,7 +210,7 @@ public final class Processor<Id> {
             Flowable<GroupedFlowable<ClassId<?, Id>, Signal<?, Id>>> o;
             if (mapFactory != null) {
                 throw new UnsupportedOperationException(
-                        "cannot use mapFactory in RxJava2, author will need to get API supplemented in RxJava2");
+                        "cannot use mapFactory in RxJava2, author will need to get Flowable.groupBy API supplemented in RxJava2");
                 // o1 = o0.groupBy(signal -> new ClassId(signal.cls(),
                 // signal.id()), x -> x, mapFactory);
             } else {
