@@ -44,14 +44,21 @@ public class StreamingTest {
         // create the signal processor
         Processor<String> processor = createProcessor(scheduler, signals);
 
+        // using a test subscriber because has easy assert methods on it
         TestSubscriber<Object> ts = TestSubscriber.create();
 
+        // subscribe to the stream of entity states that is produced from the
+        // signals stream
         processor //
                 .observable() //
+                .map(esm -> esm.state()) //
                 .subscribe(ts);
 
         Thread.sleep(1000);
-        ts.assertValueCount(3);
+        ts.assertValues(MicrowaveStateMachine.State.COOKING,
+                MicrowaveStateMachine.State.COOKING_INTERRUPTED,
+                MicrowaveStateMachine.State.COOKING_INTERRUPTED);
+
     }
 
     private static Signal<?, String> toSignal(String msg) {
