@@ -21,7 +21,6 @@ import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.guavamini.Preconditions;
 import com.github.davidmoten.rx.Actions;
 import com.github.davidmoten.rx.Functions;
-import com.github.davidmoten.rx.Transformers;
 
 import rx.Observable;
 import rx.Observable.Transformer;
