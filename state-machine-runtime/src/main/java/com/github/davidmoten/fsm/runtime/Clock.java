@@ -1,6 +1,8 @@
 package com.github.davidmoten.fsm.runtime;
 
-import rx.Scheduler;
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.Scheduler;
 
 public interface Clock {
 
@@ -10,7 +12,7 @@ public interface Clock {
         return new Clock() {
             @Override
             public long now() {
-                return scheduler.now();
+                return scheduler.now(TimeUnit.MILLISECONDS);
             }
         };
 

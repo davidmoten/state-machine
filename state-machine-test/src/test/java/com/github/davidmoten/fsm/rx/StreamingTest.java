@@ -19,10 +19,10 @@ import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 
-import rx.Observable;
-import rx.Scheduler;
-import rx.observers.TestSubscriber;
-import rx.schedulers.Schedulers;
+import io.reactivex.Flowable;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subscribers.TestSubscriber;
 
 public class StreamingTest {
 
@@ -32,12 +32,12 @@ public class StreamingTest {
         // JSON source stream (could contain other messages about other
         // Microwaves with different ids which will be processed concurrently by
         // the Processor)
-        Observable<String> messages = Observable.just(
+        Flowable<String> messages = Flowable.just(
                 "{\"cls\": \"Microwave\", \"id\": \"1\",\"event\": \"ButtonPressed\"}",
                 "{\"cls\": \"Microwave\", \"id\": \"1\",\"event\": \"DoorOpened\"}",
                 "{\"cls\": \"Microwave\", \"id\": \"1\",\"event\": \"ButtonPressed\"}");
 
-        Observable<Signal<?, String>> signals = messages //
+        Flowable<Signal<?, String>> signals = messages //
                 .map(msg -> toSignal(msg));
 
         // special scheduler that we will use to schedule signals and to process
@@ -53,7 +53,7 @@ public class StreamingTest {
         // subscribe to the stream of entity states that is produced from the
         // signals stream
         processor //
-                .observable() //
+                .flowable() //
                 // just output the states
                 .map(esm -> esm.state()) //
                 .subscribe(ts);
@@ -92,7 +92,7 @@ public class StreamingTest {
     }
 
     private static Processor<String> createProcessor(Scheduler scheduler,
-            Observable<Signal<?, String>> signals) {
+            Flowable<Signal<?, String>> signals) {
         MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
 
         // build a processor
