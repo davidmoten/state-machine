@@ -54,11 +54,15 @@ public class StreamingTest {
         // signals stream
         processor //
                 .observable() //
-                //just output the states
+                // just output the states
                 .map(esm -> esm.state()) //
                 .subscribe(ts);
 
+        // wait for processing to finish (is running asynchronously using the
+        // scheduler)
         Thread.sleep(1000);
+        
+        //assert that things happened as we expected
         ts.assertValues( //
                 MicrowaveStateMachine.State.COOKING,
                 MicrowaveStateMachine.State.COOKING_INTERRUPTED,
