@@ -39,10 +39,10 @@ public class StreamingTest {
 
         // special scheduler that we will use to schedule signals and to process
         // events
-        Scheduler signalScheduler = Schedulers.from(Executors.newFixedThreadPool(3));
+        Scheduler scheduler = Schedulers.from(Executors.newFixedThreadPool(3));
 
         // create the signal processor
-        Processor<String> processor = createProcessor(signalScheduler, signals);
+        Processor<String> processor = createProcessor(scheduler, signals);
 
         TestSubscriber<Object> ts = TestSubscriber.create();
 
