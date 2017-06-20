@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.davidmoten.fsm.Util;
+import com.github.davidmoten.fsm.runtime.Action3;
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.Clock;
 import com.github.davidmoten.fsm.runtime.ClockDefault;
@@ -27,9 +28,6 @@ import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.guavamini.Preconditions;
 import com.github.davidmoten.guavamini.Sets;
-import com.github.davidmoten.rx.Actions;
-
-import rx.functions.Action3;
 
 public final class Generator<T> {
 
@@ -332,13 +330,13 @@ public final class Generator<T> {
                     imports.add(behaviourClassName()), imports.add(Clock.class));
             indent.right();
             out.format(
-                    "%sreturn new %s<T>(%s, id, behaviour, %s.empty(), state, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), %s.instance(), %s.empty(), false, %s.<%s, %s, %s>doNothing3());\n",
+                    "%sreturn new %s<T>(%s, id, behaviour, %s.empty(), state, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), %s.instance(), %s.empty(), false, %s.<%s, %s, %s>doNothing());\n",
                     indent, stateMachineClassSimpleName(), instanceName(),
                     imports.add(Optional.class), imports.add(ArrayList.class),
                     imports.add(Event.class), imports.add(cls), imports.add(ArrayList.class),
                     imports.add(Signal.class), imports.add(SearchUnsupported.class),
                     imports.add(ClockDefault.class), imports.add(Optional.class),
-                    imports.add(Actions.class), imports.add(Object.class),
+                    imports.add(Action3.class), imports.add(Object.class),
                     imports.add(Object.class), imports.add(Object.class));
             out.format("%s}\n", indent.left());
             out.println();
@@ -347,12 +345,12 @@ public final class Generator<T> {
                 out.format("%spublic static <T> %s<T> create(T id, %s<T> behaviour) {\n", indent,
                         stateMachineClassSimpleName(), imports.add(behaviourClassName()));
                 out.format(
-                        "%sreturn new %s<T>(null, id, behaviour, %s.empty(), State.INITIAL, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), %s.instance(), %s.empty(), false, %s.<%s, %s, %s>doNothing3());\n",
+                        "%sreturn new %s<T>(null, id, behaviour, %s.empty(), State.INITIAL, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), %s.instance(), %s.empty(), false, %s.<%s, %s, %s>doNothing());\n",
                         indent.right(), stateMachineClassSimpleName(), imports.add(Optional.class),
                         imports.add(ArrayList.class), imports.add(Event.class), imports.add(cls),
                         imports.add(ArrayList.class), imports.add(Signal.class),
                         imports.add(SearchUnsupported.class), imports.add(ClockDefault.class),
-                        imports.add(Optional.class), imports.add(Actions.class),
+                        imports.add(Optional.class), imports.add(Action3.class),
                         imports.add(Object.class), imports.add(Object.class),
                         imports.add(Object.class));
                 out.format("%s}\n", indent.left());

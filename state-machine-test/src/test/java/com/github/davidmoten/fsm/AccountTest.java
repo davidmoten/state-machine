@@ -15,8 +15,8 @@ import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 
-import rx.observers.TestSubscriber;
-import rx.schedulers.Schedulers;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subscribers.TestSubscriber;
 
 public class AccountTest {
 
@@ -60,7 +60,7 @@ public class AccountTest {
 
 		TestSubscriber<Object> ts = TestSubscriber.create();
 		
-		processor.observable() //
+		processor.flowable() //
 		        .doOnNext(System.out::println) //
 				.subscribe(ts);
 		
@@ -74,7 +74,7 @@ public class AccountTest {
 		ts.assertNoErrors();
 		
 		processor.onCompleted();
-		ts.assertCompleted();
+		ts.assertComplete();
 		
 
 	}
