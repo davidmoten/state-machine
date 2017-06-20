@@ -114,7 +114,11 @@ In the example below the documentation is a pseudo-code description of the *entr
 Here's a more complex one:
 
 <img src="src/docs/complex-state-diagram.png?raw=true" />
-On my linux machine I have a command line alias for *yEd* : `alias yed='java -jar /opt/yed/current/yed.jar'` so that I can automate the regeneration of the diagram from the command line like this:
+On my linux machine I have a command line alias for *yEd*
+```bash
+alias yed='java -jar /opt/yed/current/yed.jar'
+``` 
+so that I can automate the regeneration of the diagram from the command line like this:
 
 ```bash
 mvn clean install && yed state-machine/state-machine-test/target/state-machine-docs/com.github.davidmoten.fsm.example.microwave.Microwave.graphml
