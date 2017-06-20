@@ -199,7 +199,7 @@ A popular strategy for dealing with this issue is to use [Event Sourcing](http:/
 
 Event Sourcing and CQRS and Guaranteed Delivery
 ----------------------------------------
-The term *Event Sourcing* might be better described as *Signal Sourcing* when one thinks of a system of state machines rathen than a single state machine.
+The term *Event Sourcing* might be better described as *Signal Sourcing* when one thinks of a system of state machines rather than a single state machine.
 
 Incoming signals to a system are placed on a *Command Queue* and then processed. The diagram below indicates the path taken on restart of a system. 
 For each domain object state machines need to be refreshed from the *Event Source* (which we are calling a *Signal Store*).
