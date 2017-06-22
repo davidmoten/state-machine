@@ -24,23 +24,34 @@ if no message then exit
 
 while (true) {
   wip = wip attribute for signal.cls and signal.id from DynamoDb.Entity table
-  time = epochTimeMs
-  if (wip.compareAndSet(0, time) || (now - time > TIMEOUT_MS) {
-    //update stuff   
-    processor = create Processor
-    read events from DynamoDb.EntityEvent table in order
-      replay event through processor
-    push signal.event through processor
-    for each s in processor.signalsToOthers
-      call signalResource with s
-    while 
-    insert signal.event into DynamoDb.EntityEvent table 
-    if (!wip.compareAndSet(time, 0)) {
+  time = wip.get 
+  now = currentTimeEpochMs
+  if (time == 0) {
+    if (wip.compareAndSet(0, now)) {
+      updateStuff()
+      break;
+    }
+  } else if (now - time > TIMEOUT_MS) {
+    if (wip.compareAndSet(time, now)) {
+      updateStuff()
+      break;  
+    }
+  }
+}
+
+void updateStuff() {
+  //update stuff   
+  processor = create Processor
+  read events from DynamoDb.EntityEvent table in order
+    replay event through processor
+  push signal.event through processor
+  for each s in processor.signalsToOthers
+    call signalResource with s
+  insert signal.event into DynamoDb.EntityEvent table 
+  if (!wip.compareAndSet(time, 0)) {
       send RUN to signalTopic
     }
-  } else {
-    dynamo.compareAndSet(wip, wip+1);
-  }
+  } 
 }
 ```
 
