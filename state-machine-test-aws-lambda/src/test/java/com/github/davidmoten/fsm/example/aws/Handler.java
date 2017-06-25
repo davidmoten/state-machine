@@ -23,7 +23,6 @@ import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
 
 public class Handler {
 
@@ -38,6 +37,20 @@ public class Handler {
     }
 
     public String process(Map<String, Object> input, Context context) {
+
+        // for each message on the queue while time allows
+        // deserialize the signal message to extract Class, Id and Event objects
+        // atomically set the time field on the entity if 0 or too old as a
+        // work-in-progress counter.
+
+        // if the time field was set then
+        // get the latest state bytes from the item in Entity table identified
+        // by the msg entityId
+        // deserialize the bytes into an an entity object and its state enum
+        // create an EntityStateMachine object
+        //
+        // apply the Event object to the EntityStateMachine object
+        // serialize the new state to bytes 
         AmazonSQS sqs = AmazonSQSClientBuilder //
                 .standard() //
                 .withRegion(Regions.AP_SOUTHEAST_2) //
@@ -104,6 +117,10 @@ public class Handler {
     }
 
     private void updateStuff(DynamoDB db, String entityId) {
+
+    }
+
+    private void replay(DynamoDB db, String entityId) {
         Table entityEvent = db.getTable("EntityEvent");
         QuerySpec spec = new QuerySpec() //
                 .withKeyConditionExpression("EntityId = :entityId")
