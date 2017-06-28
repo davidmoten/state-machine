@@ -1,5 +1,6 @@
 package com.github.davidmoten.fsm.example.aws;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -7,7 +8,6 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Expected;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
@@ -15,7 +15,6 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
-import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.sqs.AmazonSQS;
@@ -23,10 +22,16 @@ import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviour;
+import com.github.davidmoten.fsm.example.generated.MicrowaveStateMachine;
+import com.github.davidmoten.fsm.example.generated.MicrowaveStateMachine.State;
+import com.github.davidmoten.fsm.example.microwave.Microwave;
+import com.github.davidmoten.fsm.example.microwave.event.DoorOpened;
+import com.github.davidmoten.fsm.runtime.Signal;
+import com.github.davidmoten.fsm.runtime.rx.ClassId;
 
 public class Handler {
-
-    private static final long THRESHOLD_MS = 60000;
 
     public String submitSignal(Map<String, Object> input, Context context) {
         LambdaLogger log = context.getLogger();
@@ -38,93 +43,95 @@ public class Handler {
 
     public String process(Map<String, Object> input, Context context) {
 
-        // for each message on the queue while lambda max runtime allows
-        // deserialize the signal message to extract Class, Id and Event objects
-        // while (true) {
-        // consistently read the entity
-        // CAS set the time field on the entity if 0 or too old as a
-        // work-in-progress counter.
-        // if not set then continue
+        // use fifo sqs queue with groupId equal to Class+Id
         //
-        // if the time field was set then
+        // to support fifo deduplication every signal needs to include a from
+        // Class+Id, eventId pair in the serialized signal
+        //
         // get the latest state bytes from the item in Entity table identified
         // by the msg entityId
         //
         // deserialize the bytes into an an entity object and its state enum
-        // create an EntityStateMachine object
+        //
+        // create an EntityStateMachine object intialized with entity object and
+        // its state
         //
         // apply the Event object to the EntityStateMachine object
         // serialize the new state to bytes
-        // send the signals to others async
-        // append event to EntityEvent table (primary key Class+Id, sort key
-        // eventId)
         //
-        // set the Entity object state and stateBytes and incremented eventId,
-        // and time to zero
-
+        // fifo queue regions still limited so use a US region
         AmazonSQS sqs = AmazonSQSClientBuilder //
                 .standard() //
-                .withRegion(Regions.AP_SOUTHEAST_2) //
+                .withRegion(Regions.US_WEST_2) //
                 .build();
         String signalQueueUrl = sqs //
-                .getQueueUrl("signal-queue") //
+                .getQueueUrl("signal-queue.fifo") //
                 .getQueueUrl();
         List<Message> msgs = readQueue(sqs, signalQueueUrl);
         if (msgs.isEmpty()) {
             return "none";
         } else {
+            AmazonDynamoDB dbClient = AmazonDynamoDBClientBuilder //
+                    .standard() //
+                    .withRegion(Regions.AP_SOUTHEAST_2) //
+                    .build();
+            DynamoDB db = new DynamoDB(dbClient);
+            Table entityTable = db.getTable("Entity");
             for (Message msg : msgs) {
-                // TODO extract from msg
-                String entityId = "microwave:1";
-                AmazonDynamoDB dbClient = AmazonDynamoDBClientBuilder //
-                        .standard() //
-                        .withRegion(Regions.AP_SOUTHEAST_2) //
-                        .build();
-                DynamoDB db = new DynamoDB(dbClient);
-                Table entityTable = db.getTable("Entity");
-                Item entity;
-                while (true) {
-                    long now = System.currentTimeMillis();
-                    entity = entityTable.getItem("EntityId", entityId);
-                    if (entity == null) {
-                        entity = new Item().with("EntityId", entityId).with("time", now);
-                        try {
-                            entityTable.putItem(entity, new Expected("EntityId").notExist());
-                            // put succeeded
-                            break;
-                        } catch (ConditionalCheckFailedException e) {
-                            // do nothing, loop again
-                        }
-                    } else {
-                        break;
-                    }
+                Signal<Microwave, String> signal = parseSignal(msg.getBody());
+                String entityId = signal.cls().getCanonicalName() + ":" + signal.id();
+                Item item = entityTable.getItem("EntityId", entityId);
+                MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
+                Microwave m = Microwave.fromId(signal.id());
+                String id = null;
+                State state = MicrowaveStateMachine.State.COOKING;
+                MicrowaveStateMachine<String> sm = MicrowaveStateMachine.create(m, id, behaviour,
+                        state);
+                sm.signal(signal.event());
+                // send signals to others
+                for (Signal<?, ?> sig : sm.signalsToOther()) {
+                    // serialize sig to bytes
+                    // put bytes on queue
+                    String serialized = Base64.getEncoder().encodeToString(serialize(sig));
+                    SendMessageRequest req = new SendMessageRequest() //
+                            .withQueueUrl(signalQueueUrl) //
+                            .withMessageBody(serialized) //
+                            .withMessageGroupId(toGroupId(sig));
+                    sqs.sendMessage(req);
                 }
-                while (true) {
-                    long now = System.currentTimeMillis();
-                    long time = entity.getLong("time");
-                    if (time == 0) {
-                        Item item = new Item().with("EntityId", entityId).with("time", now);
-                        if (putItem(entityTable, item, new Expected("time").eq(0L))) {
-                            updateStuff(db, entityId);
-                            break;
-                        }
-                    } else if (now - time > THRESHOLD_MS) {
-                        Item item = new Item().with("EntityId", entityId).with("time", now);
-                        if (putItem(entityTable, item, new Expected("time").eq(time))) {
-                            updateStuff(db, entityId);
-                            break;
-                        }
-                    } else {
-                        Item item = new Item().with("EntityId", entityId).with("time", time);
-                        if (putItem(entityTable, item, new Expected("time").eq(time))) {
-                            // don't update anything
-                            return "";
-                        }
-                    }
-                }
+                Microwave m2 = sm.get().get();
+                // TODO serialize m2 and save in entityTable item
+                byte[] bytes = serialize(m2);
+                Item item2 = new Item() //
+                        .with("EntityId", entityId) //
+                        .withBinary("entityBytes", bytes);
+                entityTable.putItem(item2);
             }
         }
         return "ok";
+
+    }
+
+    private byte[] serialize(Microwave m2) {
+        // TODO
+        return new byte[] { 1, 2, 3 };
+    }
+
+    private static String toGroupId(Signal<?, ?> sig) {
+        return sig.cls().getCanonicalName() + ":" + sig.id();
+    }
+
+    private static byte[] serialize(Signal<?, ?> sig) {
+        return new byte[] { 1, 2, 3 };
+    }
+
+    private static Signal<Microwave, String> parseSignal(String body) {
+        return Signal.create(ClassId.create(Microwave.class, "1"), new DoorOpened());
+    }
+
+    private MicrowaveBehaviour<String> createMicrowaveBehaviour() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     private void updateStuff(DynamoDB db, String entityId) {
@@ -141,15 +148,6 @@ public class Handler {
         while (it.hasNext()) {
             Item item = it.next();
             // TODO push through Processor
-        }
-    }
-
-    private static boolean putItem(Table table, Item item, Expected expected) {
-        try {
-            table.putItem(item, expected);
-            return true;
-        } catch (ConditionalCheckFailedException e) {
-            return false;
         }
     }
 
