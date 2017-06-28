@@ -1,6 +1,9 @@
 package com.github.davidmoten.fsm.persistence;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -15,6 +18,17 @@ public final class PersistenceH2<T> implements Persistence<T> {
 
     public PersistenceH2(File directory) {
         this.directory = directory;
+    }
+
+    public void create() {
+        directory.mkdirs();
+        try (Connection con = createConnection()) {
+            String sql = new String(Files.readAllBytes(new File("/create-h2.sql").toPath()), StandardCharsets.UTF_8);
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        } catch (IOException e) {
+            throw new SQLRuntimeException(e);
+        }
     }
 
     @Override
