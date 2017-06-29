@@ -33,11 +33,11 @@ public final class PersistenceH2 implements Persistence {
     private final Clock clock;
     private final Serializer entitySerializer;
     private final Serializer eventSerializer;
-    private final Queue<Signal<?, ?>> queue = new LinkedList<>();
+    private final Queue<NumberedSignal<?, ?>> queue = new LinkedList<>();
     private final AtomicInteger wip = new AtomicInteger();
 
-    public PersistenceH2(File directory, ScheduledExecutorService executor, Clock clock,
-            Serializer entitySerializer, Serializer eventSerializer) {
+    public PersistenceH2(File directory, ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
+            Serializer eventSerializer) {
         this.directory = directory;
         this.executor = executor;
         this.clock = clock;
@@ -49,13 +49,13 @@ public final class PersistenceH2 implements Persistence {
         directory.mkdirs();
         try (Connection con = createConnection()) {
             con.setAutoCommit(true);
-            String sql = new String(
-                    readAll(PersistenceH2.class.getResourceAsStream("/create-h2.sql")),
+            String sql = new String(readAll(PersistenceH2.class.getResourceAsStream("/create-h2.sql")),
                     StandardCharsets.UTF_8);
             String[] commands = sql.split(";");
             for (String command : commands) {
                 con.prepareStatement(command).execute();
             }
+            con.commit();
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
@@ -76,9 +76,10 @@ public final class PersistenceH2 implements Persistence {
         List<TimedRunnable> list = new ArrayList<TimedRunnable>();
         try (Connection con = createConnection()) {
             try (PreparedStatement ps = con.prepareStatement(
-                    "select cls, id, event_bytes, time from delayed_signal_queue order by seq_num")) {
+                    "select seq_num, cls, id, event_bytes, time from delayed_signal_queue order by seq_num")) {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
+                        long number = rs.getLong("seq_num");
                         String className = rs.getString("cls");
                         String id = rs.getString("id");
                         byte[] eventBytes = readAll(rs.getBlob("event_bytes").getBinaryStream());
@@ -86,11 +87,10 @@ public final class PersistenceH2 implements Persistence {
                         Class<?> cls = Class.forName(className);
                         long time = rs.getTimestamp("times").getTime();
                         @SuppressWarnings("unchecked")
-                        Signal<?, String> signal = Signal.create((Class<Object>) cls, id,
-                                (Event<Object>) event);
+                        Signal<Object, String> signal = Signal.create((Class<Object>) cls, id, (Event<Object>) event);
                         list.add(new TimedRunnable(() -> {
-                            offer(signal);
-                        } , time));
+                            offer(new NumberedSignal<Object, String>(signal, number));
+                        }, time));
                     }
                 } catch (ClassNotFoundException e) {
                     throw new RuntimeException(e);
@@ -121,19 +121,26 @@ public final class PersistenceH2 implements Persistence {
     }
 
     @Override
-    public void process(Signal<?, String> signal) {
+    public void process(NumberedSignal<?, String> signal) {
         try (Connection con = createConnection()) {
             con.setAutoCommit(false);
             EntityStateMachine<?, String> esm = null;
-            insertIntoSignalStore(esm, signal.event(), eventSerializer(), con);
+            insertIntoSignalStore(esm, signal.signal.event(), eventSerializer(), con);
             @SuppressWarnings("unchecked")
-            EntityStateMachine<?, String> esm2 = esm.signal((Event<Object>) signal.event());
+            EntityStateMachine<?, String> esm2 = esm.signal((Event<Object>) signal.signal.event());
             List<Signal<?, ?>> signalsToOther = esm2.signalsToOther();
             insertSignalsToOther(eventSerializer(), con, signalsToOther);
             insertDelayedSignalsToOther(eventSerializer(), con, signalsToOther);
+            removeSignal(signal.number);
+            con.commit();
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
+    }
+
+    private void removeSignal(long number) {
+        // TODO Auto-generated method stub
+        
     }
 
     private void insertDelayedSignalsToOther(Serializer eventSerializer, Connection con,
@@ -155,10 +162,10 @@ public final class PersistenceH2 implements Persistence {
         }
     }
 
-    private void insertSignalsToOther(Serializer eventSerializer, Connection con,
-            List<Signal<?, ?>> signalsToOther) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement(
-                "insert into signal_queue(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
+    private void insertSignalsToOther(Serializer eventSerializer, Connection con, List<Signal<?, ?>> signalsToOther)
+            throws SQLException {
+        try (PreparedStatement ps = con
+                .prepareStatement("insert into signal_queue(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
             for (Signal<?, ?> signal : signalsToOther) {
                 if (!signal.time().isPresent()) {
                     @SuppressWarnings("unchecked")
@@ -173,10 +180,10 @@ public final class PersistenceH2 implements Persistence {
         }
     }
 
-    private void insertIntoSignalStore(EntityStateMachine<?, String> esm, Event<?> event,
-            Serializer eventSerializer, Connection con) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement(
-                "insert into signal_store(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
+    private void insertIntoSignalStore(EntityStateMachine<?, String> esm, Event<?> event, Serializer eventSerializer,
+            Connection con) throws SQLException {
+        try (PreparedStatement ps = con
+                .prepareStatement("insert into signal_store(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
             ps.setString(1, esm.cls().getName());
             ps.setString(2, esm.id());
             ps.setString(3, event.getClass().getName());
@@ -219,21 +226,22 @@ public final class PersistenceH2 implements Persistence {
     }
 
     @Override
-    public void offer(Signal<?, String> signal) {
+    public void offer(NumberedSignal<?, String> signal) {
         queue.offer(signal);
         drain();
     }
 
+    @SuppressWarnings("unchecked")
     private void drain() {
         if (wip.getAndIncrement() == 0) {
             int missed = 1;
             while (true) {
                 while (true) {
-                    Signal<?, ?> signal = queue.poll();
+                    NumberedSignal<?, ?> signal = queue.poll();
                     if (signal == null) {
                         break;
                     } else {
-
+                        process((NumberedSignal<?, String>) signal);
                     }
                 }
                 missed = wip.addAndGet(-missed);

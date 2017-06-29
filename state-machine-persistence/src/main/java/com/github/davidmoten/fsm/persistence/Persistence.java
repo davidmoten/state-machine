@@ -2,13 +2,11 @@ package com.github.davidmoten.fsm.persistence;
 
 import java.util.Optional;
 
-import com.github.davidmoten.fsm.runtime.Signal;
-
 public interface Persistence {
-    
-    void offer(Signal<?,String> signal);
 
-    void process(Signal<?, String> signal);
+    void offer(NumberedSignal<?, String> signal);
+
+    void process(NumberedSignal<?, String> signal);
 
     <T> Optional<T> get(Class<T> cls, String id);
 
