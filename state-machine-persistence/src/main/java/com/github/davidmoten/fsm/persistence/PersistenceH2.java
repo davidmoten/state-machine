@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
@@ -42,27 +43,38 @@ public final class PersistenceH2<T> implements Persistence<T> {
             }
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
     public void initialize() {
         try (Connection con = createConnection()) {
-            try (PreparedStatement ps = con.prepareStatement("select from delayed_signal_queue")) {
-                
+            try (PreparedStatement ps = con.prepareStatement(
+                    "select cls, id, event_cls, event_bytes, time from delayed_signal_queue order by seq_num")) {
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String className = rs.getString(1);
+                        String id = rs.getString(2);
+                        String eventCls = rs.getString(3);
+                        byte[] eventBytes = readAll(rs.getBlob(4).getBinaryStream());
+                        long time = rs.getTimestamp(5).getTime();
+                    }
+                }
             }
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
     }
 
-    private static byte[] readAll(InputStream is) throws IOException {
+    private static byte[] readAll(InputStream is) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         byte[] buffer = new byte[8192];
         int count;
-        while ((count = is.read(buffer)) != -1) {
-            bytes.write(buffer, 0, count);
+        try {
+            while ((count = is.read(buffer)) != -1) {
+                bytes.write(buffer, 0, count);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         return bytes.toByteArray();
     }
