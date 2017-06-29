@@ -1,9 +1,10 @@
 package com.github.davidmoten.fsm.persistence;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -23,17 +24,34 @@ public final class PersistenceH2<T> implements Persistence<T> {
     public void create() {
         directory.mkdirs();
         try (Connection con = createConnection()) {
-            String sql = new String(Files.readAllBytes(new File("/create-h2.sql").toPath()), StandardCharsets.UTF_8);
+            con.setAutoCommit(true);
+            String sql = new String(
+                    readAll(PersistenceH2.class.getResourceAsStream("/create-h2.sql")),
+                    StandardCharsets.UTF_8);
+            String[] commands = sql.split(";");
+            for (String command : commands) {
+                con.prepareStatement(command).execute();
+            }
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         } catch (IOException e) {
-            throw new SQLRuntimeException(e);
+            throw new RuntimeException(e);
         }
     }
 
+    private static byte[] readAll(InputStream is) throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int count;
+        while ((count = is.read(buffer)) != -1) {
+            bytes.write(buffer, 0, count);
+        }
+        return bytes.toByteArray();
+    }
+
     @Override
-    public EntityStateMachine<T, String> process(EntityStateMachine<T, String> esm, Serializer<? super T> serializer,
-            Signal<T, String> signal) {
+    public EntityStateMachine<T, String> process(EntityStateMachine<T, String> esm,
+            Serializer<? super T> serializer, Signal<T, String> signal) {
         try (Connection con = createConnection()) {
             con.setAutoCommit(false);
             // add signals to others to Signal table
