@@ -2,17 +2,20 @@ package com.github.davidmoten.fsm.persistence;
 
 import java.util.Optional;
 
-import com.github.davidmoten.fsm.runtime.EntityStateMachine;
-import com.github.davidmoten.fsm.runtime.Event;
+import com.github.davidmoten.fsm.runtime.Signal;
 
-public interface Persistence<T> {
+public interface Persistence {
+    
+    void offer(Signal<?,String> signal);
 
-    EntityStateMachine<T, String> process(EntityStateMachine<T, String> esm,
-            Serializer serializer, Event<T> event,
-            Serializer eventSerializer);
+    void process(Signal<?, String> signal);
 
-    Optional<T> get(Class<T> cls, String id);
+    <T> Optional<T> get(Class<T> cls, String id);
 
-    EntityStateMachine<T, String> replay(Class<T> cls, String id);
+    void replay(Class<?> cls, String id);
+
+    Serializer entitySerializer();
+
+    Serializer eventSerializer();
 
 }

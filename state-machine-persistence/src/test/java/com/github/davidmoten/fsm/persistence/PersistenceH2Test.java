@@ -12,8 +12,8 @@ public class PersistenceH2Test {
     public void test() throws IOException {
         File directory = File.createTempFile("db-", "", new File("target"));
         directory.mkdir();
-        PersistenceH2<String> p = new PersistenceH2<String>(directory,
-                Executors.newFixedThreadPool(5));
+        PersistenceH2 p = new PersistenceH2(directory, Executors.newScheduledThreadPool(5), null,
+                null, null);
         p.create();
     }
 

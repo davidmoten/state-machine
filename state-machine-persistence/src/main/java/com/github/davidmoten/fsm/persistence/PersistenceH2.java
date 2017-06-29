@@ -12,22 +12,37 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
+import java.util.Queue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.github.davidmoten.fsm.runtime.Clock;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.Signal;
 
-public final class PersistenceH2<T> implements Persistence<T> {
+public final class PersistenceH2 implements Persistence {
 
     private final File directory;
-    private ExecutorService executor;
+    private final ScheduledExecutorService executor;
+    private final Clock clock;
+    private final Serializer entitySerializer;
+    private final Serializer eventSerializer;
+    private final Queue<Signal<?, ?>> queue = new LinkedList<>();
+    private final AtomicInteger wip = new AtomicInteger();
 
-    public PersistenceH2(File directory, ExecutorService executor) {
+    public PersistenceH2(File directory, ScheduledExecutorService executor, Clock clock,
+            Serializer entitySerializer, Serializer eventSerializer) {
         this.directory = directory;
         this.executor = executor;
+        this.clock = clock;
+        this.entitySerializer = entitySerializer;
+        this.eventSerializer = eventSerializer;
     }
 
     public void create() {
@@ -46,22 +61,48 @@ public final class PersistenceH2<T> implements Persistence<T> {
         }
     }
 
+    private static class TimedRunnable {
+        final Runnable runnable;
+        final long time;
+
+        TimedRunnable(Runnable runnable, long time) {
+            super();
+            this.runnable = runnable;
+            this.time = time;
+        }
+    }
+
     public void initialize() {
+        List<TimedRunnable> list = new ArrayList<TimedRunnable>();
         try (Connection con = createConnection()) {
             try (PreparedStatement ps = con.prepareStatement(
-                    "select cls, id, event_cls, event_bytes, time from delayed_signal_queue order by seq_num")) {
+                    "select cls, id, event_bytes, time from delayed_signal_queue order by seq_num")) {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        String className = rs.getString(1);
-                        String id = rs.getString(2);
-                        String eventCls = rs.getString(3);
-                        byte[] eventBytes = readAll(rs.getBlob(4).getBinaryStream());
-                        long time = rs.getTimestamp(5).getTime();
+                        String className = rs.getString("cls");
+                        String id = rs.getString("id");
+                        byte[] eventBytes = readAll(rs.getBlob("event_bytes").getBinaryStream());
+                        Object event = eventSerializer.deserialize(eventBytes);
+                        Class<?> cls = Class.forName(className);
+                        long time = rs.getTimestamp("times").getTime();
+                        @SuppressWarnings("unchecked")
+                        Signal<?, String> signal = Signal.create((Class<Object>) cls, id,
+                                (Event<Object>) event);
+                        list.add(new TimedRunnable(() -> {
+                            offer(signal);
+                        } , time));
                     }
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
                 }
             }
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
+        }
+        for (TimedRunnable r : list) {
+            long now = clock.now();
+            long delayMs = Math.max(0, r.time - now);
+            executor.schedule(r.runnable, delayMs, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -80,16 +121,16 @@ public final class PersistenceH2<T> implements Persistence<T> {
     }
 
     @Override
-    public EntityStateMachine<T, String> process(EntityStateMachine<T, String> esm,
-            Serializer serializer, Event<T> event, Serializer eventSerializer) {
+    public void process(Signal<?, String> signal) {
         try (Connection con = createConnection()) {
             con.setAutoCommit(false);
-            insertIntoSignalStore(esm, event, eventSerializer, con);
-            EntityStateMachine<T, String> esm2 = esm.signal(event);
+            EntityStateMachine<?, String> esm = null;
+            insertIntoSignalStore(esm, signal.event(), eventSerializer(), con);
+            @SuppressWarnings("unchecked")
+            EntityStateMachine<?, String> esm2 = esm.signal((Event<Object>) signal.event());
             List<Signal<?, ?>> signalsToOther = esm2.signalsToOther();
-            insertSignalsToOther(eventSerializer, con, signalsToOther);
-            insertDelayedSignalsToOther(eventSerializer, con, signalsToOther);
-            return esm2;
+            insertSignalsToOther(eventSerializer(), con, signalsToOther);
+            insertDelayedSignalsToOther(eventSerializer(), con, signalsToOther);
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
@@ -132,7 +173,7 @@ public final class PersistenceH2<T> implements Persistence<T> {
         }
     }
 
-    private void insertIntoSignalStore(EntityStateMachine<T, String> esm, Event<T> event,
+    private void insertIntoSignalStore(EntityStateMachine<?, String> esm, Event<?> event,
             Serializer eventSerializer, Connection con) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(
                 "insert into signal_store(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
@@ -145,9 +186,9 @@ public final class PersistenceH2<T> implements Persistence<T> {
     }
 
     @Override
-    public EntityStateMachine<T, String> replay(Class<T> cls, String id) {
+    public void replay(Class<?> cls, String id) {
         try (Connection con = createConnection()) {
-            return null;
+            return;
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
@@ -162,9 +203,45 @@ public final class PersistenceH2<T> implements Persistence<T> {
     }
 
     @Override
-    public Optional<T> get(Class<T> cls, String id) {
+    public <T> Optional<T> get(Class<T> cls, String id) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public Serializer entitySerializer() {
+        return eventSerializer;
+    }
+
+    @Override
+    public Serializer eventSerializer() {
+        return entitySerializer;
+    }
+
+    @Override
+    public void offer(Signal<?, String> signal) {
+        queue.offer(signal);
+        drain();
+    }
+
+    private void drain() {
+        if (wip.getAndIncrement() == 0) {
+            int missed = 1;
+            while (true) {
+                while (true) {
+                    Signal<?, ?> signal = queue.poll();
+                    if (signal == null) {
+                        break;
+                    } else {
+
+                    }
+                }
+                missed = wip.addAndGet(-missed);
+                if (missed == 0) {
+                    return;
+                }
+            }
+        }
     }
 
 }
