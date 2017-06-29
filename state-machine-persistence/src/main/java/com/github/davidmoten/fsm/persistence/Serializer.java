@@ -1,9 +1,9 @@
 package com.github.davidmoten.fsm.persistence;
 
-public interface Serializer<T> {
+public interface Serializer {
 
-    byte[] serialize(T t);
+    byte[] serialize(Object t);
 
-    T deserialize(byte[] bytes);
+    Object deserialize(byte[] bytes);
 
 }

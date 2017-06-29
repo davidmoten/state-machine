@@ -1,5 +1,6 @@
 package com.github.davidmoten.fsm.persistence;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -7,11 +8,13 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Optional;
 
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
+import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.Signal;
-import com.github.davidmoten.fsm.runtime.rx.ClassId;
 
 public final class PersistenceH2<T> implements Persistence<T> {
 
@@ -51,21 +54,38 @@ public final class PersistenceH2<T> implements Persistence<T> {
 
     @Override
     public EntityStateMachine<T, String> process(EntityStateMachine<T, String> esm,
-            Serializer<? super T> serializer, Signal<T, String> signal) {
+            Serializer serializer, Event<T> event, Serializer eventSerializer) {
         try (Connection con = createConnection()) {
             con.setAutoCommit(false);
-            // add signals to others to Signal table
-            // set state in Entity table
-            // set bytes in Entity table
-            // add signal.event to EntityEvent table
-            return null;
+            try (PreparedStatement ps = con.prepareStatement(
+                    "insert into signal_store(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
+                ps.setString(1, esm.cls().getName());
+                ps.setString(2, esm.id());
+                ps.setString(3, event.getClass().getName());
+                ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(event)));
+                ps.executeUpdate();
+            }
+            EntityStateMachine<T, String> esm2 = esm.signal(event);
+            try (PreparedStatement ps = con.prepareStatement(
+                    "insert into signal_queue(cls, id, event_cls, event_bytes) values(?,?,?,?")) {
+                for (Signal<?, ?> signal : esm2.signalsToOther()) {
+                    @SuppressWarnings("unchecked")
+                    Signal<?, String> sig = (Signal<?, String>) signal;
+                    ps.setString(1, sig.cls().getName());
+                    ps.setString(2, sig.id());
+                    ps.setString(3, sig.event().getClass().getName());
+                    ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(sig.event())));
+                    ps.executeUpdate();
+                }
+            }
+            return esm2;
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
     }
 
     @Override
-    public EntityStateMachine<T, String> replay(ClassId<T, String> classId) {
+    public EntityStateMachine<T, String> replay(Class<T> cls, String id) {
         try (Connection con = createConnection()) {
             return null;
         } catch (SQLException e) {
@@ -79,6 +99,12 @@ public final class PersistenceH2<T> implements Persistence<T> {
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
+    }
+
+    @Override
+    public Optional<T> get(Class<T> cls, String id) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
