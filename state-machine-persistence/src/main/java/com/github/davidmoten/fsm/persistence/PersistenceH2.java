@@ -140,7 +140,7 @@ public final class PersistenceH2 implements Persistence {
 
     private void removeSignal(long number) {
         // TODO Auto-generated method stub
-        
+
     }
 
     private void insertDelayedSignalsToOther(Serializer eventSerializer, Connection con,
