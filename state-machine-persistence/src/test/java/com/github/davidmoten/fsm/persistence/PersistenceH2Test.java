@@ -34,6 +34,12 @@ public class PersistenceH2Test {
         Serializer s = createMicrowaveEventSerializer();
         assertTrue(s.deserialize(s.serialize(new Create())) instanceof Create);
     }
+    
+    @Test
+    public void testMicrowaveSerializerRoundTrip() {
+        Serializer s = createMicrowaveSerializer();
+        assertTrue(s.deserialize(s.serialize(new Microwave(1))) instanceof Microwave);
+    }
 
     @Test
     public void test() throws IOException {
@@ -91,6 +97,7 @@ public class PersistenceH2Test {
 
             @Override
             public byte[] serialize(Object t) {
+                System.out.println(t);
                 Microwave m = (Microwave) t;
                 return String.valueOf(m.serialNumber()).getBytes(UTF_8);
             }
