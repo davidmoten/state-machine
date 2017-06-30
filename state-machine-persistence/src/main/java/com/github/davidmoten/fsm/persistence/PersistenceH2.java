@@ -68,19 +68,19 @@ public final class PersistenceH2 implements Persistence {
         }
     }
 
-    private static class TimedRunnable {
-        final Runnable runnable;
+    private static final class NumberedDelayedSignal<T, Id> {
+        final NumberedSignal<T, Id> signal;
         final long time;
 
-        TimedRunnable(Runnable runnable, long time) {
-            super();
-            this.runnable = runnable;
+        NumberedDelayedSignal(NumberedSignal<T, Id> signal, long time) {
+            this.signal = signal;
             this.time = time;
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void initialize() {
-        List<TimedRunnable> list = new ArrayList<TimedRunnable>();
+        List<NumberedDelayedSignal<?, ?>> list = new ArrayList<NumberedDelayedSignal<?, ?>>();
         try (Connection con = createConnection()) {
             try (PreparedStatement ps = con.prepareStatement(
                     "select seq_num, cls, id, event_bytes, time from delayed_signal_queue order by seq_num")) {
@@ -93,12 +93,10 @@ public final class PersistenceH2 implements Persistence {
                         Object event = eventSerializer.deserialize(eventBytes);
                         Class<?> cls = Class.forName(className);
                         long time = rs.getTimestamp("times").getTime();
-                        @SuppressWarnings("unchecked")
                         Signal<Object, String> signal = Signal.create((Class<Object>) cls, id,
                                 (Event<Object>) event);
-                        list.add(new TimedRunnable(() -> {
-                            offer(new NumberedSignal<Object, String>(signal, number));
-                        } , time));
+                        list.add(new NumberedDelayedSignal<Object, String>(
+                                new NumberedSignal<Object, String>(signal, number), time));
                     }
                 } catch (ClassNotFoundException e) {
                     throw new RuntimeException(e);
@@ -107,10 +105,11 @@ public final class PersistenceH2 implements Persistence {
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
-        for (TimedRunnable r : list) {
+        for (NumberedDelayedSignal<?, ?> sig : list) {
             long now = clock.now();
-            long delayMs = Math.max(0, r.time - now);
-            executor.schedule(r.runnable, delayMs, TimeUnit.MILLISECONDS);
+            long delayMs = Math.max(0, sig.time - now);
+            executor.schedule(() -> offer((NumberedSignal<?, String>) sig.signal), delayMs,
+                    TimeUnit.MILLISECONDS);
         }
     }
 
@@ -192,7 +191,6 @@ public final class PersistenceH2 implements Persistence {
         for (NumberedSignal<?, ?> signalToOther : numberedSignalsToOther) {
             offer((NumberedSignal<?, String>) signalToOther);
         }
-        // TODO offer signals to others
         // TODO call executor with delayed signals
     }
 
