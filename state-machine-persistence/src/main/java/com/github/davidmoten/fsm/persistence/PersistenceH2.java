@@ -68,28 +68,38 @@ public final class PersistenceH2 implements Persistence {
         }
     }
 
+    public void signal(Signal<?, String> signal) {
+        try ( //
+                Connection con = createConnection();
+                PreparedStatement ps = con.prepareStatement("insert into signal_queue() values()")) {
+
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public void initialize() {
         List<NumberedSignal<?, ?>> list = new ArrayList<NumberedSignal<?, ?>>();
-        try (Connection con = createConnection()) {
-            try (PreparedStatement ps = con.prepareStatement(
-                    "select seq_num, cls, id, event_bytes, time from delayed_signal_queue order by seq_num")) {
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        long number = rs.getLong("seq_num");
-                        String className = rs.getString("cls");
-                        String id = rs.getString("id");
-                        byte[] eventBytes = readAll(rs.getBlob("event_bytes").getBinaryStream());
-                        Object event = eventSerializer.deserialize(eventBytes);
-                        Class<?> cls = Class.forName(className);
-                        long time = rs.getTimestamp("times").getTime();
-                        Signal<Object, String> signal = Signal.create((Class<Object>) cls, id, (Event<Object>) event,
-                                Optional.of(time));
-                        list.add(new NumberedSignal<Object, String>(signal, number));
-                    }
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException(e);
+        try ( //
+                Connection con = createConnection();
+                PreparedStatement ps = con.prepareStatement(
+                        "select seq_num, cls, id, event_bytes, time from delayed_signal_queue order by seq_num")) {
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    long number = rs.getLong("seq_num");
+                    String className = rs.getString("cls");
+                    String id = rs.getString("id");
+                    byte[] eventBytes = readAll(rs.getBlob("event_bytes").getBinaryStream());
+                    Object event = eventSerializer.deserialize(eventBytes);
+                    Class<?> cls = Class.forName(className);
+                    long time = rs.getTimestamp("times").getTime();
+                    Signal<Object, String> signal = Signal.create((Class<Object>) cls, id, (Event<Object>) event,
+                            Optional.of(time));
+                    list.add(new NumberedSignal<Object, String>(signal, number));
                 }
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
             }
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
