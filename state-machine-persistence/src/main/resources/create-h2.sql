@@ -7,11 +7,13 @@ create table signal_queue (
 );
   
 create table delayed_signal_queue (
+  from_cls varchar(512) not null, 
+  from_id varchar(255) not null,
   cls varchar(512) not null,
   id  varchar(255) not null,
   time timestamp not null,
   event_bytes blob not null,
-  primary key(cls, id)
+  primary key(from_cls, from_id, cls, id)
 );
 
 create table entity (

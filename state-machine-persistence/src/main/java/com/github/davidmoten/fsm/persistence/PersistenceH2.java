@@ -162,12 +162,7 @@ public final class PersistenceH2 implements Persistence {
                     (EntityBehaviour<Object, String>) behaviour);
 
             // initialize state machine
-            final EntityStateMachine<?, String> esm;
-            if (entity.isPresent()) {
-                esm = behaviour.create(signal.signal.id());
-            } else {
-                esm = behaviour.create(signal.signal.id(), entity.get().entity, entity.get().state);
-            }
+            final EntityStateMachine<?, String> esm = loadStateMachine(signal, behaviour, entity);
 
             // apend signal to signal_store
             insertIntoSignalStore(esm, signal.signal.event(), eventSerializer(), con);
@@ -175,14 +170,16 @@ public final class PersistenceH2 implements Persistence {
             // push signal through state machine
             EntityStateMachine<?, String> esm2 = esm.signal((Event<Object>) signal.signal.event());
 
-            // add signals to others to signal_queue
             List<Signal<?, ?>> signalsToOther = esm2.signalsToOther();
+
+            // add signals to others to signal_queue
             numberedSignalsToOther = insertSignalsToOther(eventSerializer(), con, signalsToOther);
 
             // add delayed signals to other to delayed_signal_queue
-            insertDelayedSignalsToOther(eventSerializer(), con, signalsToOther);
-            
-            //TODO handle delayed signal to self
+            insertDelayedSignalsToOther(esm2.cls(), esm.id(), eventSerializer(), con,
+                    signalsToOther);
+
+            // TODO handle delayed signal to self
 
             // remove signal from signal_queue
             removeSignal(signal.number, con);
@@ -199,6 +196,102 @@ public final class PersistenceH2 implements Persistence {
             offer((NumberedSignal<?, String>) signalToOther);
         }
         // TODO call executor with delayed signals
+    }
+
+    private EntityStateMachine<?, String> loadStateMachine(NumberedSignal<?, String> signal,
+            EntityBehaviour<Object, String> behaviour, Optional<EntityAndState<Object>> entity) {
+        final EntityStateMachine<?, String> esm;
+        if (entity.isPresent()) {
+            esm = behaviour.create(signal.signal.id());
+        } else {
+            esm = behaviour.create(signal.signal.id(), entity.get().entity, entity.get().state);
+        }
+        return esm;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> Optional<EntityAndState<T>> readEntity(Connection con, Class<T> cls, String id,
+            EntityBehaviour<T, String> behaviour) throws SQLException {
+        try (PreparedStatement ps = con
+                .prepareStatement("select state, bytes from entity where cls=? and id=?")) {
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                return Optional.empty();
+            } else {
+                byte[] bytes = readAll(rs.getBlob("bytes").getBinaryStream());
+                T entity = (T) entitySerializer.deserialize(bytes);
+                EntityState<T> state = behaviour.from(rs.getString("state"));
+                return Optional.of(EntityAndState.create(entity, state));
+            }
+        }
+    }
+
+    private void insertIntoSignalStore(EntityStateMachine<?, String> esm, Event<?> event,
+            Serializer eventSerializer, Connection con) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(
+                "insert into signal_store(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
+            ps.setString(1, esm.cls().getName());
+            ps.setString(2, esm.id());
+            ps.setString(3, event.getClass().getName());
+            ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(event)));
+            ps.executeUpdate();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<NumberedSignal<?, ?>> insertSignalsToOther(Serializer eventSerializer,
+            Connection con, List<Signal<?, ?>> signalsToOther) throws SQLException {
+        List<NumberedSignal<?, ?>> list = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(
+                "insert into signal_queue(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
+            for (Signal<?, ?> signal : signalsToOther) {
+                if (!signal.time().isPresent()) {
+                    Signal<?, String> sig = (Signal<?, String>) signal;
+                    ps.setString(1, sig.cls().getName());
+                    ps.setString(2, sig.id());
+                    ps.setString(3, sig.event().getClass().getName());
+                    ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(sig.event())));
+                    ps.executeUpdate();
+                    // add the generated primary key for the signal to the list
+                    try (ResultSet rs = ps.getGeneratedKeys()) {
+                        rs.next();
+                        list.add(new NumberedSignal<Object, String>((Signal<Object, String>) signal,
+                                rs.getLong(0)));
+                    }
+                }
+            }
+        }
+        return list;
+    }
+
+    private void insertDelayedSignalsToOther(Class<?> fromCls, String fromId,
+            Serializer eventSerializer, Connection con, List<Signal<?, ?>> signalsToOther)
+                    throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(
+                "insert into delayed_signal_queue(from_cls, from_id, ls, id, event_cls, event_bytes, time) values(?,?,?,?,?,?,?)")) {
+            for (Signal<?, ?> signal : signalsToOther) {
+                if (signal.time().isPresent()) {
+                    @SuppressWarnings("unchecked")
+                    Signal<?, String> sig = (Signal<?, String>) signal;
+                    ps.setString(1, fromCls.getName());
+                    ps.setString(2, fromId);
+                    ps.setString(3, sig.cls().getName());
+                    ps.setString(4, sig.id());
+                    ps.setString(5, sig.event().getClass().getName());
+                    ps.setBlob(6, new ByteArrayInputStream(eventSerializer.serialize(sig.event())));
+                    ps.setTimestamp(7, new Timestamp(sig.time().get()));
+                    ps.executeUpdate();
+                }
+            }
+        }
+    }
+
+    private void removeSignal(long number, Connection con) throws SQLException {
+        try (PreparedStatement ps = con
+                .prepareStatement("delete from signal_queue where seq_num=?")) {
+            ps.setLong(1, number);
+            ps.executeUpdate();
+        }
     }
 
     private void saveEntity(Connection con, EntityStateMachine<?, String> esm) throws SQLException {
@@ -222,89 +315,6 @@ public final class PersistenceH2 implements Persistence {
                 ps.setString(4, esm.state().toString());
                 ps.executeUpdate();
             }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> Optional<EntityAndState<T>> readEntity(Connection con, Class<T> cls, String id,
-            EntityBehaviour<T, String> behaviour) throws SQLException {
-        try (PreparedStatement ps = con
-                .prepareStatement("select state, bytes from entity where cls=? and id=?")) {
-            ResultSet rs = ps.executeQuery();
-            if (!rs.next()) {
-                return Optional.empty();
-            } else {
-                byte[] bytes = readAll(rs.getBlob("bytes").getBinaryStream());
-                T entity = (T) entitySerializer.deserialize(bytes);
-                EntityState<T> state = behaviour.from(rs.getString("state"));
-                return Optional.of(EntityAndState.create(entity, state));
-            }
-        }
-    }
-
-    private void removeSignal(long number, Connection con) throws SQLException {
-        try (PreparedStatement ps = con
-                .prepareStatement("delete from signal_queue where seq_num=?")) {
-            ps.setLong(1, number);
-            ps.executeUpdate();
-        }
-    }
-
-    private void insertDelayedSignalsToOther(Serializer eventSerializer, Connection con,
-            List<Signal<?, ?>> signalsToOther) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement(
-                "insert into delayed_signal_queue(cls, id, event_cls, event_bytes, time) values(?,?,?,?,?)")) {
-            for (Signal<?, ?> signal : signalsToOther) {
-                if (signal.time().isPresent()) {
-                    @SuppressWarnings("unchecked")
-                    Signal<?, String> sig = (Signal<?, String>) signal;
-                    ps.setString(1, sig.cls().getName());
-                    ps.setString(2, sig.id());
-                    ps.setString(3, sig.event().getClass().getName());
-                    ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(sig.event())));
-                    ps.setTimestamp(5, new Timestamp(sig.time().get()));
-                    ps.executeUpdate();
-                }
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<NumberedSignal<?, ?>> insertSignalsToOther(Serializer eventSerializer,
-            Connection con, List<Signal<?, ?>> signalsToOther) throws SQLException {
-        List<NumberedSignal<?, ?>> list = new ArrayList<>();
-        try (PreparedStatement ps = con.prepareStatement(
-                "insert into signal_queue(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
-            for (Signal<?, ?> signal : signalsToOther) {
-                if (!signal.time().isPresent()) {
-                    @SuppressWarnings("unchecked")
-                    Signal<?, String> sig = (Signal<?, String>) signal;
-                    ps.setString(1, sig.cls().getName());
-                    ps.setString(2, sig.id());
-                    ps.setString(3, sig.event().getClass().getName());
-                    ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(sig.event())));
-                    ps.executeUpdate();
-                    // add the generated primary key for the signal to the list
-                    try (ResultSet rs = ps.getGeneratedKeys()) {
-                        rs.next();
-                        list.add(new NumberedSignal<Object, String>((Signal<Object, String>) signal,
-                                rs.getLong(0)));
-                    }
-                }
-            }
-        }
-        return list;
-    }
-
-    private void insertIntoSignalStore(EntityStateMachine<?, String> esm, Event<?> event,
-            Serializer eventSerializer, Connection con) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement(
-                "insert into signal_store(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
-            ps.setString(1, esm.cls().getName());
-            ps.setString(2, esm.id());
-            ps.setString(3, event.getClass().getName());
-            ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(event)));
-            ps.executeUpdate();
         }
     }
 
