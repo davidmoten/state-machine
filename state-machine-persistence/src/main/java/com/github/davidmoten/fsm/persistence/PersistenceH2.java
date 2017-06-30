@@ -142,9 +142,11 @@ public final class PersistenceH2 implements Persistence {
         List<NumberedSignal<?, ?>> numberedSignalsToOther;
         List<NumberedSignal<?, ?>> delayedNumberedSignalsToOther;
         try (Connection con = createConnection()) {
+            // start a transaction
             con.setAutoCommit(false);
+
             // if signal does not exist in queue anymore then ignore
-            if (!signalExists(con, signal.number)) {
+            if (!signalExists(con, signal)) {
                 return;
             }
 
@@ -176,7 +178,7 @@ public final class PersistenceH2 implements Persistence {
                     eventSerializer(), signalsToOther);
 
             // remove signal from signal_queue
-            removeSignal(con, signal.number);
+            removeSignal(con, signal);
 
             // update/create the entity bytes and state to entity table
             saveEntity(con, esm2);
@@ -194,11 +196,22 @@ public final class PersistenceH2 implements Persistence {
         }
     }
 
-    private boolean signalExists(Connection con, long number) throws SQLException {
-        try (PreparedStatement ps = con
-                .prepareStatement("select 0 from signal_queue where seq_num=?")) {
-            ResultSet rs = ps.executeQuery();
-            return rs.next();
+    private boolean signalExists(Connection con, NumberedSignal<?, String> signal)
+            throws SQLException {
+        if (signal.signal.time().isPresent()) {
+            try (PreparedStatement ps = con
+                    .prepareStatement("select 0 from delayed_signal_queue where seq_num=?")) {
+                ps.setLong(1, signal.number);
+                ResultSet rs = ps.executeQuery();
+                return rs.next();
+            }
+        } else {
+            try (PreparedStatement ps = con
+                    .prepareStatement("select 0 from signal_queue where seq_num=?")) {
+                ps.setLong(1, signal.number);
+                ResultSet rs = ps.executeQuery();
+                return rs.next();
+            }
         }
     }
 
@@ -306,11 +319,20 @@ public final class PersistenceH2 implements Persistence {
         return list;
     }
 
-    private void removeSignal(Connection con, long number) throws SQLException {
-        try (PreparedStatement ps = con
-                .prepareStatement("delete from signal_queue where seq_num=?")) {
-            ps.setLong(1, number);
-            ps.executeUpdate();
+    private void removeSignal(Connection con, NumberedSignal<?, String> signal)
+            throws SQLException {
+        if (signal.signal.time().isPresent()) {
+            try (PreparedStatement ps = con
+                    .prepareStatement("delete from delayed_signal_queue where seq_num=?")) {
+                ps.setLong(1, signal.number);
+                ps.executeUpdate();
+            }
+        } else {
+            try (PreparedStatement ps = con
+                    .prepareStatement("delete from ssignal_queue where seq_num=?")) {
+                ps.setLong(1, signal.number);
+                ps.executeUpdate();
+            }
         }
     }
 
