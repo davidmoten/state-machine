@@ -165,6 +165,28 @@ public final class Generator<T> {
             out.format("%s@%s\n", indent, imports.add(Override.class));
             out.format("%s%s<Id> create(Id id);\n", indent, this.stateMachineClassSimpleName());
             out.println();
+
+            out.format("%s@%s\n", indent, imports.add(Override.class));
+            out.format("%sdefault %s<Id> create(Id id, %s entity, %s<%s> state) {\n", indent,
+                    this.stateMachineClassSimpleName(), imports.add(cls),
+                    imports.add(EntityState.class), imports.add(cls));
+            indent.right();
+            out.format("%sreturn %s.create(entity, id, this, (%s.State) state);\n", indent,
+                    this.stateMachineClassSimpleName(), this.stateMachineClassSimpleName());
+            indent.left();
+            out.format("%s}\n", indent);
+            out.println();
+
+            out.format("%s@%s\n", indent, imports.add(Override.class));
+            out.format("%sdefault %s.State from(String name) {\n", indent,
+                    this.stateMachineClassSimpleName(), imports.add(cls));
+            indent.right();
+            out.format("%sreturn %s.State.valueOf(name);\n", indent,
+                    this.stateMachineClassSimpleName());
+            indent.left();
+            out.format("%s}\n", indent);
+            out.println();
+
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
                 if (state.isCreationDestination()) {
                     out.format(
