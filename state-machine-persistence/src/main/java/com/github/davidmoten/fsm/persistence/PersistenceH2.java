@@ -175,8 +175,6 @@ public final class PersistenceH2 implements Persistence {
             delayedNumberedSignalsToOther = insertDelayedSignalsToOther(con, esm2.cls(), esm.id(),
                     eventSerializer(), signalsToOther);
 
-            // TODO handle delayed signal to self
-
             // remove signal from signal_queue
             removeSignal(con, signal.number);
 
@@ -275,11 +273,20 @@ public final class PersistenceH2 implements Persistence {
             String fromId, Serializer eventSerializer, List<Signal<?, ?>> signalsToOther)
                     throws SQLException {
         List<NumberedSignal<?, ?>> list = new ArrayList<NumberedSignal<?, ?>>();
-        try (PreparedStatement ps = con.prepareStatement(
-                "insert into delayed_signal_queue(from_cls, from_id, ls, id, event_cls, event_bytes, time) values(?,?,?,?,?,?,?)")) {
+        try ( //
+                PreparedStatement ps = con.prepareStatement(
+                        "insert into delayed_signal_queue(from_cls, from_id, ls, id, event_cls, event_bytes, time) values(?,?,?,?,?,?,?)");
+                PreparedStatement del = con.prepareStatement(
+                        "delete from delayed_signal_queue where from_cls=? and from_id=? and cls=? and id=?")) {
+
             for (Signal<?, ?> signal : signalsToOther) {
                 if (signal.time().isPresent()) {
                     Signal<?, String> sig = (Signal<?, String>) signal;
+                    del.setString(1, fromCls.getName());
+                    del.setString(2, fromId);
+                    del.setString(3, sig.cls().getName());
+                    del.setString(4, sig.id());
+                    del.executeUpdate();
                     ps.setString(1, fromCls.getName());
                     ps.setString(2, fromId);
                     ps.setString(3, sig.cls().getName());
