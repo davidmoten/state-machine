@@ -213,6 +213,7 @@ public final class PersistenceH2 implements Persistence {
 
             // commit the transaction
             con.commit();
+            System.out.println(signal.signal.cls().getSimpleName() + "[" + signal.signal.id() + "] - " + esm2.state());
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
@@ -338,11 +339,11 @@ public final class PersistenceH2 implements Persistence {
                     ps.setString(3, sig.cls().getName());
                     ps.setString(4, sig.id());
                     ps.setBlob(5, new ByteArrayInputStream(eventSerializer.serialize(sig.event())));
-                    ps.setTimestamp(7, new Timestamp(sig.time().get()));
+                    ps.setTimestamp(6, new Timestamp(sig.time().get()));
                     ps.executeUpdate();
                     try (ResultSet rs = ps.getGeneratedKeys()) {
                         rs.next();
-                        list.add(new NumberedSignal<Object, String>((Signal<Object, String>) signal, rs.getLong(0)));
+                        list.add(new NumberedSignal<Object, String>((Signal<Object, String>) signal, rs.getLong(1)));
                     }
                 }
             }

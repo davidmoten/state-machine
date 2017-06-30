@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.junit.Test;
@@ -14,12 +15,15 @@ import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviour;
 import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.MicrowaveStateMachine;
 import com.github.davidmoten.fsm.example.microwave.Microwave;
+import com.github.davidmoten.fsm.example.microwave.event.ButtonPressed;
 import com.github.davidmoten.fsm.example.microwave.event.DoorClosed;
 import com.github.davidmoten.fsm.example.microwave.event.DoorOpened;
+import com.github.davidmoten.fsm.example.microwave.event.TimerTimesOut;
 import com.github.davidmoten.fsm.runtime.ClockDefault;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 import com.github.davidmoten.fsm.runtime.Signal;
+import com.github.davidmoten.fsm.runtime.Signaller;
 
 public class PersistenceH2Test {
 
@@ -42,7 +46,7 @@ public class PersistenceH2Test {
     }
 
     @Test
-    public void test() throws IOException {
+    public void test() throws IOException, InterruptedException {
         File directory = File.createTempFile("db-", "", new File("target"));
         directory.mkdir();
         Serializer entitySerializer = createMicrowaveSerializer();
@@ -55,6 +59,8 @@ public class PersistenceH2Test {
         p.initialize();
         p.signal(Signal.create(Microwave.class, "1", new DoorOpened()));
         p.signal(Signal.create(Microwave.class, "1", new DoorClosed()));
+        p.signal(Signal.create(Microwave.class, "1", new ButtonPressed()));
+        Thread.sleep(2000);
     }
 
     private static MicrowaveBehaviour<String> createMicrowaveBehaviour() {
@@ -65,6 +71,16 @@ public class PersistenceH2Test {
                 return MicrowaveStateMachine.create(Microwave.fromId(id), id, this,
                         MicrowaveStateMachine.State.READY_TO_COOK);
             }
+
+            @Override
+            public Microwave onEntry_Cooking(Signaller<Microwave, String> signaller, Microwave microwave, String id,
+                    ButtonPressed event, boolean replaying) {
+                if (!replaying) {
+                    signaller.signalToSelf(new TimerTimesOut(), 1, TimeUnit.SECONDS);
+                }
+                return microwave;
+            }
+
         };
         return behaviour;
     }
