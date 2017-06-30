@@ -8,13 +8,13 @@ import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviour;
 import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.MicrowaveStateMachine;
 import com.github.davidmoten.fsm.example.microwave.Microwave;
+import com.github.davidmoten.fsm.example.microwave.event.DoorClosed;
 import com.github.davidmoten.fsm.example.microwave.event.DoorOpened;
 import com.github.davidmoten.fsm.runtime.ClockDefault;
 import com.github.davidmoten.fsm.runtime.Create;
@@ -34,7 +34,7 @@ public class PersistenceH2Test {
         Serializer s = createMicrowaveEventSerializer();
         assertTrue(s.deserialize(s.serialize(new Create())) instanceof Create);
     }
-    
+
     @Test
     public void testMicrowaveSerializerRoundTrip() {
         Serializer s = createMicrowaveSerializer();
@@ -54,7 +54,7 @@ public class PersistenceH2Test {
         p.create();
         p.initialize();
         p.signal(Signal.create(Microwave.class, "1", new DoorOpened()));
-
+        p.signal(Signal.create(Microwave.class, "1", new DoorClosed()));
     }
 
     private static MicrowaveBehaviour<String> createMicrowaveBehaviour() {
@@ -97,7 +97,6 @@ public class PersistenceH2Test {
 
             @Override
             public byte[] serialize(Object t) {
-                System.out.println(t);
                 Microwave m = (Microwave) t;
                 return String.valueOf(m.serialNumber()).getBytes(UTF_8);
             }

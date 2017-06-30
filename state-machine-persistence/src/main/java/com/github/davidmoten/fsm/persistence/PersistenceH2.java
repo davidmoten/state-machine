@@ -286,7 +286,6 @@ public final class PersistenceH2 implements Persistence {
                 .prepareStatement("insert into signal_store(cls, id, event_bytes) values(?,?,?)")) {
             ps.setString(1, esm.cls().getName());
             ps.setString(2, esm.id());
-            System.out.println("serializing "+ event);
             ps.setBlob(3, new ByteArrayInputStream(eventSerializer.serialize(event)));
             ps.executeUpdate();
         }
