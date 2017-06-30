@@ -140,20 +140,19 @@ public final class PersistenceH2 implements Persistence {
         static <T> EntityAndState<T> create(T entity, EntityState<T> state) {
             return new EntityAndState<T>(entity, state);
         }
-
     }
 
+    @SuppressWarnings("unchecked")
     private void process(NumberedSignal<?, String> signal) {
+        List<NumberedSignal<?, ?>> numberedSignalsToOther;
         try (Connection con = createConnection()) {
             con.setAutoCommit(false);
 
             // get behaviour
-            @SuppressWarnings("unchecked")
             EntityBehaviour<Object, String> behaviour = (EntityBehaviour<Object, String>) behaviourFactory
                     .apply(signal.signal.cls());
 
             // read entity
-            @SuppressWarnings("unchecked")
             Optional<EntityAndState<Object>> entity = readEntity(con,
                     (Class<Object>) signal.signal.cls(), signal.signal.id(),
                     (EntityBehaviour<Object, String>) behaviour);
@@ -170,12 +169,11 @@ public final class PersistenceH2 implements Persistence {
             insertIntoSignalStore(esm, signal.signal.event(), eventSerializer(), con);
 
             // push signal through state machine
-            @SuppressWarnings("unchecked")
             EntityStateMachine<?, String> esm2 = esm.signal((Event<Object>) signal.signal.event());
 
             // add signals to others to signal_queue
             List<Signal<?, ?>> signalsToOther = esm2.signalsToOther();
-            insertSignalsToOther(eventSerializer(), con, signalsToOther);
+            numberedSignalsToOther = insertSignalsToOther(eventSerializer(), con, signalsToOther);
 
             // add delayed signals to other to delayed_signal_queue
             insertDelayedSignalsToOther(eventSerializer(), con, signalsToOther);
@@ -183,7 +181,7 @@ public final class PersistenceH2 implements Persistence {
             // remove signal from signal_queue
             removeSignal(signal.number, con);
 
-            // save the entity bytes and state to entity table
+            // update/create the entity bytes and state to entity table
             saveEntity(con, esm2);
 
             // commit the transaction
@@ -191,13 +189,35 @@ public final class PersistenceH2 implements Persistence {
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
+        for (NumberedSignal<?, ?> signalToOther : numberedSignalsToOther) {
+            offer((NumberedSignal<?, String>) signalToOther);
+        }
         // TODO offer signals to others
         // TODO call executor with delayed signals
     }
 
-    private void saveEntity(Connection con, EntityStateMachine<?, String> esm2) {
-        // TODO Auto-generated method stub
-
+    private void saveEntity(Connection con, EntityStateMachine<?, String> esm) throws SQLException {
+        final boolean updated;
+        try (PreparedStatement ps = con
+                .prepareStatement("update entity set bytes=?, state=? where cls=? and id=?")) {
+            byte[] bytes = entitySerializer.serialize(esm.get().get());
+            ps.setBlob(1, new ByteArrayInputStream(bytes));
+            ps.setString(2, esm.state().toString());
+            ps.setString(3, esm.cls().getName());
+            ps.setString(4, esm.id());
+            updated = ps.executeUpdate() > 0;
+        }
+        if (!updated) {
+            try (PreparedStatement ps = con.prepareStatement(
+                    "insert into entity(cls, id, bytes, state) values(?,?,?,?)")) {
+                byte[] bytes = entitySerializer.serialize(esm.get().get());
+                ps.setString(1, esm.cls().getName());
+                ps.setString(2, esm.id());
+                ps.setBlob(3, new ByteArrayInputStream(bytes));
+                ps.setString(4, esm.state().toString());
+                ps.executeUpdate();
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -244,8 +264,10 @@ public final class PersistenceH2 implements Persistence {
         }
     }
 
-    private void insertSignalsToOther(Serializer eventSerializer, Connection con,
-            List<Signal<?, ?>> signalsToOther) throws SQLException {
+    @SuppressWarnings("unchecked")
+    private List<NumberedSignal<?, ?>> insertSignalsToOther(Serializer eventSerializer,
+            Connection con, List<Signal<?, ?>> signalsToOther) throws SQLException {
+        List<NumberedSignal<?, ?>> list = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(
                 "insert into signal_queue(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
             for (Signal<?, ?> signal : signalsToOther) {
@@ -257,9 +279,16 @@ public final class PersistenceH2 implements Persistence {
                     ps.setString(3, sig.event().getClass().getName());
                     ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(sig.event())));
                     ps.executeUpdate();
+                    // add the generated primary key for the signal to the list
+                    try (ResultSet rs = ps.getGeneratedKeys()) {
+                        rs.next();
+                        list.add(new NumberedSignal<Object, String>((Signal<Object, String>) signal,
+                                rs.getLong(0)));
+                    }
                 }
             }
         }
+        return list;
     }
 
     private void insertIntoSignalStore(EntityStateMachine<?, String> esm, Event<?> event,
