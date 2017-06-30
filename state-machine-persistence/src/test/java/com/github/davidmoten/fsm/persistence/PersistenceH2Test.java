@@ -1,6 +1,8 @@
 package com.github.davidmoten.fsm.persistence;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -57,10 +59,21 @@ public class PersistenceH2Test {
                 entitySerializer, eventSerializer, behaviourFactory);
         p.create();
         p.initialize();
+        assertFalse(p.get(Microwave.class, "1").isPresent());
         p.signal(Signal.create(Microwave.class, "1", new DoorOpened()));
+        check(MicrowaveStateMachine.State.DOOR_OPEN, p);
         p.signal(Signal.create(Microwave.class, "1", new DoorClosed()));
+        check(MicrowaveStateMachine.State.READY_TO_COOK, p);
         p.signal(Signal.create(Microwave.class, "1", new ButtonPressed()));
-        Thread.sleep(2000);
+        check(MicrowaveStateMachine.State.COOKING, p);
+        Thread.sleep(200);
+        p.signal(Signal.create(Microwave.class, "1", new DoorOpened()));
+        check(MicrowaveStateMachine.State.COOKING_INTERRUPTED, p);
+        Thread.sleep(1000);
+    }
+
+    private static void check(MicrowaveStateMachine.State state, PersistenceH2 p) {
+        assertEquals(state, p.get(Microwave.class, "1").get().state);
     }
 
     private static MicrowaveBehaviour<String> createMicrowaveBehaviour() {

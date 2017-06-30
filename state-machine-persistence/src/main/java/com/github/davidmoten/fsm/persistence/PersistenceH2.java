@@ -145,7 +145,7 @@ public final class PersistenceH2 implements Persistence {
         return bytes.toByteArray();
     }
 
-    private static final class EntityAndState<T> {
+    public static final class EntityAndState<T> {
         final T entity;
         final EntityState<T> state;
 
@@ -425,12 +425,29 @@ public final class PersistenceH2 implements Persistence {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public <T> Optional<T> get(Class<T> cls, String id) {
-        // TODO Auto-generated method stub
-        return null;
+    public <T> Optional<EntityAndState<T>> get(Class<T> cls, String id) {
+        try ( //
+                Connection con = createConnection();
+                PreparedStatement ps = con.prepareStatement("select state, bytes from entity where cls=? and id=?")) {
+            ps.setString(1, cls.getName());
+            ps.setString(2, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String stateName = rs.getString(1);
+                T t = (T) entitySerializer.deserialize(readAll(rs.getBlob(2).getBinaryStream()));
+                EntityBehaviour<?, String> behaviour = behaviourFactory.apply(cls);
+                EntityState<?> state = behaviour.from(stateName);
+                return Optional.of(EntityAndState.create(t, (EntityState<T>) state));
+            } else {
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        }
     }
-
+    
     @Override
     public Serializer entitySerializer() {
         return entitySerializer;
