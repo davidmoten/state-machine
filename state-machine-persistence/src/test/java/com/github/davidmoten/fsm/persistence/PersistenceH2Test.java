@@ -15,6 +15,7 @@ public class PersistenceH2Test {
         PersistenceH2 p = new PersistenceH2(directory, Executors.newScheduledThreadPool(5), null,
                 null, null, null);
         p.create();
+        p.initialize();
     }
 
 }
