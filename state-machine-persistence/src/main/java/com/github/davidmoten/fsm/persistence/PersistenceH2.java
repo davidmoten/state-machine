@@ -106,11 +106,16 @@ public final class PersistenceH2 implements Persistence {
             throw new SQLRuntimeException(e);
         }
         for (NumberedDelayedSignal<?, ?> sig : list) {
-            long now = clock.now();
-            long delayMs = Math.max(0, sig.time - now);
-            executor.schedule(() -> offer((NumberedSignal<?, String>) sig.signal), delayMs,
-                    TimeUnit.MILLISECONDS);
+            schedule(sig.signal, sig.time);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void schedule(NumberedSignal<?, ?> sig, long time) {
+        long now = clock.now();
+        long delayMs = Math.max(0, time - now);
+        executor.schedule(() -> offer((NumberedSignal<?, String>) sig), delayMs,
+                TimeUnit.MILLISECONDS);
     }
 
     private static byte[] readAll(InputStream is) {
@@ -176,6 +181,8 @@ public final class PersistenceH2 implements Persistence {
 
             // add delayed signals to other to delayed_signal_queue
             insertDelayedSignalsToOther(eventSerializer(), con, signalsToOther);
+            
+            //TODO handle delayed signal to self
 
             // remove signal from signal_queue
             removeSignal(signal.number, con);
