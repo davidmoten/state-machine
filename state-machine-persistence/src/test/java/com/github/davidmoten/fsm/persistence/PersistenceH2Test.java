@@ -19,15 +19,16 @@ import com.github.davidmoten.fsm.example.microwave.event.DoorOpened;
 import com.github.davidmoten.fsm.runtime.ClockDefault;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
+import com.github.davidmoten.fsm.runtime.Signal;
 
 public class PersistenceH2Test {
-    
+
     @Test
     public void testEventSerializerRoundTrip() {
         Serializer s = createMicrowaveEventSerializer();
         assertTrue(s.deserialize(s.serialize(new DoorOpened())) instanceof DoorOpened);
     }
-    
+
     @Test
     public void testEventSerializerRoundTripCreate() {
         Serializer s = createMicrowaveEventSerializer();
@@ -46,7 +47,8 @@ public class PersistenceH2Test {
                 entitySerializer, eventSerializer, behaviourFactory);
         p.create();
         p.initialize();
-        
+        p.signal(Signal.create(Microwave.class, "1", new DoorOpened()));
+
     }
 
     private static MicrowaveBehaviour<String> createMicrowaveBehaviour() {

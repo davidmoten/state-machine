@@ -69,12 +69,26 @@ public final class PersistenceH2 implements Persistence {
     }
 
     public void signal(Signal<?, String> signal) {
-        try ( //
-                Connection con = createConnection();
-                PreparedStatement ps = con.prepareStatement("insert into signal_queue() values()")) {
 
-        } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
+        if (!signal.time().isPresent()) {
+            try ( //
+                    Connection con = createConnection();
+                    PreparedStatement ps = con
+                            .prepareStatement("insert into signal_queue(cls, id, event_bytes) values(?,?,?)")) {
+                ps.setString(1, signal.cls().getName());
+                ps.setString(2, signal.id());
+                ps.setBlob(3, new ByteArrayInputStream(eventSerializer.serialize(signal.event())));
+                ps.executeUpdate();
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    rs.next();
+                    long number = rs.getLong(1);
+                    offer(new NumberedSignal<>(signal, number));
+                }
+            } catch (SQLException e) {
+                throw new SQLRuntimeException(e);
+            }
+        } else {
+
         }
     }
 
@@ -240,7 +254,7 @@ public final class PersistenceH2 implements Persistence {
     private EntityStateMachine<?, String> getStateMachine(NumberedSignal<?, String> signal,
             EntityBehaviour<Object, String> behaviour, Optional<EntityAndState<Object>> entity) {
         final EntityStateMachine<?, String> esm;
-        if (entity.isPresent()) {
+        if (!entity.isPresent()) {
             esm = behaviour.create(signal.signal.id());
         } else {
             esm = behaviour.create(signal.signal.id(), entity.get().entity, entity.get().state);
@@ -252,6 +266,8 @@ public final class PersistenceH2 implements Persistence {
     private <T> Optional<EntityAndState<T>> readEntity(Connection con, Class<T> cls, String id,
             EntityBehaviour<T, String> behaviour) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select state, bytes from entity where cls=? and id=?")) {
+            ps.setString(1, cls.getName());
+            ps.setString(2, id);
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) {
                 return Optional.empty();
@@ -267,11 +283,10 @@ public final class PersistenceH2 implements Persistence {
     private void insertIntoSignalStore(Connection con, EntityStateMachine<?, String> esm, Event<?> event,
             Serializer eventSerializer) throws SQLException {
         try (PreparedStatement ps = con
-                .prepareStatement("insert into signal_store(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
+                .prepareStatement("insert into signal_store(cls, id, event_bytes) values(?,?,?)")) {
             ps.setString(1, esm.cls().getName());
             ps.setString(2, esm.id());
-            ps.setString(3, event.getClass().getName());
-            ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(event)));
+            ps.setBlob(3, new ByteArrayInputStream(eventSerializer.serialize(event)));
             ps.executeUpdate();
         }
     }
