@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
+import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.Clock;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 import com.github.davidmoten.fsm.runtime.EntityState;
@@ -159,13 +160,22 @@ public final class PersistenceH2 implements Persistence {
                     (Class<Object>) signal.signal.cls(), signal.signal.id(),
                     (EntityBehaviour<Object, String>) behaviour);
 
+            // check for cancellation signal
+            if (signal.signal.event() instanceof CancelTimedSignal) {
+                CancelTimedSignal<String> c = (CancelTimedSignal<String>) signal.signal.event();
+                removeDelayedSignal(con, c.fromClass(), c.fromId(), signal.signal.cls(),
+                        signal.signal.id());
+                return;
+            }
+            
             // initialize state machine
             final EntityStateMachine<?, String> esm = getStateMachine(signal, behaviour, entity);
 
             // apend signal to signal_store
             insertIntoSignalStore(con, esm, signal.signal.event(), eventSerializer());
 
-            // push signal through state machine
+            // push signal through state machine which will immediately process
+            // non-delayed signals to self and accumulate signals to others
             EntityStateMachine<?, String> esm2 = esm.signal((Event<Object>) signal.signal.event());
 
             List<Signal<?, ?>> signalsToOther = esm2.signalsToOther();
@@ -328,11 +338,27 @@ public final class PersistenceH2 implements Persistence {
                 ps.executeUpdate();
             }
         } else {
-            try (PreparedStatement ps = con
-                    .prepareStatement("delete from ssignal_queue where seq_num=?")) {
-                ps.setLong(1, signal.number);
+            removeDelayedSignal(con, signal.number);
+        }
+    }
+
+    private void removeDelayedSignal(Connection con, long number) throws SQLException {
+        try (PreparedStatement ps = con
+                .prepareStatement("delete from delayed_signal_queue where seq_num=?")) {
+            ps.setLong(1, number);
+            ps.executeUpdate();
+        }
+    }
+
+    private void removeDelayedSignal(Connection con, Class<?> fromClass, String fromId,
+            Class<?> cls, String id) throws SQLException {
+        try (PreparedStatement ps = con.prepareStatement(
+                "delete from delayed_signal_queue where from_cls=? and from_id=? and cls=? and id=?")) {
+                ps.setString(1, fromClass.getName());
+                ps.setString(2, fromId);
+                ps.setString(3, cls.getName());
+                ps.setString(4, id);
                 ps.executeUpdate();
-            }
         }
     }
 
