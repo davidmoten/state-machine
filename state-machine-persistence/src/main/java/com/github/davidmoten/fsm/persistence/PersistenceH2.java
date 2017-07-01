@@ -73,11 +73,12 @@ public final class PersistenceH2 implements Persistence {
         if (!signal.time().isPresent()) {
             try ( //
                     Connection con = createConnection();
-                    PreparedStatement ps = con
-                            .prepareStatement("insert into signal_queue(cls, id, event_bytes) values(?,?,?)")) {
+                    PreparedStatement ps = con.prepareStatement(
+                            "insert into signal_queue(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
                 ps.setString(1, signal.cls().getName());
                 ps.setString(2, signal.id());
-                ps.setBlob(3, new ByteArrayInputStream(eventSerializer.serialize(signal.event())));
+                ps.setString(3, signal.event().getClass().getName());
+                ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(signal.event())));
                 ps.executeUpdate();
                 try (ResultSet rs = ps.getGeneratedKeys()) {
                     rs.next();
@@ -98,14 +99,16 @@ public final class PersistenceH2 implements Persistence {
         try ( //
                 Connection con = createConnection();
                 PreparedStatement ps = con.prepareStatement(
-                        "select seq_num, cls, id, event_bytes, time from delayed_signal_queue order by seq_num")) {
+                        "select seq_num, cls, id, event_cls, event_bytes, time from delayed_signal_queue order by seq_num")) {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     long number = rs.getLong("seq_num");
                     String className = rs.getString("cls");
                     String id = rs.getString("id");
                     byte[] eventBytes = readAll(rs.getBlob("event_bytes").getBinaryStream());
-                    Object event = eventSerializer.deserialize(eventBytes);
+                    String eventClsName = rs.getString("event_cls");
+                    Class<?> eventClass = Class.forName(eventClsName);
+                    Object event = eventSerializer.deserialize(eventClass, eventBytes);
                     Class<?> cls = Class.forName(className);
                     long time = rs.getTimestamp("times").getTime();
                     Signal<Object, String> signal = Signal.create((Class<Object>) cls, id, (Event<Object>) event,
@@ -274,7 +277,7 @@ public final class PersistenceH2 implements Persistence {
                 return Optional.empty();
             } else {
                 byte[] bytes = readAll(rs.getBlob("bytes").getBinaryStream());
-                T entity = (T) entitySerializer.deserialize(bytes);
+                T entity = (T) entitySerializer.deserialize(cls, bytes);
                 EntityState<T> state = behaviour.from(rs.getString("state"));
                 return Optional.of(EntityAndState.create(entity, state));
             }
@@ -284,10 +287,11 @@ public final class PersistenceH2 implements Persistence {
     private void insertIntoSignalStore(Connection con, EntityStateMachine<?, String> esm, Event<?> event,
             Serializer eventSerializer) throws SQLException {
         try (PreparedStatement ps = con
-                .prepareStatement("insert into signal_store(cls, id, event_bytes) values(?,?,?)")) {
+                .prepareStatement("insert into signal_store(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
             ps.setString(1, esm.cls().getName());
             ps.setString(2, esm.id());
-            ps.setBlob(3, new ByteArrayInputStream(eventSerializer.serialize(event)));
+            ps.setString(3, event.getClass().getName());
+            ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(event)));
             ps.executeUpdate();
         }
     }
@@ -297,12 +301,13 @@ public final class PersistenceH2 implements Persistence {
             List<Signal<?, ?>> signalsToOther) throws SQLException {
         List<NumberedSignal<?, ?>> list = new ArrayList<>();
         try (PreparedStatement ps = con
-                .prepareStatement("insert into signal_queue(cls, id, event_bytes) values(?,?,?)")) {
+                .prepareStatement("insert into signal_queue(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
             for (Signal<?, ?> signal : signalsToOther) {
                 if (!signal.time().isPresent()) {
                     Signal<?, String> sig = (Signal<?, String>) signal;
                     ps.setString(1, sig.cls().getName());
                     ps.setString(2, sig.id());
+                    ps.setString(3, sig.event().getClass().getName());
                     ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(sig.event())));
                     ps.executeUpdate();
                     // add the generated primary key for the signal to the list
@@ -324,7 +329,7 @@ public final class PersistenceH2 implements Persistence {
                 PreparedStatement del = con.prepareStatement(
                         "delete from delayed_signal_queue where from_cls=? and from_id=? and cls=? and id=?");
                 PreparedStatement ps = con.prepareStatement(
-                        "insert into delayed_signal_queue(from_cls, from_id, cls, id, event_bytes, time) values(?,?,?,?,?,?)")) {
+                        "insert into delayed_signal_queue(from_cls, from_id, cls, id, event_cls, event_bytes, time) values(?,?,?,?,?,?,?)")) {
 
             for (Signal<?, ?> signal : signalsToOther) {
                 if (signal.time().isPresent()) {
@@ -338,8 +343,9 @@ public final class PersistenceH2 implements Persistence {
                     ps.setString(2, fromId);
                     ps.setString(3, sig.cls().getName());
                     ps.setString(4, sig.id());
-                    ps.setBlob(5, new ByteArrayInputStream(eventSerializer.serialize(sig.event())));
-                    ps.setTimestamp(6, new Timestamp(sig.time().get()));
+                    ps.setString(5, sig.event().getClass().getName());
+                    ps.setBlob(6, new ByteArrayInputStream(eventSerializer.serialize(sig.event())));
+                    ps.setTimestamp(7, new Timestamp(sig.time().get()));
                     ps.executeUpdate();
                     try (ResultSet rs = ps.getGeneratedKeys()) {
                         rs.next();
@@ -436,7 +442,7 @@ public final class PersistenceH2 implements Persistence {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 String stateName = rs.getString(1);
-                T t = (T) entitySerializer.deserialize(readAll(rs.getBlob(2).getBinaryStream()));
+                T t = (T) entitySerializer.deserialize(cls, readAll(rs.getBlob(2).getBinaryStream()));
                 EntityBehaviour<?, String> behaviour = behaviourFactory.apply(cls);
                 EntityState<?> state = behaviour.from(stateName);
                 return Optional.of(EntityAndState.create(t, (EntityState<T>) state));
@@ -447,7 +453,7 @@ public final class PersistenceH2 implements Persistence {
             throw new SQLRuntimeException(e);
         }
     }
-    
+
     @Override
     public Serializer entitySerializer() {
         return entitySerializer;

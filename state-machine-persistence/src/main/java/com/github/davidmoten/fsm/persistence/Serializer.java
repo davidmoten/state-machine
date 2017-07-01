@@ -4,6 +4,8 @@ public interface Serializer {
 
     byte[] serialize(Object t);
 
-    Object deserialize(byte[] bytes);
+    <T> T deserialize(Class<T> cls, byte[] bytes);
+
+    public static final Serializer JSON = new SerializerJson();
 
 }

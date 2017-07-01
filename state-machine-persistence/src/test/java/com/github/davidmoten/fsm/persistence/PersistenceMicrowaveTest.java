@@ -7,8 +7,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -25,27 +23,28 @@ import com.github.davidmoten.fsm.example.microwave.event.TimerTimesOut;
 import com.github.davidmoten.fsm.runtime.ClockDefault;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
+import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.fsm.runtime.Signaller;
 
-public class PersistenceH2Test {
+public class PersistenceMicrowaveTest {
 
     @Test
     public void testEventSerializerRoundTrip() {
         Serializer s = createMicrowaveEventSerializer();
-        assertTrue(s.deserialize(s.serialize(new DoorOpened())) instanceof DoorOpened);
+        assertTrue(s.deserialize(DoorOpened.class, s.serialize(new DoorOpened())) instanceof DoorOpened);
     }
 
     @Test
     public void testEventSerializerRoundTripCreate() {
         Serializer s = createMicrowaveEventSerializer();
-        assertTrue(s.deserialize(s.serialize(new Create())) instanceof Create);
+        assertTrue(s.deserialize(Create.class, s.serialize(new Create())) instanceof Create);
     }
 
     @Test
     public void testMicrowaveSerializerRoundTrip() {
         Serializer s = createMicrowaveSerializer();
-        assertTrue(s.deserialize(s.serialize(new Microwave(1))) instanceof Microwave);
+        assertTrue(s.deserialize(Microwave.class, s.serialize(new Microwave(1))) instanceof Microwave);
     }
 
     @Test
@@ -62,19 +61,29 @@ public class PersistenceH2Test {
         p.create();
         p.initialize();
         assertFalse(p.get(Microwave.class, "1").isPresent());
-        p.signal(Signal.create(Microwave.class, "1", new DoorOpened()));
-        check(MicrowaveStateMachine.State.DOOR_OPEN, p);
-        p.signal(Signal.create(Microwave.class, "1", new DoorClosed()));
-        check(MicrowaveStateMachine.State.READY_TO_COOK, p);
-        p.signal(Signal.create(Microwave.class, "1", new ButtonPressed()));
-        check(MicrowaveStateMachine.State.COOKING, p);
+        signal(p, new DoorOpened());
+        check(p, MicrowaveStateMachine.State.DOOR_OPEN);
+        signal(p, new DoorClosed());
+        check(p, MicrowaveStateMachine.State.READY_TO_COOK);
+        signal(p, new ButtonPressed());
+        check(p, MicrowaveStateMachine.State.COOKING);
         executor.advance(200, TimeUnit.MILLISECONDS);
-        p.signal(Signal.create(Microwave.class, "1", new DoorOpened()));
-        check(MicrowaveStateMachine.State.COOKING_INTERRUPTED, p);
+        signal(p, new DoorOpened());
+        check(p, MicrowaveStateMachine.State.COOKING_INTERRUPTED);
         executor.advance(2, TimeUnit.SECONDS);
+        signal(p, new DoorClosed());
+        check(p, MicrowaveStateMachine.State.READY_TO_COOK);
+        signal(p, new ButtonPressed());
+        check(p, MicrowaveStateMachine.State.COOKING);
+        executor.advance(1, TimeUnit.SECONDS);
+        check(p, MicrowaveStateMachine.State.COOKING_COMPLETE);
     }
 
-    private static void check(MicrowaveStateMachine.State state, PersistenceH2 p) {
+    private static void signal(PersistenceH2 p, Event<Microwave> event) {
+        p.signal(Signal.create(Microwave.class, "1", event));
+    }
+
+    private static void check(PersistenceH2 p, MicrowaveStateMachine.State state) {
         assertEquals(state, p.get(Microwave.class, "1").get().state);
     }
 
@@ -110,11 +119,12 @@ public class PersistenceH2Test {
                 return className.getBytes(UTF_8);
             }
 
+            @SuppressWarnings("unchecked")
             @Override
-            public Object deserialize(byte[] bytes) {
+            public <T> T deserialize(Class<T> cls, byte[] bytes) {
                 String className = new String(bytes, UTF_8);
                 try {
-                    return Class.forName(className).newInstance();
+                    return (T) Class.forName(className).newInstance();
                 } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
@@ -132,10 +142,11 @@ public class PersistenceH2Test {
                 return String.valueOf(m.serialNumber()).getBytes(UTF_8);
             }
 
+            @SuppressWarnings("unchecked")
             @Override
-            public Object deserialize(byte[] bytes) {
+            public <T> T deserialize(Class<T> cls, byte[] bytes) {
                 int serialNumber = Integer.parseInt(new String(bytes, UTF_8));
-                return new Microwave(serialNumber);
+                return (T) new Microwave(serialNumber);
             }
         };
         return entitySerializer;
