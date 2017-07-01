@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -55,8 +56,9 @@ public class PersistenceH2Test {
         Serializer eventSerializer = createMicrowaveEventSerializer();
         MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
         Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory = cls -> behaviour;
-        PersistenceH2 p = new PersistenceH2(directory, Executors.newScheduledThreadPool(5), ClockDefault.instance(),
-                entitySerializer, eventSerializer, behaviourFactory);
+        TestExecutor executor = new TestExecutor();
+        PersistenceH2 p = new PersistenceH2(directory, executor, ClockDefault.instance(), entitySerializer,
+                eventSerializer, behaviourFactory);
         p.create();
         p.initialize();
         assertFalse(p.get(Microwave.class, "1").isPresent());
@@ -66,10 +68,10 @@ public class PersistenceH2Test {
         check(MicrowaveStateMachine.State.READY_TO_COOK, p);
         p.signal(Signal.create(Microwave.class, "1", new ButtonPressed()));
         check(MicrowaveStateMachine.State.COOKING, p);
-        Thread.sleep(200);
+        executor.advance(200, TimeUnit.MILLISECONDS);
         p.signal(Signal.create(Microwave.class, "1", new DoorOpened()));
         check(MicrowaveStateMachine.State.COOKING_INTERRUPTED, p);
-        Thread.sleep(1000);
+        executor.advance(2, TimeUnit.SECONDS);
     }
 
     private static void check(MicrowaveStateMachine.State state, PersistenceH2 p) {
