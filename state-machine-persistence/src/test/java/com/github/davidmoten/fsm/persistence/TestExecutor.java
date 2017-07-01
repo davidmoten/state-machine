@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public final class TestExecutor implements ScheduledExecutorService {
 
-    long time = 0;
+    private volatile long time = 0;
     private AtomicReference<List<ScheduledRunnable>> list = new AtomicReference<>(Collections.emptyList());
     private AtomicInteger wip = new AtomicInteger();
 

@@ -49,7 +49,7 @@ public class PersistenceH2Test {
     }
 
     @Test
-    public void test() throws IOException, InterruptedException {
+    public void test() throws IOException {
         File directory = File.createTempFile("db-", "", new File("target"));
         directory.mkdir();
         Serializer entitySerializer = createMicrowaveSerializer();
