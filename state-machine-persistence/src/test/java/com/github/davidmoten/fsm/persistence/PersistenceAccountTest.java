@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.function.Function;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.davidmoten.fsm.example.account.Account;
 import com.github.davidmoten.fsm.example.account.event.ChangeBalance;
 import com.github.davidmoten.fsm.example.account.event.Deposit;
@@ -24,6 +24,15 @@ import com.github.davidmoten.fsm.runtime.Signaller;
 public class PersistenceAccountTest {
 
     @Test
+    public void testJsonSerializeAccountRoundTrip() {
+        byte[] bytes = Serializer.JSON.serialize(new Account("dave", BigDecimal.TEN));
+        System.out.println(new String(bytes));
+        Account a = Serializer.JSON.deserialize(Account.class, bytes);
+        Assert.assertEquals("dave", a.id);
+        Assert.assertEquals(10, a.balance.intValue());
+    }
+
+    @Test
     public void test() throws IOException {
         File directory = File.createTempFile("db-", "", new File("target"));
         directory.mkdir();
@@ -34,6 +43,13 @@ public class PersistenceAccountTest {
 
         PersistenceH2 p = new PersistenceH2(directory, executor, ClockDefault.instance(), entitySerializer,
                 eventSerializer, behaviourFactory);
+        p.create();
+        p.initialize();
+        p.signal(Account.class, "1", new Create());
+        p.signal(Account.class, "1", new Deposit(BigDecimal.valueOf(100)));
+        // p.signal(Account.class, "1", new Transfer(BigDecimal.valueOf(12),
+        // "2"));
+
     }
 
     private static final AccountBehaviour<String> behaviour = new AccountBehaviourBase<String>() {

@@ -68,6 +68,10 @@ public final class PersistenceH2 implements Persistence {
         }
     }
 
+    public <T> void signal(Class<T> cls, String id, Event<? super T> event) {
+        signal(Signal.create(cls, id, event));
+    }
+
     public void signal(Signal<?, String> signal) {
 
         if (!signal.time().isPresent()) {
@@ -313,7 +317,7 @@ public final class PersistenceH2 implements Persistence {
                     // add the generated primary key for the signal to the list
                     try (ResultSet rs = ps.getGeneratedKeys()) {
                         rs.next();
-                        list.add(new NumberedSignal<Object, String>((Signal<Object, String>) signal, rs.getLong(0)));
+                        list.add(new NumberedSignal<Object, String>((Signal<Object, String>) signal, rs.getLong(1)));
                     }
                 }
             }

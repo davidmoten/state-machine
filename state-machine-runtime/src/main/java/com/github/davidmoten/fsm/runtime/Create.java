@@ -7,5 +7,9 @@ public final class Create implements Event<Object> {
     public static Create instance() {
         return instance;
     }
+    
+    public Create() {
+        
+    }
 
 }
