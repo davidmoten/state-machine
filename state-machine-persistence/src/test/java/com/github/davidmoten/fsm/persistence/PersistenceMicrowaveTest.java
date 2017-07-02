@@ -1,6 +1,5 @@
 package com.github.davidmoten.fsm.persistence;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -13,6 +12,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.github.davidmoten.fsm.example.generated.MicrowaveBehaviour;
@@ -34,19 +34,19 @@ public class PersistenceMicrowaveTest {
 
     @Test
     public void testEventSerializerRoundTrip() {
-        Serializer s = createMicrowaveEventSerializer();
+        Serializer s = Serializer.JSON;
         assertTrue(s.deserialize(DoorOpened.class, s.serialize(new DoorOpened())) instanceof DoorOpened);
     }
 
     @Test
     public void testEventSerializerRoundTripCreate() {
-        Serializer s = createMicrowaveEventSerializer();
+        Serializer s = Serializer.JSON;
         assertTrue(s.deserialize(Create.class, s.serialize(new Create())) instanceof Create);
     }
 
     @Test
     public void testMicrowaveSerializerRoundTrip() {
-        Serializer s = createMicrowaveSerializer();
+        Serializer s = Serializer.JSON;
         assertTrue(s.deserialize(Microwave.class, s.serialize(new Microwave(1))) instanceof Microwave);
     }
 
@@ -54,8 +54,6 @@ public class PersistenceMicrowaveTest {
     public void test() throws IOException {
         File directory = File.createTempFile("db-", "", new File("target"));
         directory.mkdir();
-        Serializer entitySerializer = createMicrowaveSerializer();
-        Serializer eventSerializer = createMicrowaveEventSerializer();
         MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
         Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory = cls -> behaviour;
         TestExecutor executor = new TestExecutor();
@@ -65,13 +63,14 @@ public class PersistenceMicrowaveTest {
         Persistence p = Persistence //
                 .connectionFactory(connectionFactory) //
                 .executor(executor) //
-                .entitySerializer(entitySerializer) //
-                .eventSerializer(eventSerializer) //
+                .entitySerializer(Serializer.JSON) //
+                .eventSerializer(Serializer.JSON) //
                 .behaviourFactory(behaviourFactory) //
                 .build();
         p.create();
         p.initialize();
         assertFalse(p.get(Microwave.class, "1").isPresent());
+        assertFalse(p.getWithState(Microwave.class, "1").isPresent());
         signal(p, new DoorOpened());
         check(p, MicrowaveStateMachine.State.DOOR_OPEN);
         signal(p, new DoorClosed());
@@ -88,6 +87,7 @@ public class PersistenceMicrowaveTest {
         check(p, MicrowaveStateMachine.State.COOKING);
         executor.advance(1, TimeUnit.SECONDS);
         check(p, MicrowaveStateMachine.State.COOKING_COMPLETE);
+        Assert.assertNotNull(p.get(Microwave.class, "1").get());
     }
 
     private static void signal(Persistence p, Event<Microwave> event) {
@@ -95,7 +95,7 @@ public class PersistenceMicrowaveTest {
     }
 
     private static void check(Persistence p, MicrowaveStateMachine.State state) {
-        assertEquals(state, p.get(Microwave.class, "1").get().state);
+        assertEquals(state, p.getWithState(Microwave.class, "1").get().state);
     }
 
     private static MicrowaveBehaviour<String> createMicrowaveBehaviour() {
@@ -118,49 +118,6 @@ public class PersistenceMicrowaveTest {
 
         };
         return behaviour;
-    }
-
-    private static Serializer createMicrowaveEventSerializer() {
-        Serializer eventSerializer = new Serializer() {
-
-            @Override
-            public byte[] serialize(Object t) {
-                // Event<Microwave> event = (Event<Microwave>) t;
-                String className = t.getClass().getName();
-                return className.getBytes(UTF_8);
-            }
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public <T> T deserialize(Class<T> cls, byte[] bytes) {
-                String className = new String(bytes, UTF_8);
-                try {
-                    return (T) Class.forName(className).newInstance();
-                } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
-        return eventSerializer;
-    }
-
-    private static Serializer createMicrowaveSerializer() {
-        Serializer entitySerializer = new Serializer() {
-
-            @Override
-            public byte[] serialize(Object t) {
-                Microwave m = (Microwave) t;
-                return String.valueOf(m.serialNumber()).getBytes(UTF_8);
-            }
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public <T> T deserialize(Class<T> cls, byte[] bytes) {
-                int serialNumber = Integer.parseInt(new String(bytes, UTF_8));
-                return (T) new Microwave(serialNumber);
-            }
-        };
-        return entitySerializer;
     }
 
 }

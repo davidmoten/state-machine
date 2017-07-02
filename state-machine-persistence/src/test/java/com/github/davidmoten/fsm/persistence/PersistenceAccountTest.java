@@ -60,14 +60,14 @@ public class PersistenceAccountTest {
                 .build();
         p.create();
         p.initialize();
-        Assert.assertFalse(p.get(Account.class, "1").isPresent());
+        Assert.assertFalse(p.getWithState(Account.class, "1").isPresent());
         p.signal(Account.class, "1", new Create());
-        Assert.assertEquals(BigDecimal.ZERO, p.get(Account.class, "1").get().entity.balance);
+        Assert.assertEquals(BigDecimal.ZERO, p.getWithState(Account.class, "1").get().entity.balance);
         p.signal(Account.class, "1", new Deposit(BigDecimal.valueOf(100)));
-        Assert.assertEquals(BigDecimal.valueOf(100), p.get(Account.class, "1").get().entity.balance);
+        Assert.assertEquals(BigDecimal.valueOf(100), p.getWithState(Account.class, "1").get().entity.balance);
         p.signal(Account.class, "1", new Transfer(BigDecimal.valueOf(12), "2"));
-        Assert.assertEquals(BigDecimal.valueOf(88), p.get(Account.class, "1").get().entity.balance);
-        Assert.assertEquals(BigDecimal.valueOf(12), p.get(Account.class, "2").get().entity.balance);
+        Assert.assertEquals(BigDecimal.valueOf(88), p.getWithState(Account.class, "1").get().entity.balance);
+        Assert.assertEquals(BigDecimal.valueOf(12), p.getWithState(Account.class, "2").get().entity.balance);
     }
 
     private static final AccountBehaviour<String> behaviour = new AccountBehaviourBase<String>() {

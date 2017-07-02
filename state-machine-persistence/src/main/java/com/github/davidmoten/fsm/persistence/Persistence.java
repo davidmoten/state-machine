@@ -356,7 +356,7 @@ public final class Persistence {
 
     private <T> Optional<EntityAndState<T>> readEntity(Connection con, Class<T> cls, String id,
             EntityBehaviour<T, String> behaviour) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement(sql.readEntity())) {
+        try (PreparedStatement ps = con.prepareStatement(sql.readEntityAndState())) {
             ps.setString(1, cls.getName());
             ps.setString(2, id);
             ResultSet rs = ps.executeQuery();
@@ -514,9 +514,10 @@ public final class Persistence {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> Optional<EntityAndState<T>> get(Class<T> cls, String id) {
+    public <T> Optional<EntityAndState<T>> getWithState(Class<T> cls, String id) {
         try ( //
-                Connection con = createConnection(); PreparedStatement ps = con.prepareStatement(sql.readEntity())) {
+                Connection con = createConnection();
+                PreparedStatement ps = con.prepareStatement(sql.readEntityAndState())) {
             ps.setString(1, cls.getName());
             ps.setString(2, id);
             ResultSet rs = ps.executeQuery();
@@ -526,6 +527,22 @@ public final class Persistence {
                 EntityBehaviour<?, String> behaviour = behaviourFactory.apply(cls);
                 EntityState<?> state = behaviour.from(stateName);
                 return Optional.of(EntityAndState.create(t, (EntityState<T>) state));
+            } else {
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        }
+    }
+
+    public <T> Optional<T> get(Class<T> cls, String id) {
+        try (Connection con = createConnection(); PreparedStatement ps = con.prepareStatement(sql.readEntity())) {
+            ps.setString(1, cls.getName());
+            ps.setString(2, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                T t = (T) entitySerializer.deserialize(cls, readAll(rs.getBlob(1).getBinaryStream()));
+                return Optional.of(t);
             } else {
                 return Optional.empty();
             }

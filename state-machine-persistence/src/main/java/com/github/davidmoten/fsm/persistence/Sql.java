@@ -21,7 +21,7 @@ public interface Sql {
         return "select 0 from signal_queue where seq_num=?";
     }
 
-    default String readEntity() {
+    default String readEntityAndState() {
         return "select state, bytes from entity where cls=? and id=?";
     }
 
@@ -51,6 +51,10 @@ public interface Sql {
 
     default String insertEntity() {
         return "insert into entity(cls, id, bytes, state) values(?,?,?,?)";
+    }
+
+    default String readEntity() {
+        return "select bytes from entity where cls=? and id=?";
     }
 
 }
