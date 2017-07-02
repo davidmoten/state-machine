@@ -460,7 +460,7 @@ public final class Persistence {
     public <T> Optional<EntityAndState<T>> get(Class<T> cls, String id) {
         try ( //
                 Connection con = createConnection();
-                PreparedStatement ps = con.prepareStatement("select state, bytes from entity where cls=? and id=?")) {
+                PreparedStatement ps = con.prepareStatement(sql.readEntity())) {
             ps.setString(1, cls.getName());
             ps.setString(2, id);
             ResultSet rs = ps.executeQuery();
