@@ -392,14 +392,14 @@ public final class Persistence {
     }
 
     private void removeNonDelayedSignal(Connection con, long number) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("delete from delayed_signal_queue where seq_num=?")) {
+        try (PreparedStatement ps = con.prepareStatement(sql.deleteNumberedSignal())) {
             ps.setLong(1, number);
             ps.executeUpdate();
         }
     }
 
     private void removeDelayedSignal(Connection con, long number) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("delete from delayed_signal_queue where seq_num=?")) {
+        try (PreparedStatement ps = con.prepareStatement(sql.deleteNumberedDelayedSignal())) {
             ps.setLong(1, number);
             ps.executeUpdate();
         }
@@ -408,7 +408,7 @@ public final class Persistence {
     private void removeDelayedSignal(Connection con, Class<?> fromClass, String fromId, Class<?> cls, String id)
             throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(
-                "delete from delayed_signal_queue where from_cls=? and from_id=? and cls=? and id=?")) {
+                sql.deleteDelayedSignal())) {
             ps.setString(1, fromClass.getName());
             ps.setString(2, fromId);
             ps.setString(3, cls.getName());
@@ -419,7 +419,7 @@ public final class Persistence {
 
     private void saveEntity(Connection con, EntityStateMachine<?, String> esm) throws SQLException {
         final boolean updated;
-        try (PreparedStatement ps = con.prepareStatement("update entity set bytes=?, state=? where cls=? and id=?")) {
+        try (PreparedStatement ps = con.prepareStatement(sql.updateEntity())) {
             byte[] bytes = entitySerializer.serialize(esm.get().get());
             ps.setBlob(1, new ByteArrayInputStream(bytes));
             ps.setString(2, esm.state().toString());
