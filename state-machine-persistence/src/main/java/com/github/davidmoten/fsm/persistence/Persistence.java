@@ -48,7 +48,7 @@ public final class Persistence {
     private final Queue<NumberedSignal<?, ?>> queue = new LinkedList<>();
     private final AtomicInteger wip = new AtomicInteger();
 
-    public Persistence(ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
+    private Persistence(ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
             Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory, Sql sql,
             Callable<Connection> connectionFactory) {
         this.executor = executor;
@@ -60,12 +60,8 @@ public final class Persistence {
         this.connectionFactory = connectionFactory;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
     public static Builder connectionFactory(Callable<Connection> connectionFactory) {
-        return builder().connectionFactory(connectionFactory);
+        return new Builder().connectionFactory(connectionFactory);
     }
 
     public static final class Builder {
@@ -77,7 +73,7 @@ public final class Persistence {
         private Sql sql = Sql.DEFAULT;
         private Callable<Connection> connectionFactory;
 
-        Builder() {
+        private Builder() {
             // do nothing
         }
 
