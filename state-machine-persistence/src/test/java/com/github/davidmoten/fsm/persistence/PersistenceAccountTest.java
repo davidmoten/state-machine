@@ -22,6 +22,7 @@ import com.github.davidmoten.fsm.example.generated.AccountStateMachine;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 import com.github.davidmoten.fsm.runtime.Signaller;
+import com.github.davidmoten.fsm.runtime.TestExecutor;
 
 public class PersistenceAccountTest {
 

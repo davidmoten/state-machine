@@ -1,4 +1,4 @@
-package com.github.davidmoten.fsm.persistence;
+package com.github.davidmoten.fsm.runtime;
 
 import java.util.ArrayList;
 import java.util.Collection;

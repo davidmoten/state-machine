@@ -23,12 +23,12 @@ import com.github.davidmoten.fsm.example.microwave.event.ButtonPressed;
 import com.github.davidmoten.fsm.example.microwave.event.DoorClosed;
 import com.github.davidmoten.fsm.example.microwave.event.DoorOpened;
 import com.github.davidmoten.fsm.example.microwave.event.TimerTimesOut;
-import com.github.davidmoten.fsm.runtime.ClockDefault;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.fsm.runtime.Signaller;
+import com.github.davidmoten.fsm.runtime.TestExecutor;
 
 public class PersistenceMicrowaveTest {
 
