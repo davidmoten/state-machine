@@ -45,15 +45,17 @@ public final class Persistence {
     private final Queue<NumberedSignal<?, ?>> queue = new LinkedList<>();
     private final AtomicInteger wip = new AtomicInteger();
     private final Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
+    private final Sql sql;
 
     public Persistence(File directory, ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
-            Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory) {
+            Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory, Sql sql) {
         this.directory = directory;
         this.executor = executor;
         this.clock = clock;
         this.entitySerializer = entitySerializer;
         this.eventSerializer = eventSerializer;
         this.behaviourFactory = behaviourFactory;
+        this.sql = sql;
     }
 
     public void create() {
@@ -82,7 +84,7 @@ public final class Persistence {
             try ( //
                     Connection con = createConnection();
                     PreparedStatement ps = con.prepareStatement(
-                            "insert into signal_queue(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
+                            sql.addToSignalQueue())) {
                 ps.setString(1, signal.cls().getName());
                 ps.setString(2, signal.id());
                 ps.setString(3, signal.event().getClass().getName());
@@ -107,7 +109,7 @@ public final class Persistence {
         try ( //
                 Connection con = createConnection();
                 PreparedStatement ps = con.prepareStatement(
-                        "select seq_num, cls, id, event_cls, event_bytes, time from delayed_signal_queue order by seq_num")) {
+                        sql.selectDelayedSignals())) {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     long number = rs.getLong("seq_num");
@@ -212,11 +214,9 @@ public final class Persistence {
             Event<?> event;
             while ((event = signals.signalsToSelf.poll()) != null) {
                 esm2 = esm2.signal((Event<Object>) event);
-                {
-                    List<Event<Object>> list = (List<Event<Object>>) (List<?>) esm2.signalsToSelf();
-                    for (int i = list.size() - 1; i >= 0; i--) {
-                        signals.signalsToSelf.offerLast(list.get(i));
-                    }
+                List<Event<Object>> list = (List<Event<Object>>) (List<?>) esm2.signalsToSelf();
+                for (int i = list.size() - 1; i >= 0; i--) {
+                    signals.signalsToSelf.offerLast(list.get(i));
                 }
                 for (Signal<?, ?> s : esm2.signalsToOther()) {
                     signals.signalsToOther.offerFirst((Signal<?, String>) s);
@@ -270,13 +270,13 @@ public final class Persistence {
 
     private boolean signalExists(Connection con, NumberedSignal<?, String> signal) throws SQLException {
         if (signal.signal.time().isPresent()) {
-            try (PreparedStatement ps = con.prepareStatement("select 0 from delayed_signal_queue where seq_num=?")) {
+            try (PreparedStatement ps = con.prepareStatement(sql.delayedSignalExists())) {
                 ps.setLong(1, signal.number);
                 ResultSet rs = ps.executeQuery();
                 return rs.next();
             }
         } else {
-            try (PreparedStatement ps = con.prepareStatement("select 0 from signal_queue where seq_num=?")) {
+            try (PreparedStatement ps = con.prepareStatement(sql.signalExists())) {
                 ps.setLong(1, signal.number);
                 ResultSet rs = ps.executeQuery();
                 return rs.next();
@@ -295,7 +295,7 @@ public final class Persistence {
 
     private <T> Optional<EntityAndState<T>> readEntity(Connection con, Class<T> cls, String id,
             EntityBehaviour<T, String> behaviour) throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement("select state, bytes from entity where cls=? and id=?")) {
+        try (PreparedStatement ps = con.prepareStatement(sql.readEntity())) {
             ps.setString(1, cls.getName());
             ps.setString(2, id);
             ResultSet rs = ps.executeQuery();
@@ -313,7 +313,7 @@ public final class Persistence {
     private void insertIntoSignalStore(Connection con, EntityStateMachine<?, String> esm, Event<?> event,
             Serializer eventSerializer) throws SQLException {
         try (PreparedStatement ps = con
-                .prepareStatement("insert into signal_store(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
+                .prepareStatement(sql.addToSignalStore())) {
             ps.setString(1, esm.cls().getName());
             ps.setString(2, esm.id());
             ps.setString(3, event.getClass().getName());
@@ -327,7 +327,7 @@ public final class Persistence {
             Collection<Signal<?, String>> signalsToOther) throws SQLException {
         List<NumberedSignal<?, ?>> list = new ArrayList<>();
         try (PreparedStatement ps = con
-                .prepareStatement("insert into signal_queue(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
+                .prepareStatement(sql.addToSignalQueue())) {
             for (Signal<?, ?> signal : signalsToOther) {
                 if (!signal.time().isPresent()) {
                     Signal<?, String> sig = (Signal<?, String>) signal;

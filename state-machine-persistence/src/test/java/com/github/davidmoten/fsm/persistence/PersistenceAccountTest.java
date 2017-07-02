@@ -53,8 +53,8 @@ public class PersistenceAccountTest {
         Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory = cls -> behaviour;
         TestExecutor executor = new TestExecutor();
 
-        Persistence p = new Persistence(directory, executor, ClockDefault.instance(), entitySerializer,
-                eventSerializer, behaviourFactory);
+        Persistence p = new Persistence(directory, executor, ClockDefault.instance(), entitySerializer, eventSerializer,
+                behaviourFactory, Sql.DEFAULT);
         p.create();
         p.initialize();
         assertFalse(p.get(Account.class, "1").isPresent());
