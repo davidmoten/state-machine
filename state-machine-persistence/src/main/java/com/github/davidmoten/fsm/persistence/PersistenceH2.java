@@ -12,7 +12,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +27,7 @@ import java.util.function.Function;
 
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.Clock;
+import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 import com.github.davidmoten.fsm.runtime.EntityState;
 import com.github.davidmoten.fsm.runtime.EntityStateMachine;
@@ -199,11 +203,27 @@ public final class PersistenceH2 implements Persistence {
             // apend signal to signal_store (optional)
             insertIntoSignalStore(con, esm, signal.signal.event(), eventSerializer());
 
+            Signals<String> signals = new Signals<String>();
+            signals.signalsToSelf.offerFirst(signal.signal.event());
+
             // push signal through state machine which will immediately process
             // non-delayed signals to self and accumulate signals to others
-            EntityStateMachine<?, String> esm2 = esm.signal((Event<Object>) signal.signal.event());
+            EntityStateMachine<?, String> esm2 = esm;
+            Event<?> event;
+            while ((event = signals.signalsToSelf.poll()) != null) {
+                esm2 = esm2.signal((Event<Object>) event);
+                {
+                    List<Event<Object>> list = (List<Event<Object>>) (List<?>) esm2.signalsToSelf();
+                    for (int i = list.size() - 1; i >= 0; i--) {
+                        signals.signalsToSelf.offerLast(list.get(i));
+                    }
+                }
+                for (Signal<?, ?> s : esm2.signalsToOther()) {
+                    signals.signalsToOther.offerFirst((Signal<?, String>) s);
+                }
+            }
 
-            List<Signal<?, ?>> signalsToOther = esm2.signalsToOther();
+            Deque<Signal<?, String>> signalsToOther = signals.signalsToOther;
 
             // add signals to others to signal_queue
             numberedSignalsToOther = insertSignalsToOther(con, eventSerializer(), signalsToOther);
@@ -230,6 +250,11 @@ public final class PersistenceH2 implements Persistence {
         for (NumberedSignal<?, ?> signalToOther : delayedNumberedSignalsToOther) {
             schedule(signalToOther);
         }
+    }
+
+    private static final class Signals<Id> {
+        final Deque<Event<?>> signalsToSelf = new ArrayDeque<>();
+        final Deque<Signal<?, Id>> signalsToOther = new ArrayDeque<>();
     }
 
     private boolean handleCancellationSignal(Connection con, NumberedSignal<?, String> signal) throws SQLException {
@@ -261,16 +286,13 @@ public final class PersistenceH2 implements Persistence {
 
     private EntityStateMachine<?, String> getStateMachine(NumberedSignal<?, String> signal,
             EntityBehaviour<Object, String> behaviour, Optional<EntityAndState<Object>> entity) {
-        final EntityStateMachine<?, String> esm;
         if (!entity.isPresent()) {
-            esm = behaviour.create(signal.signal.id());
+            return behaviour.create(signal.signal.id()).signal(new Create());
         } else {
-            esm = behaviour.create(signal.signal.id(), entity.get().entity, entity.get().state);
+            return behaviour.create(signal.signal.id(), entity.get().entity, entity.get().state);
         }
-        return esm;
     }
 
-    @SuppressWarnings("unchecked")
     private <T> Optional<EntityAndState<T>> readEntity(Connection con, Class<T> cls, String id,
             EntityBehaviour<T, String> behaviour) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement("select state, bytes from entity where cls=? and id=?")) {
@@ -302,7 +324,7 @@ public final class PersistenceH2 implements Persistence {
 
     @SuppressWarnings("unchecked")
     private List<NumberedSignal<?, ?>> insertSignalsToOther(Connection con, Serializer eventSerializer,
-            List<Signal<?, ?>> signalsToOther) throws SQLException {
+            Collection<Signal<?, String>> signalsToOther) throws SQLException {
         List<NumberedSignal<?, ?>> list = new ArrayList<>();
         try (PreparedStatement ps = con
                 .prepareStatement("insert into signal_queue(cls, id, event_cls, event_bytes) values(?,?,?,?)")) {
@@ -327,7 +349,7 @@ public final class PersistenceH2 implements Persistence {
 
     @SuppressWarnings("unchecked")
     private List<NumberedSignal<?, ?>> insertDelayedSignalsToOther(Connection con, Class<?> fromCls, String fromId,
-            Serializer eventSerializer, List<Signal<?, ?>> signalsToOther) throws SQLException {
+            Serializer eventSerializer, Collection<Signal<?, String>> signalsToOther) throws SQLException {
         List<NumberedSignal<?, ?>> list = new ArrayList<NumberedSignal<?, ?>>();
         try ( //
                 PreparedStatement del = con.prepareStatement(

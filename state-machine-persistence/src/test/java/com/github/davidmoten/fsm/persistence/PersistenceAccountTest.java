@@ -1,5 +1,8 @@
 package com.github.davidmoten.fsm.persistence;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -33,6 +36,15 @@ public class PersistenceAccountTest {
     }
 
     @Test
+    public void testJsonSerializeTransferRoundTrip() {
+        byte[] bytes = Serializer.JSON.serialize(new Transfer(BigDecimal.valueOf(12), "dave"));
+        System.out.println(new String(bytes));
+        Transfer a = Serializer.JSON.deserialize(Transfer.class, bytes);
+        Assert.assertEquals("dave", a.toAccountId);
+        Assert.assertEquals(12, a.amount.longValue());
+    }
+
+    @Test
     public void test() throws IOException {
         File directory = File.createTempFile("db-", "", new File("target"));
         directory.mkdir();
@@ -45,11 +57,14 @@ public class PersistenceAccountTest {
                 eventSerializer, behaviourFactory);
         p.create();
         p.initialize();
+        assertFalse(p.get(Account.class, "1").isPresent());
         p.signal(Account.class, "1", new Create());
+        assertEquals(BigDecimal.ZERO, p.get(Account.class, "1").get().entity.balance);
         p.signal(Account.class, "1", new Deposit(BigDecimal.valueOf(100)));
-        // p.signal(Account.class, "1", new Transfer(BigDecimal.valueOf(12),
-        // "2"));
-
+        assertEquals(BigDecimal.valueOf(100), p.get(Account.class, "1").get().entity.balance);
+        p.signal(Account.class, "1", new Transfer(BigDecimal.valueOf(12), "2"));
+        assertEquals(BigDecimal.valueOf(88), p.get(Account.class, "1").get().entity.balance);
+        assertEquals(BigDecimal.valueOf(12), p.get(Account.class, "2").get().entity.balance);
     }
 
     private static final AccountBehaviour<String> behaviour = new AccountBehaviourBase<String>() {
@@ -70,6 +85,7 @@ public class PersistenceAccountTest {
         @Override
         public Account onEntry_Changed(Signaller<Account, String> signaller, Account account, String id,
                 ChangeBalance event, boolean replaying) {
+            System.out.println("change=" + event.change);
             return new Account(id, account.balance.add(event.change));
         }
 
