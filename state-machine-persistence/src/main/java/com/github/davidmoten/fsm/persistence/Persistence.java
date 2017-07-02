@@ -61,7 +61,7 @@ public final class Persistence {
     }
 
     public static Builder builder() {
-        return builder();
+        return new Builder();
     }
 
     public static Builder connectionFactory(Callable<Connection> connectionFactory) {
@@ -76,6 +76,10 @@ public final class Persistence {
         private Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
         private Sql sql = Sql.DEFAULT;
         private Callable<Connection> connectionFactory;
+
+        Builder() {
+            // do nothing
+        }
 
         public Builder executor(ScheduledExecutorService executor) {
             this.executor = executor;

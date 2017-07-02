@@ -61,8 +61,14 @@ public class PersistenceMicrowaveTest {
         TestExecutor executor = new TestExecutor();
         Callable<Connection> connectionFactory = () -> DriverManager
                 .getConnection("jdbc:h2:" + directory.getAbsolutePath());
-        Persistence p = new Persistence(executor, ClockDefault.instance(), entitySerializer, eventSerializer,
-                behaviourFactory, Sql.DEFAULT, connectionFactory);
+
+        Persistence p = Persistence //
+                .connectionFactory(connectionFactory) //
+                .executor(executor) //
+                .entitySerializer(entitySerializer) //
+                .eventSerializer(eventSerializer) //
+                .behaviourFactory(behaviourFactory) //
+                .build();
         p.create();
         p.initialize();
         assertFalse(p.get(Microwave.class, "1").isPresent());

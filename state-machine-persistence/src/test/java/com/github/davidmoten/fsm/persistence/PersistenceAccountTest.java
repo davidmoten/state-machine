@@ -1,12 +1,11 @@
 package com.github.davidmoten.fsm.persistence;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.concurrent.Callable;
 import java.util.function.Function;
 
 import org.junit.Assert;
@@ -20,7 +19,6 @@ import com.github.davidmoten.fsm.example.account.event.Withdrawal;
 import com.github.davidmoten.fsm.example.generated.AccountBehaviour;
 import com.github.davidmoten.fsm.example.generated.AccountBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.AccountStateMachine;
-import com.github.davidmoten.fsm.runtime.ClockDefault;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 import com.github.davidmoten.fsm.runtime.Signaller;
@@ -49,24 +47,26 @@ public class PersistenceAccountTest {
     public void test() throws IOException {
         File directory = File.createTempFile("db-", "", new File("target"));
         directory.mkdir();
-        Serializer entitySerializer = Serializer.JSON;
-        Serializer eventSerializer = Serializer.JSON;
         Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory = cls -> behaviour;
         TestExecutor executor = new TestExecutor();
 
-        Persistence p = new Persistence(executor, ClockDefault.instance(), entitySerializer, eventSerializer,
-                behaviourFactory, Sql.DEFAULT,
-                () -> DriverManager.getConnection("jdbc:h2:" + directory.getAbsolutePath()));
+        Callable<Connection> connectionFactory = () -> DriverManager
+                .getConnection("jdbc:h2:" + directory.getAbsolutePath());
+        Persistence p = Persistence //
+                .connectionFactory(connectionFactory) //
+                .executor(executor) //
+                .behaviourFactory(behaviourFactory) //
+                .build();
         p.create();
         p.initialize();
-        assertFalse(p.get(Account.class, "1").isPresent());
+        Assert.assertFalse(p.get(Account.class, "1").isPresent());
         p.signal(Account.class, "1", new Create());
-        assertEquals(BigDecimal.ZERO, p.get(Account.class, "1").get().entity.balance);
+        Assert.assertEquals(BigDecimal.ZERO, p.get(Account.class, "1").get().entity.balance);
         p.signal(Account.class, "1", new Deposit(BigDecimal.valueOf(100)));
-        assertEquals(BigDecimal.valueOf(100), p.get(Account.class, "1").get().entity.balance);
+        Assert.assertEquals(BigDecimal.valueOf(100), p.get(Account.class, "1").get().entity.balance);
         p.signal(Account.class, "1", new Transfer(BigDecimal.valueOf(12), "2"));
-        assertEquals(BigDecimal.valueOf(88), p.get(Account.class, "1").get().entity.balance);
-        assertEquals(BigDecimal.valueOf(12), p.get(Account.class, "2").get().entity.balance);
+        Assert.assertEquals(BigDecimal.valueOf(88), p.get(Account.class, "1").get().entity.balance);
+        Assert.assertEquals(BigDecimal.valueOf(12), p.get(Account.class, "2").get().entity.balance);
     }
 
     private static final AccountBehaviour<String> behaviour = new AccountBehaviourBase<String>() {
