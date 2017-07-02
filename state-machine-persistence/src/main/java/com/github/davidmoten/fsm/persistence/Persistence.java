@@ -47,10 +47,11 @@ public final class Persistence {
     private final Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
     private final Queue<NumberedSignal<?, ?>> queue = new LinkedList<>();
     private final AtomicInteger wip = new AtomicInteger();
+    private final boolean storeSignals;
 
     private Persistence(ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
             Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory, Sql sql,
-            Callable<Connection> connectionFactory) {
+            Callable<Connection> connectionFactory, boolean storeSignals) {
         this.executor = executor;
         this.clock = clock;
         this.entitySerializer = entitySerializer;
@@ -58,6 +59,7 @@ public final class Persistence {
         this.behaviourFactory = behaviourFactory;
         this.sql = sql;
         this.connectionFactory = connectionFactory;
+        this.storeSignals = storeSignals;
     }
 
     public static Builder connectionFactory(Callable<Connection> connectionFactory) {
@@ -72,6 +74,7 @@ public final class Persistence {
         private Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
         private Sql sql = Sql.DEFAULT;
         private Callable<Connection> connectionFactory;
+        private boolean storeSignals = true;
 
         private Builder() {
             // do nothing
@@ -112,9 +115,14 @@ public final class Persistence {
             return this;
         }
 
+        public Builder storeSignals(boolean storeSignals) {
+            this.storeSignals = storeSignals;
+            return this;
+        }
+
         public Persistence build() {
             return new Persistence(executor, clock, entitySerializer, eventSerializer, behaviourFactory, sql,
-                    connectionFactory);
+                    connectionFactory, storeSignals);
         }
     }
 
@@ -264,7 +272,9 @@ public final class Persistence {
             final EntityStateMachine<?, String> esm = getStateMachine(signal, behaviour, entity);
 
             // apend signal to signal_store (optional)
-            insertIntoSignalStore(con, esm, signal.signal.event(), eventSerializer);
+            if (storeSignals) {
+                insertIntoSignalStore(con, esm, signal.signal.event(), eventSerializer);
+            }
 
             Signals<String> signals = new Signals<String>();
             signals.signalsToSelf.offerFirst(signal.signal.event());
