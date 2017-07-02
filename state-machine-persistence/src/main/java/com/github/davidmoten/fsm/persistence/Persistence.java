@@ -281,18 +281,7 @@ public final class Persistence {
 
             // push signal through state machine which will immediately process
             // non-delayed signals to self and accumulate signals to others
-            EntityStateMachine<?, String> esm2 = esm;
-            Event<?> event;
-            while ((event = signals.signalsToSelf.poll()) != null) {
-                esm2 = esm2.signal((Event<Object>) event);
-                List<Event<Object>> list = (List<Event<Object>>) (List<?>) esm2.signalsToSelf();
-                for (int i = list.size() - 1; i >= 0; i--) {
-                    signals.signalsToSelf.offerLast(list.get(i));
-                }
-                for (Signal<?, ?> s : esm2.signalsToOther()) {
-                    signals.signalsToOther.offerFirst((Signal<?, String>) s);
-                }
-            }
+            EntityStateMachine<?, String> esm2 = pushSignalThroughStateMachine(esm, signals);
 
             Deque<Signal<?, String>> signalsToOther = signals.signalsToOther;
 
@@ -321,6 +310,24 @@ public final class Persistence {
         for (NumberedSignal<?, ?> signalToOther : delayedNumberedSignalsToOther) {
             schedule(signalToOther);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private EntityStateMachine<?, String> pushSignalThroughStateMachine(final EntityStateMachine<?, String> esm,
+            Signals<String> signals) {
+        EntityStateMachine<?, String> esm2 = esm;
+        Event<?> event;
+        while ((event = signals.signalsToSelf.poll()) != null) {
+            esm2 = esm2.signal((Event<Object>) event);
+            List<Event<Object>> list = (List<Event<Object>>) (List<?>) esm2.signalsToSelf();
+            for (int i = list.size() - 1; i >= 0; i--) {
+                signals.signalsToSelf.offerLast(list.get(i));
+            }
+            for (Signal<?, ?> s : esm2.signalsToOther()) {
+                signals.signalsToOther.offerFirst((Signal<?, String>) s);
+            }
+        }
+        return esm2;
     }
 
     private static final class Signals<Id> {
