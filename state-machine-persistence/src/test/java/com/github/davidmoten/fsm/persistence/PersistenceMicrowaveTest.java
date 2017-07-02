@@ -56,7 +56,7 @@ public class PersistenceMicrowaveTest {
         MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
         Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory = cls -> behaviour;
         TestExecutor executor = new TestExecutor();
-        PersistenceH2 p = new PersistenceH2(directory, executor, ClockDefault.instance(), entitySerializer,
+        Persistence p = new Persistence(directory, executor, ClockDefault.instance(), entitySerializer,
                 eventSerializer, behaviourFactory);
         p.create();
         p.initialize();
@@ -79,11 +79,11 @@ public class PersistenceMicrowaveTest {
         check(p, MicrowaveStateMachine.State.COOKING_COMPLETE);
     }
 
-    private static void signal(PersistenceH2 p, Event<Microwave> event) {
+    private static void signal(Persistence p, Event<Microwave> event) {
         p.signal(Signal.create(Microwave.class, "1", event));
     }
 
-    private static void check(PersistenceH2 p, MicrowaveStateMachine.State state) {
+    private static void check(Persistence p, MicrowaveStateMachine.State state) {
         assertEquals(state, p.get(Microwave.class, "1").get().state);
     }
 

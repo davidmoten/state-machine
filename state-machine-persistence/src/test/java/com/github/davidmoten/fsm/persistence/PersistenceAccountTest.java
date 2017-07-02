@@ -53,7 +53,7 @@ public class PersistenceAccountTest {
         Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory = cls -> behaviour;
         TestExecutor executor = new TestExecutor();
 
-        PersistenceH2 p = new PersistenceH2(directory, executor, ClockDefault.instance(), entitySerializer,
+        Persistence p = new Persistence(directory, executor, ClockDefault.instance(), entitySerializer,
                 eventSerializer, behaviourFactory);
         p.create();
         p.initialize();
