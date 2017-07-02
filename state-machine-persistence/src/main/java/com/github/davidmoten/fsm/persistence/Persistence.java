@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
@@ -48,10 +49,11 @@ public final class Persistence {
     private final Queue<NumberedSignal<?, ?>> queue = new LinkedList<>();
     private final AtomicInteger wip = new AtomicInteger();
     private final boolean storeSignals;
+    private final Consumer<Throwable> errorHandler;
 
     private Persistence(ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
             Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory, Sql sql,
-            Callable<Connection> connectionFactory, boolean storeSignals) {
+            Callable<Connection> connectionFactory, boolean storeSignals, Consumer<Throwable> errorHandler) {
         this.executor = executor;
         this.clock = clock;
         this.entitySerializer = entitySerializer;
@@ -60,6 +62,7 @@ public final class Persistence {
         this.sql = sql;
         this.connectionFactory = connectionFactory;
         this.storeSignals = storeSignals;
+        this.errorHandler = errorHandler;
     }
 
     public static Builder connectionFactory(Callable<Connection> connectionFactory) {
@@ -75,6 +78,13 @@ public final class Persistence {
         private Sql sql = Sql.DEFAULT;
         private Callable<Connection> connectionFactory;
         private boolean storeSignals = true;
+        private Consumer<Throwable> errorHandler = new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable t) {
+                t.printStackTrace();
+                throw new RuntimeException(t);
+            }
+        };
 
         private Builder() {
             // do nothing
@@ -120,9 +130,14 @@ public final class Persistence {
             return this;
         }
 
+        public Builder errorHandler(Consumer<Throwable> errorHandler) {
+            this.errorHandler = errorHandler;
+            return this;
+        }
+
         public Persistence build() {
             return new Persistence(executor, clock, entitySerializer, eventSerializer, behaviourFactory, sql,
-                    connectionFactory, storeSignals);
+                    connectionFactory, storeSignals, errorHandler);
         }
     }
 
@@ -301,8 +316,9 @@ public final class Persistence {
             // commit the transaction
             con.commit();
             System.out.println(signal.signal.cls().getSimpleName() + "[" + signal.signal.id() + "] - " + esm2.state());
-        } catch (SQLException e) {
-            throw new SQLRuntimeException(e);
+        } catch (Throwable e) {
+            errorHandler.accept(e);
+            return;
         }
         for (NumberedSignal<?, ?> signalToOther : numberedSignalsToOther) {
             offer((NumberedSignal<?, String>) signalToOther);
