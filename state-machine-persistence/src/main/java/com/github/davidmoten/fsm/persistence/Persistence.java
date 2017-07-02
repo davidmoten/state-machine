@@ -59,11 +59,15 @@ public final class Persistence {
     }
 
     public void create() {
+        String sql = new String(readAll(Persistence.class.getResourceAsStream("/create-h2.sql")),
+                StandardCharsets.UTF_8);
+        create(sql);
+    }
+
+    public void create(String sql) {
         directory.mkdirs();
         try (Connection con = createConnection()) {
             con.setAutoCommit(true);
-            String sql = new String(readAll(Persistence.class.getResourceAsStream("/create-h2.sql")),
-                    StandardCharsets.UTF_8);
             String[] commands = sql.split(";");
             for (String command : commands) {
                 con.prepareStatement(command).execute();
@@ -83,8 +87,7 @@ public final class Persistence {
         if (!signal.time().isPresent()) {
             try ( //
                     Connection con = createConnection();
-                    PreparedStatement ps = con.prepareStatement(
-                            sql.addToSignalQueue())) {
+                    PreparedStatement ps = con.prepareStatement(sql.addToSignalQueue())) {
                 ps.setString(1, signal.cls().getName());
                 ps.setString(2, signal.id());
                 ps.setString(3, signal.event().getClass().getName());
@@ -108,8 +111,7 @@ public final class Persistence {
         List<NumberedSignal<?, ?>> list = new ArrayList<NumberedSignal<?, ?>>();
         try ( //
                 Connection con = createConnection();
-                PreparedStatement ps = con.prepareStatement(
-                        sql.selectDelayedSignals())) {
+                PreparedStatement ps = con.prepareStatement(sql.selectDelayedSignals())) {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     long number = rs.getLong("seq_num");
@@ -312,8 +314,7 @@ public final class Persistence {
 
     private void insertIntoSignalStore(Connection con, EntityStateMachine<?, String> esm, Event<?> event,
             Serializer eventSerializer) throws SQLException {
-        try (PreparedStatement ps = con
-                .prepareStatement(sql.addToSignalStore())) {
+        try (PreparedStatement ps = con.prepareStatement(sql.addToSignalStore())) {
             ps.setString(1, esm.cls().getName());
             ps.setString(2, esm.id());
             ps.setString(3, event.getClass().getName());
@@ -326,8 +327,7 @@ public final class Persistence {
     private List<NumberedSignal<?, ?>> insertSignalsToOther(Connection con, Serializer eventSerializer,
             Collection<Signal<?, String>> signalsToOther) throws SQLException {
         List<NumberedSignal<?, ?>> list = new ArrayList<>();
-        try (PreparedStatement ps = con
-                .prepareStatement(sql.addToSignalQueue())) {
+        try (PreparedStatement ps = con.prepareStatement(sql.addToSignalQueue())) {
             for (Signal<?, ?> signal : signalsToOther) {
                 if (!signal.time().isPresent()) {
                     Signal<?, String> sig = (Signal<?, String>) signal;
@@ -352,10 +352,8 @@ public final class Persistence {
             Serializer eventSerializer, Collection<Signal<?, String>> signalsToOther) throws SQLException {
         List<NumberedSignal<?, ?>> list = new ArrayList<NumberedSignal<?, ?>>();
         try ( //
-                PreparedStatement del = con.prepareStatement(
-                        sql.deleteDelayedSignal());
-                PreparedStatement ps = con.prepareStatement(
-                        sql.addDelayedSignal())) {
+                PreparedStatement del = con.prepareStatement(sql.deleteDelayedSignal());
+                PreparedStatement ps = con.prepareStatement(sql.addDelayedSignal())) {
 
             for (Signal<?, ?> signal : signalsToOther) {
                 if (signal.time().isPresent()) {
@@ -407,8 +405,7 @@ public final class Persistence {
 
     private void removeDelayedSignal(Connection con, Class<?> fromClass, String fromId, Class<?> cls, String id)
             throws SQLException {
-        try (PreparedStatement ps = con.prepareStatement(
-                sql.deleteDelayedSignal())) {
+        try (PreparedStatement ps = con.prepareStatement(sql.deleteDelayedSignal())) {
             ps.setString(1, fromClass.getName());
             ps.setString(2, fromId);
             ps.setString(3, cls.getName());
@@ -428,8 +425,7 @@ public final class Persistence {
             updated = ps.executeUpdate() > 0;
         }
         if (!updated) {
-            try (PreparedStatement ps = con
-                    .prepareStatement(sql.insertEntity())) {
+            try (PreparedStatement ps = con.prepareStatement(sql.insertEntity())) {
                 byte[] bytes = entitySerializer.serialize(esm.get().get());
                 ps.setString(1, esm.cls().getName());
                 ps.setString(2, esm.id());
@@ -459,8 +455,7 @@ public final class Persistence {
     @SuppressWarnings("unchecked")
     public <T> Optional<EntityAndState<T>> get(Class<T> cls, String id) {
         try ( //
-                Connection con = createConnection();
-                PreparedStatement ps = con.prepareStatement(sql.readEntity())) {
+                Connection con = createConnection(); PreparedStatement ps = con.prepareStatement(sql.readEntity())) {
             ps.setString(1, cls.getName());
             ps.setString(2, id);
             ResultSet rs = ps.executeQuery();
