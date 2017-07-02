@@ -429,7 +429,7 @@ public final class Persistence {
         }
         if (!updated) {
             try (PreparedStatement ps = con
-                    .prepareStatement("insert into entity(cls, id, bytes, state) values(?,?,?,?)")) {
+                    .prepareStatement(sql.insertEntity())) {
                 byte[] bytes = entitySerializer.serialize(esm.get().get());
                 ps.setString(1, esm.cls().getName());
                 ps.setString(2, esm.id());
