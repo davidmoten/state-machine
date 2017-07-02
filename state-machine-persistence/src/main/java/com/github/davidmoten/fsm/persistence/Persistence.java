@@ -353,9 +353,9 @@ public final class Persistence {
         List<NumberedSignal<?, ?>> list = new ArrayList<NumberedSignal<?, ?>>();
         try ( //
                 PreparedStatement del = con.prepareStatement(
-                        "delete from delayed_signal_queue where from_cls=? and from_id=? and cls=? and id=?");
+                        sql.deleteDelayedSignal());
                 PreparedStatement ps = con.prepareStatement(
-                        "insert into delayed_signal_queue(from_cls, from_id, cls, id, event_cls, event_bytes, time) values(?,?,?,?,?,?,?)")) {
+                        sql.addDelayedSignal())) {
 
             for (Signal<?, ?> signal : signalsToOther) {
                 if (signal.time().isPresent()) {
