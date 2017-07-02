@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,6 +27,7 @@ import java.util.function.Function;
 
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.Clock;
+import com.github.davidmoten.fsm.runtime.ClockDefault;
 import com.github.davidmoten.fsm.runtime.Create;
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 import com.github.davidmoten.fsm.runtime.EntityState;
@@ -40,11 +42,11 @@ public final class Persistence {
     private final Clock clock;
     private final Serializer entitySerializer;
     private final Serializer eventSerializer;
-    private final Queue<NumberedSignal<?, ?>> queue = new LinkedList<>();
-    private final AtomicInteger wip = new AtomicInteger();
-    private final Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
     private final Sql sql;
     private final Callable<Connection> connectionFactory;
+    private final Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
+    private final Queue<NumberedSignal<?, ?>> queue = new LinkedList<>();
+    private final AtomicInteger wip = new AtomicInteger();
 
     public Persistence(ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
             Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory, Sql sql,
@@ -56,6 +58,64 @@ public final class Persistence {
         this.behaviourFactory = behaviourFactory;
         this.sql = sql;
         this.connectionFactory = connectionFactory;
+    }
+
+    public static Builder builder() {
+        return builder();
+    }
+
+    public static Builder connectionFactory(Callable<Connection> connectionFactory) {
+        return builder().connectionFactory(connectionFactory);
+    }
+
+    public static final class Builder {
+        private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        private Clock clock = ClockDefault.instance();
+        private Serializer entitySerializer = Serializer.JSON;
+        private Serializer eventSerializer = Serializer.JSON;
+        private Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
+        private Sql sql = Sql.DEFAULT;
+        private Callable<Connection> connectionFactory;
+
+        public Builder executor(ScheduledExecutorService executor) {
+            this.executor = executor;
+            return this;
+        }
+
+        public Builder clock(Clock clock) {
+            this.clock = clock;
+            return this;
+        }
+
+        public Builder entitySerializer(Serializer serializer) {
+            this.entitySerializer = serializer;
+            return this;
+        }
+
+        public Builder eventSerializer(Serializer serializer) {
+            this.eventSerializer = serializer;
+            return this;
+        }
+
+        public Builder behaviourFactory(Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory) {
+            this.behaviourFactory = behaviourFactory;
+            return this;
+        }
+
+        public Builder sql(Sql sql) {
+            this.sql = sql;
+            return this;
+        }
+
+        public Builder connectionFactory(Callable<Connection> connectionFactory) {
+            this.connectionFactory = connectionFactory;
+            return this;
+        }
+
+        public Persistence build() {
+            return new Persistence(executor, clock, entitySerializer, eventSerializer, behaviourFactory, sql,
+                    connectionFactory);
+        }
     }
 
     public void create() {
