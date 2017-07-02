@@ -7,6 +7,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -56,8 +59,10 @@ public class PersistenceMicrowaveTest {
         MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
         Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory = cls -> behaviour;
         TestExecutor executor = new TestExecutor();
-        Persistence p = new Persistence(directory, executor, ClockDefault.instance(), entitySerializer, eventSerializer,
-                behaviourFactory, Sql.DEFAULT);
+        Callable<Connection> connectionFactory = () -> DriverManager
+                .getConnection("jdbc:h2:" + directory.getAbsolutePath());
+        Persistence p = new Persistence(executor, ClockDefault.instance(), entitySerializer, eventSerializer,
+                behaviourFactory, Sql.DEFAULT, connectionFactory);
         p.create();
         p.initialize();
         assertFalse(p.get(Microwave.class, "1").isPresent());

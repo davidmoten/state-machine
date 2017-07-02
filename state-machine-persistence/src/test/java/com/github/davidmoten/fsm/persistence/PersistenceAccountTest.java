@@ -6,6 +6,7 @@ import static org.junit.Assert.assertFalse;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.DriverManager;
 import java.util.function.Function;
 
 import org.junit.Assert;
@@ -53,8 +54,9 @@ public class PersistenceAccountTest {
         Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory = cls -> behaviour;
         TestExecutor executor = new TestExecutor();
 
-        Persistence p = new Persistence(directory, executor, ClockDefault.instance(), entitySerializer, eventSerializer,
-                behaviourFactory, Sql.DEFAULT);
+        Persistence p = new Persistence(executor, ClockDefault.instance(), entitySerializer, eventSerializer,
+                behaviourFactory, Sql.DEFAULT,
+                () -> DriverManager.getConnection("jdbc:h2:" + directory.getAbsolutePath()));
         p.create();
         p.initialize();
         assertFalse(p.get(Account.class, "1").isPresent());

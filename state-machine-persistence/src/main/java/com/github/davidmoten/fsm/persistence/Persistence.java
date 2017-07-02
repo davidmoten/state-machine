@@ -2,12 +2,10 @@ package com.github.davidmoten.fsm.persistence;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,7 +36,6 @@ import com.github.davidmoten.guavamini.Preconditions;
 
 public final class Persistence {
 
-    private final File directory;
     private final ScheduledExecutorService executor;
     private final Clock clock;
     private final Serializer entitySerializer;
@@ -46,16 +44,18 @@ public final class Persistence {
     private final AtomicInteger wip = new AtomicInteger();
     private final Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
     private final Sql sql;
+    private final Callable<Connection> connectionFactory;
 
-    public Persistence(File directory, ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
-            Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory, Sql sql) {
-        this.directory = directory;
+    public Persistence(ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
+            Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory, Sql sql,
+            Callable<Connection> connectionFactory) {
         this.executor = executor;
         this.clock = clock;
         this.entitySerializer = entitySerializer;
         this.eventSerializer = eventSerializer;
         this.behaviourFactory = behaviourFactory;
         this.sql = sql;
+        this.connectionFactory = connectionFactory;
     }
 
     public void create() {
@@ -65,7 +65,6 @@ public final class Persistence {
     }
 
     public void create(String sql) {
-        directory.mkdirs();
         try (Connection con = createConnection()) {
             con.setAutoCommit(true);
             String[] commands = sql.split(";");
@@ -446,9 +445,11 @@ public final class Persistence {
 
     private Connection createConnection() {
         try {
-            return DriverManager.getConnection("jdbc:h2:" + directory.getAbsolutePath());
+            return connectionFactory.call();
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
