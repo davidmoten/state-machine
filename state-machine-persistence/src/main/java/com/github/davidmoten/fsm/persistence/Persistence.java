@@ -70,6 +70,12 @@ public final class Persistence {
     }
 
     public static final class Builder {
+
+        private static final Consumer<Throwable> PRINT_STACK_TRACE_AND_THROW = t -> {
+            t.printStackTrace();
+            throw new RuntimeException(t);
+        };
+
         private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         private Clock clock = ClockDefault.instance();
         private Serializer entitySerializer = Serializer.JSON;
@@ -78,13 +84,7 @@ public final class Persistence {
         private Sql sql = Sql.DEFAULT;
         private Callable<Connection> connectionFactory;
         private boolean storeSignals = true;
-        private Consumer<Throwable> errorHandler = new Consumer<Throwable>() {
-            @Override
-            public void accept(Throwable t) {
-                t.printStackTrace();
-                throw new RuntimeException(t);
-            }
-        };
+        private Consumer<Throwable> errorHandler = PRINT_STACK_TRACE_AND_THROW;
 
         private Builder() {
             // do nothing
@@ -315,7 +315,6 @@ public final class Persistence {
 
             // commit the transaction
             con.commit();
-            System.out.println(signal.signal.cls().getSimpleName() + "[" + signal.signal.id() + "] - " + esm2.state());
         } catch (Throwable e) {
             errorHandler.accept(e);
             return;
@@ -366,14 +365,16 @@ public final class Persistence {
         if (signal.signal.time().isPresent()) {
             try (PreparedStatement ps = con.prepareStatement(sql.delayedSignalExists())) {
                 ps.setLong(1, signal.number);
-                ResultSet rs = ps.executeQuery();
-                return rs.next();
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next();
+                }
             }
         } else {
             try (PreparedStatement ps = con.prepareStatement(sql.signalExists())) {
                 ps.setLong(1, signal.number);
-                ResultSet rs = ps.executeQuery();
-                return rs.next();
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next();
+                }
             }
         }
     }
@@ -392,14 +393,15 @@ public final class Persistence {
         try (PreparedStatement ps = con.prepareStatement(sql.readEntityAndState())) {
             ps.setString(1, cls.getName());
             ps.setString(2, id);
-            ResultSet rs = ps.executeQuery();
-            if (!rs.next()) {
-                return Optional.empty();
-            } else {
-                byte[] bytes = readAll(rs.getBlob("bytes").getBinaryStream());
-                T entity = (T) entitySerializer.deserialize(cls, bytes);
-                EntityState<T> state = behaviour.from(rs.getString("state"));
-                return Optional.of(EntityAndState.create(entity, state));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return Optional.empty();
+                } else {
+                    byte[] bytes = readAll(rs.getBlob("bytes").getBinaryStream());
+                    T entity = (T) entitySerializer.deserialize(cls, bytes);
+                    EntityState<T> state = behaviour.from(rs.getString("state"));
+                    return Optional.of(EntityAndState.create(entity, state));
+                }
             }
         }
     }
@@ -553,15 +555,16 @@ public final class Persistence {
                 PreparedStatement ps = con.prepareStatement(sql.readEntityAndState())) {
             ps.setString(1, cls.getName());
             ps.setString(2, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                String stateName = rs.getString(1);
-                T t = (T) entitySerializer.deserialize(cls, readAll(rs.getBlob(2).getBinaryStream()));
-                EntityBehaviour<?, String> behaviour = behaviourFactory.apply(cls);
-                EntityState<?> state = behaviour.from(stateName);
-                return Optional.of(EntityAndState.create(t, (EntityState<T>) state));
-            } else {
-                return Optional.empty();
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String stateName = rs.getString(1);
+                    T t = (T) entitySerializer.deserialize(cls, readAll(rs.getBlob(2).getBinaryStream()));
+                    EntityBehaviour<?, String> behaviour = behaviourFactory.apply(cls);
+                    EntityState<?> state = behaviour.from(stateName);
+                    return Optional.of(EntityAndState.create(t, (EntityState<T>) state));
+                } else {
+                    return Optional.empty();
+                }
             }
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
@@ -569,15 +572,18 @@ public final class Persistence {
     }
 
     public <T> Optional<T> get(Class<T> cls, String id) {
-        try (Connection con = createConnection(); PreparedStatement ps = con.prepareStatement(sql.readEntity())) {
+        try ( //
+                Connection con = createConnection(); //
+                PreparedStatement ps = con.prepareStatement(sql.readEntity())) {
             ps.setString(1, cls.getName());
             ps.setString(2, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                T t = (T) entitySerializer.deserialize(cls, readAll(rs.getBlob(1).getBinaryStream()));
-                return Optional.of(t);
-            } else {
-                return Optional.empty();
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    T t = (T) entitySerializer.deserialize(cls, readAll(rs.getBlob(1).getBinaryStream()));
+                    return Optional.of(t);
+                } else {
+                    return Optional.empty();
+                }
             }
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
@@ -591,6 +597,7 @@ public final class Persistence {
 
     @SuppressWarnings("unchecked")
     private void drain() {
+        // non-blocking drain loop for the signal queue
         if (wip.getAndIncrement() == 0) {
             int missed = 1;
             while (true) {
