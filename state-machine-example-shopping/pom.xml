@@ -16,7 +16,7 @@
 
         <dependency>
             <groupId>com.github.davidmoten</groupId>
-            <artifactId>state-machine-test-definition</artifactId>
+            <artifactId>state-machine-example-shopping-definition</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
@@ -91,7 +91,7 @@
                 <dependencies>
                     <dependency>
                         <groupId>com.github.davidmoten</groupId>
-                        <artifactId>state-machine-test-definition</artifactId>
+                        <artifactId>state-machine-example-shopping-definition</artifactId>
                         <version>${project.parent.version}</version>
                     </dependency>
                 </dependencies>

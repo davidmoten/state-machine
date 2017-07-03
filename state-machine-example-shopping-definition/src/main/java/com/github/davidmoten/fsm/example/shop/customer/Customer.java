@@ -1,4 +1,4 @@
-package com.github.davidmoten.fsm.example.customer;
+package com.github.davidmoten.fsm.example.shop.customer;
 
 import com.github.davidmoten.guavamini.Preconditions;
 
