@@ -210,12 +210,13 @@ For each domain object state machines need to be refreshed from the *Event Sourc
 <br/>
 <img src="src/docs/collaboration-diagram.png?raw=true" />
 
+Relational Database Persistence
+--------------------------------
 The *state-machine-persistence* module provides everything you need to implement Event Sourcing with a relational database (RDB).
 
-RDB Persistence
------------------
-
 Here's an example:
+
+TODO
 
 
 Highly scalable persistence
