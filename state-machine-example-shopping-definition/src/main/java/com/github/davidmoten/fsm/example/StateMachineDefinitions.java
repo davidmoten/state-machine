@@ -24,11 +24,27 @@ public final class StateMachineDefinitions implements Supplier<List<StateMachine
 
     private static StateMachineDefinition<Basket> createBasketStateMachine() {
         StateMachineDefinition<Basket> m = StateMachineDefinition.create(Basket.class);
-        State<Basket, Create> created = m.createState("Created", Create.class);
+        State<Basket, Create> created = m.createState("Created", Create.class)
+                .documentation("<pre>onEntry/\n" //
+                        + "send Clear to self\n" //
+                        + "</pre>");
         State<Basket, Clear> empty = m.createState("Empty", Clear.class);
-        State<Basket, Change> changed = m.createState("Changed", Change.class);
-        State<Basket, Checkout> checkedOut = m.createState("CheckedOut", Checkout.class);
-        State<Basket, Payment> paid = m.createState("Paid", Payment.class);
+        State<Basket, Change> changed = m.createState("Changed", Change.class)
+                .documentation("<pre>onEntry/\n" //
+                        + "update changed items\n" //
+                        + "if empty then\n" //
+                        + "  send Clear to self\n" //
+                        + "send Timeout to self in 1 day" //
+                        + "</pre>");
+        State<Basket, Checkout> checkedOut = m.createState("CheckedOut", Checkout.class)
+                .documentation("<pre>onEntry/\n" //
+                        + "send Timeout to self in 1 day" //
+                        + "</pre>");
+        State<Basket, Payment> paid = m.createState("Paid", Payment.class)
+                .documentation("<pre>onEntry/\n" //
+                        + "create order\n" //
+                        + "send order to Order\n" //
+                        + "</pre>");
         State<Basket, Timeout> timedOut = m.createState("TimedOut", Timeout.class);
         created.initial() //
                 .to(empty //
