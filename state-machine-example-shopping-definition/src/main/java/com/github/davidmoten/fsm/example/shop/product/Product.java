@@ -1,4 +1,4 @@
-package com.github.davidmoten.fsm.example.product;
+package com.github.davidmoten.fsm.example.shop.product;
 
 import java.util.Optional;
 
