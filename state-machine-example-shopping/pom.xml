@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -22,14 +23,14 @@
 
         <dependency>
             <groupId>com.github.davidmoten</groupId>
-            <artifactId>state-machine-runtime</artifactId>
+            <artifactId>state-machine-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>io.reactivex.rxjava2</groupId>
-            <artifactId>rxjava</artifactId>
-            <version>${rxjava.version}</version>
+            <groupId>com.github.davidmoten</groupId>
+            <artifactId>state-machine-runtime</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -45,13 +46,6 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.4.191</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -120,7 +114,8 @@
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>${deploy.plugin.version}</version>
                 <configuration>
-                    <!-- don't skip even though we want to because it is the last -->
+                    <!-- don't skip even though we want to because it is 
+                        the last -->
                     <!-- module and deploy will fail if we skip it -->
                     <skip>false</skip>
                 </configuration>
@@ -137,8 +132,8 @@
         </plugins>
         <pluginManagement>
             <plugins>
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no 
-                    influence on the Maven build itself. -->
+                <!--This plugin's configuration is used to store Eclipse 
+                    m2e settings only. It has no influence on the Maven build itself. -->
                 <plugin>
                     <groupId>org.eclipse.m2e</groupId>
                     <artifactId>lifecycle-mapping</artifactId>
