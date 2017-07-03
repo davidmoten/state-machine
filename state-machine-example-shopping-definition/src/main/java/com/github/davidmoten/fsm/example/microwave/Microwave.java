@@ -1,14 +1,10 @@
 package com.github.davidmoten.fsm.example.microwave;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public final class Microwave {
 
     private final int serialNumber;
 
-    @JsonCreator
-    public Microwave(@JsonProperty("serialNumber") int serialNumber) {
+    public Microwave(int serialNumber) {
         this.serialNumber = serialNumber;
     }
 
