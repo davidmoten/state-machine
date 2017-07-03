@@ -43,7 +43,9 @@ public final class StateMachineDefinitions implements Supplier<List<StateMachine
         State<Microwave, TimerTimesOut> cookingComplete = m.createState("Cooking Complete", TimerTimesOut.class)
                 .documentation("<pre>entry/\nturn light off;</pre>");
 
-        readyToCook.to(cooking).to(cookingInterruped)
+        readyToCook //
+                .to(cooking) //
+                .to(cookingInterruped)
                 .to(readyToCook.from(doorOpen.from(readyToCook).from(cookingComplete.from(cooking))));
 
         return m;
@@ -54,7 +56,11 @@ public final class StateMachineDefinitions implements Supplier<List<StateMachine
         State<Account, Create> created = m.createState("Created", Create.class);
         State<Account, ChangeBalance> changed = m.createState("Changed", ChangeBalance.class);
         State<Account, Transfer> transferred = m.createState("Transferred", Transfer.class);
-        created.initial().to(changed).to(changed).to(transferred).to(changed);
+        created.initial() //
+                .to(changed) //
+                .to(changed) //
+                .to(transferred) //
+                .to(changed);
         return m;
     }
 
