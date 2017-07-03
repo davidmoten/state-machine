@@ -7,12 +7,14 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 public class SerializerJson implements Serializer {
 
     private final ObjectMapper m = new ObjectMapper() //
             .setVisibility(PropertyAccessor.FIELD, Visibility.PUBLIC_ONLY)
-            .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+            .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS) //
+            .registerModule(new Jdk8Module());
 
     @Override
     public byte[] serialize(Object t) {
