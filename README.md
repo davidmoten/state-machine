@@ -12,6 +12,7 @@ to state diagrams (one Event type for each State)
 * Maven plugin
 * Not coupled to a storage mechanism (both a feature and a non-feature!)
 * optional reactive API using [RxJava 2](https://github.com/ReactiveX/RxJava) (very useful for asynchronous coordination and for extensions like storage if desired)
+* optional relational database persistence module 
 
 Status: *beta*
 
@@ -193,9 +194,11 @@ Persistence
 ---------------
 For a system to recover properly from failure all signals and state changes should be persisted to media that survives process restarts.
 
-Having had scaling problems with a system that persisted every signal and state change to a database was one of the motivations to develop this project. 
+If signal queues and entity state and optionally signal stores are all kept in a single relational database that supports transactions then *exactly once* messaging can be guaranteed. For a reaonably sized system without the need to scale massively this is the recommended approach. 
 
-A popular strategy for dealing with this issue is to use [Event Sourcing](http://martinfowler.com/eaaDev/EventSourcing.html) and [CQRS](http://martinfowler.com/bliki/CQRS.html). 
+If you can relax the consistency requirements of your system then you can use *eventually consistent* storage with the consequence that the system is now *at least once* in terms of message processing. If you can deal sensibly with multiple deliveries of the same message then you can introduce non-RDB systems for storage that may scale easier than RDB.
+
+A popular architectural pattern for handling persistence is to use [Event Sourcing](http://martinfowler.com/eaaDev/EventSourcing.html) and [CQRS](http://martinfowler.com/bliki/CQRS.html). 
 
 Event Sourcing and CQRS and Guaranteed Delivery
 ----------------------------------------
@@ -207,17 +210,29 @@ For each domain object state machines need to be refreshed from the *Event Sourc
 <br/>
 <img src="src/docs/collaboration-diagram.png?raw=true" />
 
-A scalable implementation of this architecture might use:
+The *state-machine-persistence* module provides everything you need to implement Event Sourcing with a relational database (RDB).
+
+RDB Persistence
+-----------------
+
+Here's an example:
+
+
+Highly scalable persistence
+--------------------------
+
+A scalable implementation of an Event Sourcing + CQRS architecture might use:
 
 * AWS SQS for the *Command Queue*
 * Apache Kafka for the *Signal Store*
 
 To leverage the performance benefits of eventual consistency the state machines must be designed so
-that *at least once* delivery of events does not break business logic. Not every problem will be suited to this but many scenarios can be solved this way. Remember to consider:
+that *at least once* processing of events does not break business logic. Not every problem will be suited to this but many scenarios can be solved this way. Remember to consider:
 
 * code defensively in expectation of more-than-once events
 * consider probabilities of more-than-once delivery to state machines with critical roles 
-* consider using consistent write/reads to the Signal Store for state machines with critical roles
+* consider using consistent write/reads to the data stores for state machines with critical roles
+* partition parts of the system to use RDB so that they are fully transaction controlled and *exactly once* message processing
 
 A basic implementation of the architecture might use:
 

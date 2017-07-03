@@ -37,6 +37,8 @@ import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.guavamini.Preconditions;
 
+import io.reactivex.functions.BiPredicate;
+
 public final class Persistence {
 
     private final ScheduledExecutorService executor;
