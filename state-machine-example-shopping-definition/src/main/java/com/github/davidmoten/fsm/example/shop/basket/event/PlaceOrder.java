@@ -1,6 +1,9 @@
 package com.github.davidmoten.fsm.example.shop.basket.event;
 
-public final class PlaceOrder {
+import com.github.davidmoten.fsm.example.shop.basket.Basket;
+import com.github.davidmoten.fsm.runtime.Event;
+
+public final class PlaceOrder implements Event<Basket>{
     public final String address;
     public final String phoneNumber;
 
