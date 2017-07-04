@@ -76,6 +76,10 @@ public final class Persistence {
             throw new RuntimeException(t);
         };
 
+        private static final Consumer<Throwable> PRINT_STACK_TRACE = t -> {
+            t.printStackTrace();
+        };
+
         private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         private Clock clock = ClockDefault.instance();
         private Serializer entitySerializer = Serializer.JSON;
@@ -84,7 +88,7 @@ public final class Persistence {
         private Sql sql = Sql.DEFAULT;
         private Callable<Connection> connectionFactory;
         private boolean storeSignals = true;
-        private Consumer<Throwable> errorHandler = PRINT_STACK_TRACE_AND_THROW;
+        private Consumer<Throwable> errorHandler = PRINT_STACK_TRACE;
 
         private Builder() {
             // do nothing
@@ -133,6 +137,15 @@ public final class Persistence {
         public Builder errorHandler(Consumer<Throwable> errorHandler) {
             this.errorHandler = errorHandler;
             return this;
+        }
+
+        /**
+         * This method designed for use with TestExecutor in unit tests. Best
+         * not to use this outside of unit tests because throwing shuts down the
+         * drain loop and no further signals will be processed.
+         */
+        public Builder errorHandlerPrintStackTraceAndThrow() {
+            return errorHandler(PRINT_STACK_TRACE_AND_THROW);
         }
 
         public Persistence build() {
@@ -226,20 +239,6 @@ public final class Persistence {
         long now = clock.now();
         long delayMs = Math.max(0, sig.signal.time().get() - now);
         executor.schedule(() -> offer((NumberedSignal<?, String>) sig), delayMs, TimeUnit.MILLISECONDS);
-    }
-
-    private static byte[] readAll(InputStream is) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        byte[] buffer = new byte[8192];
-        int count;
-        try {
-            while ((count = is.read(buffer)) != -1) {
-                bytes.write(buffer, 0, count);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return bytes.toByteArray();
     }
 
     public static final class EntityAndState<T> {
@@ -599,22 +598,37 @@ public final class Persistence {
     private void drain() {
         // non-blocking drain loop for the signal queue
         if (wip.getAndIncrement() == 0) {
-            int missed = 1;
-            while (true) {
+            executor.execute(() -> {
+                int missed = 1;
                 while (true) {
-                    NumberedSignal<?, ?> signal = queue.poll();
-                    if (signal == null) {
-                        break;
-                    } else {
-                        process((NumberedSignal<?, String>) signal);
+                    while (true) {
+                        NumberedSignal<?, ?> signal = queue.poll();
+                        if (signal == null) {
+                            break;
+                        } else {
+                            process((NumberedSignal<?, String>) signal);
+                        }
+                    }
+                    missed = wip.addAndGet(-missed);
+                    if (missed == 0) {
+                        return;
                     }
                 }
-                missed = wip.addAndGet(-missed);
-                if (missed == 0) {
-                    return;
-                }
-            }
+            });
         }
     }
 
+    private static byte[] readAll(InputStream is) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int count;
+        try {
+            while ((count = is.read(buffer)) != -1) {
+                bytes.write(buffer, 0, count);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return bytes.toByteArray();
+    }
 }

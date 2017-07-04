@@ -56,6 +56,7 @@ public class PersistenceAccountTest {
         Persistence p = Persistence //
                 .connectionFactory(connectionFactory) //
                 .executor(executor) //
+                .errorHandlerPrintStackTraceAndThrow() //
                 .behaviourFactory(behaviourFactory) //
                 .build();
         p.create();

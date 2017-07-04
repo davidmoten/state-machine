@@ -63,6 +63,7 @@ public class PersistenceMicrowaveTest {
         Persistence p = Persistence //
                 .connectionFactory(connectionFactory) //
                 .executor(executor) //
+                .errorHandlerPrintStackTraceAndThrow() //
                 .entitySerializer(Serializer.JSON) //
                 .eventSerializer(Serializer.JSON) //
                 .behaviourFactory(behaviourFactory) //
