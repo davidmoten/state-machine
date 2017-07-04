@@ -80,6 +80,7 @@
                                         <versionRange>[3.4,)</versionRange>
                                         <goals>
                                             <goal>helpmojo</goal>
+                                            <goal>descriptor</goal>
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
