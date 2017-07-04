@@ -50,10 +50,12 @@ public final class Persistence {
     private final AtomicInteger wip = new AtomicInteger();
     private final boolean storeSignals;
     private final Consumer<Throwable> errorHandler;
+    private final long retryIntervalMs;
 
     private Persistence(ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
             Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory, Sql sql,
-            Callable<Connection> connectionFactory, boolean storeSignals, Consumer<Throwable> errorHandler) {
+            Callable<Connection> connectionFactory, boolean storeSignals, Consumer<Throwable> errorHandler,
+            long retryIntervalMs) {
         this.executor = executor;
         this.clock = clock;
         this.entitySerializer = entitySerializer;
@@ -63,6 +65,7 @@ public final class Persistence {
         this.connectionFactory = connectionFactory;
         this.storeSignals = storeSignals;
         this.errorHandler = errorHandler;
+        this.retryIntervalMs = retryIntervalMs;
     }
 
     public static Builder connectionFactory(Callable<Connection> connectionFactory) {
@@ -70,6 +73,8 @@ public final class Persistence {
     }
 
     public static final class Builder {
+
+        private static final int DEFAULT_RETRY_INTERVAL_MS = 30000;
 
         private static final Consumer<Throwable> PRINT_STACK_TRACE_AND_THROW = t -> {
             t.printStackTrace();
@@ -89,6 +94,7 @@ public final class Persistence {
         private Callable<Connection> connectionFactory;
         private boolean storeSignals = true;
         private Consumer<Throwable> errorHandler = PRINT_STACK_TRACE;
+        private long retryIntervalMs = DEFAULT_RETRY_INTERVAL_MS;
 
         private Builder() {
             // do nothing
@@ -148,9 +154,14 @@ public final class Persistence {
             return errorHandler(PRINT_STACK_TRACE_AND_THROW);
         }
 
+        public Builder retryIntervalMs(long retryIntervalMs) {
+            this.retryIntervalMs = retryIntervalMs;
+            return this;
+        }
+
         public Persistence build() {
             return new Persistence(executor, clock, entitySerializer, eventSerializer, behaviourFactory, sql,
-                    connectionFactory, storeSignals, errorHandler);
+                    connectionFactory, storeSignals, errorHandler, retryIntervalMs);
         }
     }
 
@@ -256,7 +267,7 @@ public final class Persistence {
     }
 
     @SuppressWarnings("unchecked")
-    private void process(NumberedSignal<?, String> signal) {
+    private boolean process(NumberedSignal<?, String> signal) {
         List<NumberedSignal<?, ?>> numberedSignalsToOther;
         List<NumberedSignal<?, ?>> delayedNumberedSignalsToOther;
         try (Connection con = createConnection()) {
@@ -265,13 +276,13 @@ public final class Persistence {
 
             // if signal does not exist in queue anymore then ignore
             if (!signalExists(con, signal)) {
-                return;
+                return true;
             }
 
             // if is cancellation then remove signal from delayed queue and
             // return
             if (handleCancellationSignal(con, signal)) {
-                return;
+                return true;
             }
 
             // get behaviour
@@ -316,13 +327,21 @@ public final class Persistence {
             con.commit();
         } catch (Throwable e) {
             errorHandler.accept(e);
-            return;
+            scheduleRetry();
+            return false;
         }
         for (NumberedSignal<?, ?> signalToOther : numberedSignalsToOther) {
             offer((NumberedSignal<?, String>) signalToOther);
         }
         for (NumberedSignal<?, ?> signalToOther : delayedNumberedSignalsToOther) {
             schedule(signalToOther);
+        }
+        return true;
+    }
+
+    private void scheduleRetry() {
+        if (retryIntervalMs > 0) {
+            executor.schedule(() -> drain(), retryIntervalMs, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -602,11 +621,15 @@ public final class Persistence {
                 int missed = 1;
                 while (true) {
                     while (true) {
-                        NumberedSignal<?, ?> signal = queue.poll();
+                        NumberedSignal<?, ?> signal = queue.peek();
                         if (signal == null) {
                             break;
                         } else {
-                            process((NumberedSignal<?, String>) signal);
+                            if (process((NumberedSignal<?, String>) signal)) {
+                                queue.poll();
+                            } else {
+                                break;
+                            }
                         }
                     }
                     missed = wip.addAndGet(-missed);
