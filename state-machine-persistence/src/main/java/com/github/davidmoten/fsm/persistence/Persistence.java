@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.github.davidmoten.fsm.persistence.Persistence.Builder;
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.Clock;
 import com.github.davidmoten.fsm.runtime.ClockDefault;
@@ -74,7 +75,7 @@ public final class Persistence {
 
     public static final class Builder {
 
-        private static final int DEFAULT_RETRY_INTERVAL_MS = 30000;
+        public static final int DEFAULT_RETRY_INTERVAL_MS = 30000;
 
         private static final Consumer<Throwable> PRINT_STACK_TRACE_AND_THROW = t -> {
             t.printStackTrace();
@@ -159,10 +160,15 @@ public final class Persistence {
             return this;
         }
 
+        public Builder retryInterval(long retryInterval, TimeUnit unit) {
+            return retryIntervalMs(unit.toMillis(retryInterval));
+        }
+
         public Persistence build() {
             return new Persistence(executor, clock, entitySerializer, eventSerializer, behaviourFactory, sql,
                     connectionFactory, storeSignals, errorHandler, retryIntervalMs);
         }
+
     }
 
     public void create() {
