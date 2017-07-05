@@ -57,4 +57,8 @@ public interface Sql {
         return "select bytes from entity where cls=? and id=?";
     }
 
+	default String readAllEntities() {
+		return "select id, bytes from entity where cls=?";
+	}
+
 }

@@ -19,12 +19,23 @@ create table delayed_signal_queue (
   unique key uniq_from_to (from_cls, from_id, cls, id)
 );
 
+create index idx_delayed_sig_q_time on delayed_signal_queue(time); 
+
 create table entity (
   cls varchar(512) not null, 
   id varchar(255) not null,
   state varchar(255) not null,
   bytes blob not null,
   primary key(cls, id)
+);
+
+create table entity_property (
+  cls varchar(512) not null, 
+  id varchar(255) not null,
+  key varchar(255) not null, 
+  value varchar(255) not null,
+  primary key(cls, id, key),
+  foreign key (cls, id) references entity (cls, id)
 );
    
 create table signal_store (
@@ -38,6 +49,8 @@ create table signal_store (
    
  create index idx_sig_store on signal_store(cls, id, seq_num);
  
- create index idx_delayed_sig_q_time on delayed_signal_queue(time); 
+ 
+ 
+ 
     
   
