@@ -4,14 +4,14 @@ import java.util.Optional;
 
 public final class Product {
 
-    public final String name;
-    public final String description;
-    public final Optional<String> supplierId;
+	public final String productId;
+	public final String name;
+	public final String description;
 
-    public Product(String name, String description, Optional<String> supplierId) {
-        this.name = name;
-        this.description = description;
-        this.supplierId = supplierId;
-    }
+	public Product(String productId, String name, String description, Optional<String> supplierId) {
+		this.productId = productId;
+		this.name = name;
+		this.description = description;
+	}
 
 }

@@ -1,12 +1,15 @@
 package com.github.davidmoten.fsm.example.shop.catalog;
 
-import java.util.List;
+import java.util.Map;
 
 public final class Catalog {
 
-	public final List<CatalogProduct> products;
+	/**
+	 * Products by productId.
+	 */
+	public final Map<String, CatalogProduct> products;
 
-	public Catalog(List<CatalogProduct> products) {
+	public Catalog(Map<String, CatalogProduct> products) {
 		this.products = products;
 	}
 }

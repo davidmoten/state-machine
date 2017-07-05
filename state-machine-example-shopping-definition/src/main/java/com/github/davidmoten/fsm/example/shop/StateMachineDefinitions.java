@@ -63,16 +63,15 @@ public final class StateMachineDefinitions implements Supplier<List<StateMachine
 		State<Catalog, Create> created = m.createState("Created", Create.class);
 		State<Catalog, com.github.davidmoten.fsm.example.shop.catalog.event.Change> changed = m.createState("Changed",
 				com.github.davidmoten.fsm.example.shop.catalog.event.Change.class);
-		created.to(changed);
+		created.initial().to(changed);
 		return m;
 	}
 
 	private static StateMachineDefinition<Product> createProductStateMachine() {
 		StateMachineDefinition<Product> m = StateMachineDefinition.create(Product.class);
-		State<Product, Create> created = m.createState("Created", Create.class);
-		State<Product, com.github.davidmoten.fsm.example.shop.product.event.Change> changed = m.createState("Changed",
-				com.github.davidmoten.fsm.example.shop.product.event.Change.class);
-		created.to(changed);
+		State<Product, com.github.davidmoten.fsm.example.shop.product.event.Create> created = m.createState("Created", com.github.davidmoten.fsm.example.shop.product.event.Create.class);
+		State<Product, com.github.davidmoten.fsm.example.shop.product.event.ChangeDetails> changed = m.createState("Changed", com.github.davidmoten.fsm.example.shop.product.event.ChangeDetails.class);
+		created.initial().to(changed);
 		return m;
 	}
 }
