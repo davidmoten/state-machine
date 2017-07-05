@@ -1,15 +1,16 @@
 package com.github.davidmoten.fsm.example.shop.catalog;
 
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public final class Catalog {
 
-	/**
-	 * Products by productId.
-	 */
-	public final Map<String, CatalogProduct> products;
+    public final String catalogId;
+    public final String name;
 
-	public Catalog(Map<String, CatalogProduct> products) {
-		this.products = products;
-	}
+    @JsonCreator
+    public Catalog(@JsonProperty("catalogId") String catalogId, @JsonProperty("name") String name) {
+        this.catalogId = catalogId;
+        this.name = name;
+    }
 }
