@@ -11,10 +11,16 @@ import javax.sql.DataSource;
 import org.h2.Driver;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.example.shop.product.event.Create;
 import com.github.davidmoten.fsm.persistence.Persistence;
@@ -29,14 +35,23 @@ public class Controller {
 		File db = new File("target/db");
 		return DataSourceBuilder //
 				.create() //
-				.url("jdbc:h2:"+ db.getAbsolutePath()) //
+				.url("jdbc:h2:" + db.getAbsolutePath()) //
 				.driverClassName(Driver.class.getName()) //
 				.build();
 	}
 
+	@Bean
+	@Primary
+	public ObjectMapper objectMapper() {
+		return new ObjectMapper() //
+				.setVisibility(PropertyAccessor.FIELD, Visibility.PUBLIC_ONLY)
+				.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS) //
+				.registerModule(new Jdk8Module());
+	}
+
 	public Controller() {
-		File file = new File("target/db");
-		boolean dbExists = file.exists();
+		File dbFile = new File("target/db.mv.db");
+		boolean dbExists = dbFile.exists();
 		p = Persistence //
 				.connectionFactory(() -> dataSource().getConnection()) //
 				.errorHandlerPrintStackTraceAndThrow() //
