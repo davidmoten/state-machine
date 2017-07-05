@@ -37,6 +37,8 @@ create table entity_property (
   primary key(cls, id, key),
   foreign key (cls, id) references entity (cls, id)
 );
+
+create index idx_ent_prop on entity_property(cls, key, value);
    
 create table signal_store (
   seq_num identity,

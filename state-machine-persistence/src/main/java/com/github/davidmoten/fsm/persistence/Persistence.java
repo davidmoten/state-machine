@@ -13,11 +13,17 @@ import java.sql.Timestamp;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -51,11 +57,13 @@ public final class Persistence {
 	private final boolean storeSignals;
 	private final Consumer<Throwable> errorHandler;
 	private final long retryIntervalMs;
+	// enables indexed searches
+	private final Function<Object, Map<String, String>> propertiesFactory;
 
 	private Persistence(ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
 			Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory, Sql sql,
 			Callable<Connection> connectionFactory, boolean storeSignals, Consumer<Throwable> errorHandler,
-			long retryIntervalMs) {
+			long retryIntervalMs, Function<Object, Map<String, String>> propertiesFactory) {
 		this.executor = executor;
 		this.clock = clock;
 		this.entitySerializer = entitySerializer;
@@ -66,6 +74,7 @@ public final class Persistence {
 		this.storeSignals = storeSignals;
 		this.errorHandler = errorHandler;
 		this.retryIntervalMs = retryIntervalMs;
+		this.propertiesFactory = propertiesFactory;
 	}
 
 	public static Builder connectionFactory(Callable<Connection> connectionFactory) {
@@ -95,6 +104,7 @@ public final class Persistence {
 		private boolean storeSignals = true;
 		private Consumer<Throwable> errorHandler = PRINT_STACK_TRACE;
 		private long retryIntervalMs = DEFAULT_RETRY_INTERVAL_MS;
+		private Function<Object, Map<String, String>> propertiesFactory = x -> Collections.emptyMap();
 
 		private Builder() {
 			// do nothing
@@ -163,9 +173,14 @@ public final class Persistence {
 			return retryIntervalMs(unit.toMillis(retryInterval));
 		}
 
+		public Builder propertiesFactory(Function<Object, Map<String, String>> propertiesFactory) {
+			this.propertiesFactory = propertiesFactory;
+			return this;
+		}
+
 		public Persistence build() {
 			return new Persistence(executor, clock, entitySerializer, eventSerializer, behaviourFactory, sql,
-					connectionFactory, storeSignals, errorHandler, retryIntervalMs);
+					connectionFactory, storeSignals, errorHandler, retryIntervalMs, propertiesFactory);
 		}
 
 	}
@@ -328,9 +343,16 @@ public final class Persistence {
 			// update/create the entity bytes and state to entity table
 			saveEntity(con, esm2);
 
+			if (esm2.get().isPresent()) {
+				Map<String, String> properties = propertiesFactory.apply(esm2.get().get());
+				saveEntityProperties(con, esm2.cls(), esm2.id(), properties);
+			}
+
 			// commit the transaction
 			con.commit();
-		} catch (Throwable e) {
+		} catch (
+
+		Throwable e) {
 			errorHandler.accept(e);
 			scheduleRetry();
 			return false;
@@ -342,6 +364,26 @@ public final class Persistence {
 			schedule(signalToOther);
 		}
 		return true;
+	}
+
+	private void saveEntityProperties(Connection con, Class<?> cls, String id, Map<String, String> properties)
+			throws SQLException {
+		try (PreparedStatement ps = con.prepareStatement(sql.deleteEntityProperties())) {
+			ps.setString(1, cls.getName());
+			ps.setString(2, id);
+			ps.executeUpdate();
+		}
+		if (!properties.isEmpty()) {
+			try (PreparedStatement ps = con.prepareStatement(sql.insertEntityProperty())) {
+				for (Entry<String, String> property : properties.entrySet()) {
+					ps.setString(1, cls.getName());
+					ps.setString(2, id);
+					ps.setString(3, property.getKey());
+					ps.setString(4, property.getValue());
+					ps.executeUpdate();
+				}
+			}
+		}
 	}
 
 	private void scheduleRetry() {
@@ -532,23 +574,25 @@ public final class Persistence {
 	}
 
 	private void saveEntity(Connection con, EntityStateMachine<?, String> esm) throws SQLException {
-		final boolean updated;
-		try (PreparedStatement ps = con.prepareStatement(sql.updateEntity())) {
-			byte[] bytes = entitySerializer.serialize(esm.get().get());
-			ps.setBlob(1, new ByteArrayInputStream(bytes));
-			ps.setString(2, esm.state().toString());
-			ps.setString(3, esm.cls().getName());
-			ps.setString(4, esm.id());
-			updated = ps.executeUpdate() > 0;
-		}
-		if (!updated) {
-			try (PreparedStatement ps = con.prepareStatement(sql.insertEntity())) {
+		if (esm.get().isPresent()) {
+			final boolean updated;
+			try (PreparedStatement ps = con.prepareStatement(sql.updateEntity())) {
 				byte[] bytes = entitySerializer.serialize(esm.get().get());
-				ps.setString(1, esm.cls().getName());
-				ps.setString(2, esm.id());
-				ps.setBlob(3, new ByteArrayInputStream(bytes));
-				ps.setString(4, esm.state().toString());
-				ps.executeUpdate();
+				ps.setBlob(1, new ByteArrayInputStream(bytes));
+				ps.setString(2, esm.state().toString());
+				ps.setString(3, esm.cls().getName());
+				ps.setString(4, esm.id());
+				updated = ps.executeUpdate() > 0;
+			}
+			if (!updated) {
+				try (PreparedStatement ps = con.prepareStatement(sql.insertEntity())) {
+					byte[] bytes = entitySerializer.serialize(esm.get().get());
+					ps.setString(1, esm.cls().getName());
+					ps.setString(2, esm.id());
+					ps.setBlob(3, new ByteArrayInputStream(bytes));
+					ps.setString(4, esm.state().toString());
+					ps.executeUpdate();
+				}
 			}
 		}
 	}
@@ -615,12 +659,49 @@ public final class Persistence {
 
 	public static class EntityWithId<T> {
 		public final T entity;
+		// used by hashCode/equals
+		private final String className;
 		public final String id;
 
 		public EntityWithId(T entity, String id) {
+			Preconditions.checkNotNull(entity);
+			Preconditions.checkNotNull(id);
 			this.entity = entity;
 			this.id = id;
+			this.className = entity.getClass().getName();
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((className == null) ? 0 : className.hashCode());
+			result = prime * result + ((id == null) ? 0 : id.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			EntityWithId<?> other = (EntityWithId<?>) obj;
+			if (className == null) {
+				if (other.className != null)
+					return false;
+			} else if (!className.equals(other.className))
+				return false;
+			if (id == null) {
+				if (other.id != null)
+					return false;
+			} else if (!id.equals(other.id))
+				return false;
+			return true;
+		}
+
 	}
 
 	public <T> List<EntityWithId<T>> get(Class<T> cls) {
@@ -637,6 +718,36 @@ public final class Persistence {
 				}
 				return list;
 			}
+		} catch (SQLException e) {
+			throw new SQLRuntimeException(e);
+		}
+	}
+
+	public <T> Set<EntityWithId<T>> get(Class<T> cls, String key, String value) {
+		Map<String, String> map = new HashMap<>();
+		map.put(key, value);
+		return get(cls, map);
+	}
+
+	public <T> Set<EntityWithId<T>> get(Class<T> cls, Map<String, String> properties) {
+		try ( //
+				Connection con = createConnection(); //
+				PreparedStatement ps = con.prepareStatement(sql.readEntitiesByProperty())) {
+			ps.setString(1, cls.getName());
+			Set<EntityWithId<T>> list = new HashSet<>();
+			for (Entry<String, String> p : properties.entrySet()) {
+				ps.setString(2, p.getKey());
+				ps.setString(3, p.getValue());
+				System.out.println(ps);
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						String id = rs.getString(1);
+						T t = (T) entitySerializer.deserialize(cls, readAll(rs.getBlob(2).getBinaryStream()));
+						list.add(new EntityWithId<T>(t, id));
+					}
+				}
+			}
+			return list;
 		} catch (SQLException e) {
 			throw new SQLRuntimeException(e);
 		}
