@@ -4,6 +4,7 @@ import java.io.File;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
@@ -11,19 +12,14 @@ import javax.sql.DataSource;
 import org.h2.Driver;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.example.shop.product.event.Create;
 import com.github.davidmoten.fsm.persistence.Persistence;
+import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 
 @RestController
 public class Controller {
@@ -40,28 +36,20 @@ public class Controller {
 				.build();
 	}
 
-	@Bean
-	@Primary
-	public ObjectMapper objectMapper() {
-		return new ObjectMapper() //
-				.setVisibility(PropertyAccessor.FIELD, Visibility.PUBLIC_ONLY)
-				.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS) //
-				.registerModule(new Jdk8Module());
-	}
-
 	public Controller() {
 		File dbFile = new File("target/db.mv.db");
 		boolean dbExists = dbFile.exists();
+		Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory = cls -> {
+			if (Product.class.getName().equals(cls.getName())) {
+				return new ProductBehaviour();
+			} else {
+				throw new RuntimeException("behaviour not defined for " + cls);
+			}
+		};
 		p = Persistence //
 				.connectionFactory(() -> dataSource().getConnection()) //
 				.errorHandlerPrintStackTraceAndThrow() //
-				.behaviourFactory(cls -> {
-					if (Product.class.getName().equals(cls.getName())) {
-						return new ProductBehaviour();
-					} else {
-						throw new RuntimeException("behaviour not defined for " + cls);
-					}
-				}) //
+				.behaviourFactory(behaviourFactory) //
 				.build();
 		try {
 			DriverManager.registerDriver(Driver.load());

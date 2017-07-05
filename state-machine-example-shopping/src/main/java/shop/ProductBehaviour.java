@@ -3,10 +3,11 @@ package shop;
 import com.github.davidmoten.fsm.example.generated.ProductBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.ProductStateMachine;
 import com.github.davidmoten.fsm.example.shop.product.Product;
+import com.github.davidmoten.fsm.example.shop.product.event.ChangeDetails;
 import com.github.davidmoten.fsm.example.shop.product.event.Create;
 import com.github.davidmoten.fsm.runtime.Signaller;
 
-public class ProductBehaviour extends ProductBehaviourBase<String> {
+public final class ProductBehaviour extends ProductBehaviourBase<String> {
 
 	@Override
 	public ProductStateMachine<String> create(String id) {
@@ -18,5 +19,9 @@ public class ProductBehaviour extends ProductBehaviourBase<String> {
 		return new Product(event.productId, event.name, event.description);
 	}
 
-
+	@Override
+	public Product onEntry_Changed(Signaller<Product, String> signaller, Product product, String id,
+			ChangeDetails event, boolean replaying) {
+		return new Product(product.productId, event.name, event.description);
+	}
 }
