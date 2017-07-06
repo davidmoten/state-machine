@@ -107,6 +107,8 @@ public final class Persistence implements Entities {
         private long retryIntervalMs = DEFAULT_RETRY_INTERVAL_MS;
         private Function<Object, Map<String, String>> propertiesFactory = x -> Collections.emptyMap();
 
+        private final Map<Class<?>, EntityBehaviour<?, String>> behaviour = new HashMap<>();
+
         private Builder() {
             // do nothing
         }
@@ -132,7 +134,14 @@ public final class Persistence implements Entities {
         }
 
         public Builder behaviourFactory(Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory) {
+            Preconditions.checkArgument(behaviour.isEmpty(), "cannot specify behaviour and behaviourFactory");
             this.behaviourFactory = behaviourFactory;
+            return this;
+        }
+
+        public <T> Builder behaviour(Class<T> cls, EntityBehaviour<T, String> behaviour) {
+            Preconditions.checkArgument(behaviourFactory == null, "cannot specify behaviour and behaviourFactory");
+            this.behaviour.put(cls, behaviour);
             return this;
         }
 
@@ -180,6 +189,19 @@ public final class Persistence implements Entities {
         }
 
         public Persistence build() {
+            if (behaviourFactory == null) {
+                behaviourFactory = new Function<Class<?>, EntityBehaviour<?, String>>() {
+                    @Override
+                    public EntityBehaviour<?, String> apply(Class<?> cls) {
+                        EntityBehaviour<?, String> b = behaviour.get(cls);
+                        if (b == null) {
+                            throw new RuntimeException("Behaviour not defined for class " + cls + ", please define it");
+                        } else {
+                            return b;
+                        }
+                    }
+                };
+            }
             return new Persistence(executor, clock, entitySerializer, eventSerializer, behaviourFactory, sql,
                     connectionFactory, storeSignals, errorHandler, retryIntervalMs, propertiesFactory);
         }
@@ -840,7 +862,6 @@ public final class Persistence implements Entities {
             for (Entry<String, String> p : properties.entrySet()) {
                 ps.setString(2, p.getKey());
                 ps.setString(3, p.getValue());
-                System.out.println(ps);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         String id = rs.getString(1);
