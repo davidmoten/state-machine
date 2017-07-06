@@ -18,6 +18,7 @@ import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
 import com.github.davidmoten.fsm.example.shop.catalog.event.Change;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
 import com.github.davidmoten.fsm.example.shop.product.Product;
+import com.github.davidmoten.fsm.example.shop.product.event.ChangeDetails;
 import com.github.davidmoten.fsm.example.shop.product.event.Create;
 import com.github.davidmoten.fsm.persistence.Persistence;
 import com.github.davidmoten.fsm.persistence.Property;
@@ -58,6 +59,16 @@ public class Controller {
         p.signal(Catalog.class, "1",
                 new com.github.davidmoten.fsm.example.shop.catalog.event.Create("1", "Online bike shop"));
         p.signal(Catalog.class, "1", new Change("12", 3));
+        p.signal(Catalog.class, "1", new Change("12", 2));
+        p.signal(Product.class, "12", new ChangeDetails("Castelli Senza 2 Jacket",
+                "Fleece lined windproof cycling jacket with reflective highlights"));
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+        }
+        CatalogProduct cp = p.get(CatalogProduct.class, CatalogProduct.idFrom("1", "12")).get();
+        assert cp.name.equals("Castelli Senza 2 Jacket");
+        assert cp.quantity == 5;
     }
 
     @RequestMapping(value = "/products", method = RequestMethod.GET)
