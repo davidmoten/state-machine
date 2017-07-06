@@ -6,12 +6,12 @@ import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
 import com.github.davidmoten.fsm.runtime.Event;
 
-public final class Change implements Event<CatalogProduct> {
+public final class ChangeQuantity implements Event<CatalogProduct> {
 
     public final int quantityDelta;
 
     @JsonCreator
-    public Change(@JsonProperty("quantityDelta") int quantityDelta) {
+    public ChangeQuantity(@JsonProperty("quantityDelta") int quantityDelta) {
         this.quantityDelta = quantityDelta;
     }
 
