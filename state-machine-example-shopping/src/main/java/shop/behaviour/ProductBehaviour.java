@@ -29,7 +29,6 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
     @Override
     public Product onEntry_Changed(Signaller<Product, String> signaller, Product product, String id,
             ChangeDetails event, boolean replaying) {
-        System.out.println(Entities.get().get(Product.class) + " products found");
         Set<EntityWithId<CatalogProduct>> set = Entities.get().get(CatalogProduct.class, //
                 Property.list("productId", product.productId));
         for (EntityWithId<CatalogProduct> cp : set) {
