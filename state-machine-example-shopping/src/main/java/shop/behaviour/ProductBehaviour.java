@@ -29,10 +29,13 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
     @Override
     public Product onEntry_Changed(Signaller<Product, String> signaller, Product product, String id,
             ChangeDetails event, boolean replaying) {
-        Set<EntityWithId<CatalogProduct>> set = Entities.get().get(CatalogProduct.class, //
-                Property.list("productId", product.productId));
+        Set<EntityWithId<CatalogProduct>> set = Entities.get() //
+                .get(CatalogProduct.class, //
+                        Property.list("productId", product.productId));
         for (EntityWithId<CatalogProduct> cp : set) {
-            signaller.signal(CatalogProduct.class, cp.id, new ChangeProductDetails(event.name, event.description));
+            signaller.signal(CatalogProduct.class, //
+                    cp.id, //
+                    new ChangeProductDetails(event.name, event.description));
         }
         return new Product(product.productId, event.name, event.description);
     }
