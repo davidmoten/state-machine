@@ -18,5 +18,7 @@ public final class CatalogBehaviour extends CatalogBehaviourBase<String> {
             Create event, boolean replaying) {
         return new Catalog(event.catalogId, event.name);
     }
+    
+    
 
 }

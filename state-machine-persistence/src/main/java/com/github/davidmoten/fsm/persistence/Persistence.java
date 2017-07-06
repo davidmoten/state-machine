@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
@@ -59,12 +58,12 @@ public final class Persistence implements Entities {
     private final Consumer<Throwable> errorHandler;
     private final long retryIntervalMs;
     // enables indexed searches
-    private final Function<Object, Map<String, String>> propertiesFactory;
+    private final Function<Object, Iterable<Property>> propertiesFactory;
 
     private Persistence(ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
             Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory, Sql sql,
             Callable<Connection> connectionFactory, boolean storeSignals, Consumer<Throwable> errorHandler,
-            long retryIntervalMs, Function<Object, Map<String, String>> propertiesFactory) {
+            long retryIntervalMs, Function<Object, Iterable<Property>> propertiesFactory) {
         this.executor = executor;
         this.clock = clock;
         this.entitySerializer = entitySerializer;
@@ -99,14 +98,14 @@ public final class Persistence implements Entities {
         private Clock clock = ClockDefault.instance();
         private Serializer entitySerializer = Serializer.JSON;
         private Serializer eventSerializer = Serializer.JSON;
-        private Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
         private Sql sql = Sql.DEFAULT;
         private Callable<Connection> connectionFactory;
         private boolean storeSignals = true;
         private Consumer<Throwable> errorHandler = PRINT_STACK_TRACE;
         private long retryIntervalMs = DEFAULT_RETRY_INTERVAL_MS;
-        private Function<Object, Map<String, String>> propertiesFactory = x -> Collections.emptyMap();
-
+        private Function<Object, Iterable<Property>> propertiesFactory = null;
+        private final Map<Class<?>, Function<Object, Iterable<Property>>> properties = new HashMap<>();
+        private Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
         private final Map<Class<?>, EntityBehaviour<?, String>> behaviour = new HashMap<>();
 
         private Builder() {
@@ -183,8 +182,16 @@ public final class Persistence implements Entities {
             return retryIntervalMs(unit.toMillis(retryInterval));
         }
 
-        public Builder propertiesFactory(Function<Object, Map<String, String>> propertiesFactory) {
+        public Builder propertiesFactory(Function<Object, Iterable<Property>> propertiesFactory) {
+            Preconditions.checkArgument(properties.isEmpty());
             this.propertiesFactory = propertiesFactory;
+            return this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> Builder properties(Class<T> cls, Function<? super T, ? extends Iterable<Property>> factory) {
+            Preconditions.checkArgument(propertiesFactory == null);
+            properties.put(cls, (Function<Object, Iterable<Property>>) factory);
             return this;
         }
 
@@ -198,6 +205,19 @@ public final class Persistence implements Entities {
                             throw new RuntimeException("Behaviour not defined for class " + cls + ", please define it");
                         } else {
                             return b;
+                        }
+                    }
+                };
+            }
+            if (propertiesFactory == null) {
+                propertiesFactory = new Function<Object, Iterable<Property>>() {
+                    @Override
+                    public Iterable<Property> apply(Object t) {
+                        Function<Object, Iterable<Property>> f = properties.get(t.getClass());
+                        if (f == null) {
+                            return Collections.emptyList();
+                        } else {
+                            return f.apply(t);
                         }
                     }
                 };
@@ -382,7 +402,7 @@ public final class Persistence implements Entities {
             saveEntity(con, esm2);
 
             if (esm2.get().isPresent()) {
-                Map<String, String> properties = propertiesFactory.apply(esm2.get().get());
+                Iterable<Property> properties = propertiesFactory.apply(esm2.get().get());
                 saveEntityProperties(con, esm2.cls(), esm2.id(), properties);
             }
 
@@ -452,22 +472,21 @@ public final class Persistence implements Entities {
         };
     }
 
-    private void saveEntityProperties(Connection con, Class<?> cls, String id, Map<String, String> properties)
+    private void saveEntityProperties(Connection con, Class<?> cls, String id, Iterable<Property> properties)
             throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(sql.deleteEntityProperties())) {
             ps.setString(1, cls.getName());
             ps.setString(2, id);
             ps.executeUpdate();
         }
-        if (!properties.isEmpty()) {
-            try (PreparedStatement ps = con.prepareStatement(sql.insertEntityProperty())) {
-                for (Entry<String, String> property : properties.entrySet()) {
-                    ps.setString(1, cls.getName());
-                    ps.setString(2, id);
-                    ps.setString(3, property.getKey());
-                    ps.setString(4, property.getValue());
-                    ps.executeUpdate();
-                }
+
+        try (PreparedStatement ps = con.prepareStatement(sql.insertEntityProperty())) {
+            for (Property property : properties) {
+                ps.setString(1, cls.getName());
+                ps.setString(2, id);
+                ps.setString(3, property.key());
+                ps.setString(4, property.value());
+                ps.executeUpdate();
             }
         }
     }

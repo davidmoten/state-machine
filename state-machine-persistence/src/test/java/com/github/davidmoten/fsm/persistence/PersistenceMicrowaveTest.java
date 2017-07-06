@@ -36,6 +36,7 @@ import com.github.davidmoten.fsm.runtime.Event;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.TestExecutor;
+import com.github.davidmoten.guavamini.Lists;
 
 public class PersistenceMicrowaveTest {
 
@@ -117,21 +118,11 @@ public class PersistenceMicrowaveTest {
         MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
         Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory = cls -> behaviour;
         TestExecutor executor = new TestExecutor();
-        Function<Object, Map<String, String>> propertiesFactory = new Function<Object, Map<String, String>>() {
-            @Override
-            public Map<String, String> apply(Object o) {
-                if (o instanceof Microwave) {
-                    Map<String, String> map = new HashMap<String, String>();
-                    map.put("colour", "white");
-                    return map;
-                } else {
-                    return Collections.emptyMap();
-                }
-            }
-        };
+
         Persistence p = createPersistence() //
                 .behaviourFactory(behaviourFactory) //
-                .propertiesFactory(propertiesFactory) //
+                .properties(Microwave.class, //
+                        m -> Lists.newArrayList(Property.create("colour", "white"))) //
                 .executor(executor) //
                 .build();
         p.create();

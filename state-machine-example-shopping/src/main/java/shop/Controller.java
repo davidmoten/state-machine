@@ -16,9 +16,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
 import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.example.shop.product.event.Create;
 import com.github.davidmoten.fsm.persistence.Persistence;
+import com.github.davidmoten.fsm.persistence.Property;
+import com.github.davidmoten.guavamini.Lists;
 
 import shop.behaviour.CatalogBehaviour;
 import shop.behaviour.ProductBehaviour;
@@ -46,6 +49,8 @@ public class Controller {
                 .errorHandlerPrintStackTraceAndThrow() //
                 .behaviour(Product.class, new ProductBehaviour()) //
                 .behaviour(Catalog.class, new CatalogBehaviour()) //
+                .properties(CatalogProduct.class, //
+                        c -> Lists.newArrayList(Property.create("catalogId", c.catalogId))) //
                 .build();
         try {
             DriverManager.registerDriver(Driver.load());
