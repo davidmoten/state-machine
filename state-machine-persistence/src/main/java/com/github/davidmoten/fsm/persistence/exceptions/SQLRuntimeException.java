@@ -1,4 +1,4 @@
-package com.github.davidmoten.fsm.persistence;
+package com.github.davidmoten.fsm.persistence.exceptions;
 
 public final class SQLRuntimeException extends RuntimeException {
 
