@@ -1,4 +1,4 @@
-package shop;
+package shop.behaviour;
 
 import com.github.davidmoten.fsm.example.generated.ProductBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.ProductStateMachine;
