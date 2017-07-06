@@ -7,14 +7,15 @@ public final class CatalogProduct {
 
     public final String catalogId;
     public final String productId;
+    //Note that we have a copy of the Product attributes for query purposes
     public final String name;
     public final String description;
-    public final String quantity;
+    public final int quantity;
 
     @JsonCreator
     public CatalogProduct(@JsonProperty("catalogId") String catalogId, @JsonProperty("productId") String productId,
             @JsonProperty("name") String name, @JsonProperty("description") String description,
-            @JsonProperty("quantity") String quantity) {
+            @JsonProperty("quantity") int quantity) {
         this.catalogId = catalogId;
         this.productId = productId;
         this.name = name;
