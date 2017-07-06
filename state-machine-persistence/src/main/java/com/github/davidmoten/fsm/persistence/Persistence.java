@@ -239,9 +239,11 @@ public final class Persistence implements Entities {
             con.setAutoCommit(true);
             String[] commands = sql.split(";");
             for (String command : commands) {
+                System.out.println(command);
                 con.prepareStatement(command).execute();
             }
             con.commit();
+            System.out.println("created");
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }

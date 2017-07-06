@@ -13,4 +13,5 @@ public final class Catalog {
         this.catalogId = catalogId;
         this.name = name;
     }
+    
 }

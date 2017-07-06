@@ -7,7 +7,7 @@ public final class CatalogProduct {
 
     public final String catalogId;
     public final String productId;
-    //Note that we have a copy of the Product attributes for query purposes
+    // Note that we have a copy of the Product attributes for query purposes
     public final String name;
     public final String description;
     public final int quantity;
@@ -22,5 +22,10 @@ public final class CatalogProduct {
         this.description = description;
         this.quantity = quantity;
     }
+
+    public static String idFrom(String catalogId, String productId) {
+        return catalogId + "|" + productId;
+    }
+    
 
 }
