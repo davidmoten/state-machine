@@ -859,9 +859,7 @@ public final class Persistence implements Entities {
     }
 
     private <T> Set<EntityWithId<T>> get(Class<T> cls, String key, String value, Connection con) throws SQLException {
-        List<Property> list = new ArrayList<>(1);
-        list.add(Property.create(key, value));
-        return get(cls, list, con);
+        return get(cls, Property.list(key, value), con);
     }
 
     @Override

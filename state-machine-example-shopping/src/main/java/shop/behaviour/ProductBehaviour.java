@@ -13,7 +13,6 @@ import com.github.davidmoten.fsm.persistence.Entities;
 import com.github.davidmoten.fsm.persistence.Persistence.EntityWithId;
 import com.github.davidmoten.fsm.persistence.Property;
 import com.github.davidmoten.fsm.runtime.Signaller;
-import com.github.davidmoten.guavamini.Lists;
 
 public final class ProductBehaviour extends ProductBehaviourBase<String> {
 
@@ -32,7 +31,7 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
             ChangeDetails event, boolean replaying) {
         System.out.println(Entities.get().get(Product.class) + " products found");
         Set<EntityWithId<CatalogProduct>> set = Entities.get().get(CatalogProduct.class, //
-                Lists.newArrayList(Property.create("productId", product.productId)));
+                Property.list("productId", product.productId));
         for (EntityWithId<CatalogProduct> cp : set) {
             signaller.signal(CatalogProduct.class, cp.id, new ChangeProductDetails(event.name, event.description));
         }
