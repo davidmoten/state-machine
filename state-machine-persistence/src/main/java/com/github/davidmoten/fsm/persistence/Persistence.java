@@ -219,18 +219,21 @@ public final class Persistence {
 				ps.setString(3, signal.event().getClass().getName());
 				ps.setBlob(4, new ByteArrayInputStream(eventSerializer.serialize(signal.event())));
 				ps.executeUpdate();
+				List<Long> numbers = new ArrayList<Long>();
 				try (ResultSet rs = ps.getGeneratedKeys()) {
 					rs.next();
 					long number = rs.getLong(1);
-					offer(new NumberedSignal<>(signal, number));
+					numbers.add(number);
 				}
 				con.commit();
+				for (long number:numbers) {
+				    offer(new NumberedSignal<>(signal, number));
+				}
 			} catch (SQLException e) {
 				throw new SQLRuntimeException(e);
 			}
 		} else {
-			//TODO
-		
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -293,7 +296,7 @@ public final class Persistence {
 		List<NumberedSignal<?, ?>> numberedSignalsToOther;
 		List<NumberedSignal<?, ?>> delayedNumberedSignalsToOther;
 		try (Connection con = createConnection()) {
-			con.setAutoCommit(true);
+
 			// if signal does not exist in queue anymore then ignore
 			if (!signalExists(con, signal)) {
 				return true;
@@ -353,9 +356,7 @@ public final class Persistence {
 
 			// commit the transaction
 			con.commit();
-		} catch (
-
-		Throwable e) {
+		} catch (Throwable e) {
 			errorHandler.accept(e);
 			scheduleRetry();
 			return false;
@@ -611,7 +612,7 @@ public final class Persistence {
 	private Connection createConnection() {
 		try {
 			Connection con = connectionFactory.call();
-//			con.setAutoCommit(false);
+			con.setAutoCommit(false);
 			return con;
 		} catch (SQLException e) {
 			throw new SQLRuntimeException(e);
