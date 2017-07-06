@@ -166,9 +166,9 @@ public final class Persistence implements Entities {
         }
 
         /**
-         * This method designed for use with TestExecutor in unit tests. Best not to use
-         * this outside of unit tests because throwing shuts down the drain loop and no
-         * further signals will be processed.
+         * This method designed for use with TestExecutor in unit tests. Best
+         * not to use this outside of unit tests because throwing shuts down the
+         * drain loop and no further signals will be processed.
          */
         public Builder errorHandlerPrintStackTraceAndThrow() {
             return errorHandler(PRINT_STACK_TRACE_AND_THROW);
@@ -358,7 +358,8 @@ public final class Persistence implements Entities {
 
             EntityStateMachine<?, String> esm2;
             try {
-                // push signal through state machine which will immediately process
+                // push signal through state machine which will immediately
+                // process
                 // non-delayed signals to self and accumulate signals to others
                 esm2 = pushSignalThroughStateMachine(esm, signals);
             } finally {
@@ -441,7 +442,7 @@ public final class Persistence implements Entities {
             }
 
             @Override
-            public <T> Set<EntityWithId<T>> get(Class<T> cls, Map<String, String> properties) {
+            public <T> Set<EntityWithId<T>> get(Class<T> cls, Iterable<Property> properties) {
                 try {
                     return Persistence.this.get(cls, properties, con);
                 } catch (SQLException e) {
@@ -839,13 +840,13 @@ public final class Persistence implements Entities {
     }
 
     private <T> Set<EntityWithId<T>> get(Class<T> cls, String key, String value, Connection con) throws SQLException {
-        Map<String, String> map = new HashMap<>();
-        map.put(key, value);
-        return get(cls, map, con);
+        List<Property> list = new ArrayList<>(1);
+        list.add(Property.create(key, value));
+        return get(cls, list, con);
     }
 
     @Override
-    public <T> Set<EntityWithId<T>> get(Class<T> cls, Map<String, String> properties) {
+    public <T> Set<EntityWithId<T>> get(Class<T> cls, Iterable<Property> properties) {
         try ( //
                 Connection con = createConnection()) {
             return get(cls, properties, con);
@@ -854,14 +855,14 @@ public final class Persistence implements Entities {
         }
     }
 
-    private <T> Set<EntityWithId<T>> get(Class<T> cls, Map<String, String> properties, Connection con)
+    private <T> Set<EntityWithId<T>> get(Class<T> cls, Iterable<Property> properties, Connection con)
             throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(sql.readEntitiesByProperty())) {
             ps.setString(1, cls.getName());
             Set<EntityWithId<T>> list = new HashSet<>();
-            for (Entry<String, String> p : properties.entrySet()) {
-                ps.setString(2, p.getKey());
-                ps.setString(3, p.getValue());
+            for (Property p : properties) {
+                ps.setString(2, p.key());
+                ps.setString(3, p.value());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         String id = rs.getString(1);

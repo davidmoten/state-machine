@@ -1,7 +1,6 @@
 package com.github.davidmoten.fsm.persistence;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -19,7 +18,7 @@ public interface Entities {
 
     <T> Set<EntityWithId<T>> get(Class<T> cls, String key, String value);
 
-    <T> Set<EntityWithId<T>> get(Class<T> cls, Map<String, String> properties);
+    <T> Set<EntityWithId<T>> get(Class<T> cls, Iterable<Property> properties);
 
     static final ThreadLocal<Entities> current = new ThreadLocal<Entities>();
 
