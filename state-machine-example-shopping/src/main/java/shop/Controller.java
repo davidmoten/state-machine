@@ -50,7 +50,7 @@ public class Controller {
                 .behaviour(Product.class, new ProductBehaviour()) //
                 .behaviour(Catalog.class, new CatalogBehaviour()) //
                 .properties(CatalogProduct.class, //
-                        c -> Lists.newArrayList(Property.create("catalogId", c.catalogId))) //
+                        c -> Lists.newArrayList(Property.create("productId", c.productId))) //
                 .build();
         try {
             DriverManager.registerDriver(Driver.load());
