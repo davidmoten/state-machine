@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Getting Started: Serving Web Content</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+    <h2>Catalog</h2>
+    <table>
+	     <tr th:each="cp : ${catalogProducts}">
+	        <td th:text="${cp.id}">1</td>
+	        <td th:text="${cp.entity.name}">Name</td>
+	        <td th:text="${cp.entity.description}">Description</td>
+	        <td th:text="${cp.entity.quantity}">3</td>
+	    </tr>
+    </table>
+</body>
+</html>
