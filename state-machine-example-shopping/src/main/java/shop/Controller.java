@@ -23,6 +23,30 @@ public class Controller {
 
     private final Persistence p;
 
+    public Controller() {
+        Callable<Connection> connectionFactory = () -> dataSource().getConnection();
+        p = StateMachine.createPersistence(connectionFactory);
+        StateMachine.setup(p);
+    }
+
+    // Directly exposing the internal data model is not advised
+    // The api should be decoupled!
+    @RequestMapping(value = "/products", method = RequestMethod.GET)
+    public List<CatalogProduct> products() {
+        return p.get(CatalogProduct.class, Property.list("catalogId", "1")) //
+                .stream() //
+                .map(x -> x.entity) //
+                .collect(Collectors.toList());
+    }
+
+    @RequestMapping(value = "/clothing", method = RequestMethod.GET)
+    public List<CatalogProduct> clothing() {
+        return p.get(CatalogProduct.class, Property.list("tag", "Clothing")) //
+                .stream() //
+                .map(x -> x.entity) //
+                .collect(Collectors.toList());
+    }
+
     @Bean
     public DataSource dataSource() {
         return DataSourceBuilder //
@@ -30,20 +54,6 @@ public class Controller {
                 .url("jdbc:h2:mem:" + "testing") //
                 .driverClassName(Driver.class.getName()) //
                 .build();
-    }
-
-    public Controller() {
-        Callable<Connection> connectionFactory = () -> dataSource().getConnection();
-        p = StateMachine.createPersistence(connectionFactory);
-        StateMachine.setup(p);
-    }
-
-    @RequestMapping(value = "/products", method = RequestMethod.GET)
-    public List<CatalogProduct> products() {
-        return p.get(CatalogProduct.class, Property.list("catalogId", "1")) //
-                .stream() //
-                .map(x -> x.entity) //
-                .collect(Collectors.toList());
     }
 
 }

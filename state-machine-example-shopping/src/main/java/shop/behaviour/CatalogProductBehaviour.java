@@ -37,13 +37,15 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
     public CatalogProduct onEntry_ChangedQuantity(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeQuantity event, boolean replaying) {
         System.out.println("changing quantity catalogproduct");
-        return new CatalogProduct(c.catalogId, c.productId, c.name, c.description, c.tags, c.quantity + event.quantityDelta);
+        return new CatalogProduct(c.catalogId, c.productId, c.name, c.description, c.tags,
+                c.quantity + event.quantityDelta);
     }
 
     @Override
     public CatalogProduct onEntry_ChangedProductDetails(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeProductDetails event, boolean replaying) {
-        return new CatalogProduct(c.catalogId, c.productId, event.productName, event.productDescription,event.tags, c.quantity);
+        return new CatalogProduct(c.catalogId, c.productId, event.productName, event.productDescription, event.tags,
+                c.quantity);
     }
 
 }

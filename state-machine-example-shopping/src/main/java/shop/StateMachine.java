@@ -27,6 +27,7 @@ public final class StateMachine {
 
     private static final String MAIN_CATALOG_ID = "1";
 
+    @SuppressWarnings("unchecked")
     public static Persistence createPersistence(Callable<Connection> connectionFactory) {
         return Persistence //
                 .connectionFactory(connectionFactory) //
@@ -37,12 +38,19 @@ public final class StateMachine {
                 // set up search indexes which must exist for ProductBehaviour
                 // to find stuff for instance
                 .propertiesFactory(CatalogProduct.class, //
-                        c -> Property.list("productId", c.productId, "catalogId", c.catalogId)) //
+                        c -> Property.concatenate(Property.list("productId", c.productId, "catalogId", c.catalogId), //
+                                Property.list("tag", c.tags))) //
+                .propertiesFactory(Product.class, //
+                        prod -> Property.list("tag", prod.tags)) //
                 .build();
     }
 
     public static void setup(Persistence p) {
-        p.create();
+        try {
+            p.create();
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+        }
         p.initialize();
         p.signal(Catalog.class, MAIN_CATALOG_ID,
                 new com.github.davidmoten.fsm.example.shop.catalog.event.Create(MAIN_CATALOG_ID, "Online bike shop"));
