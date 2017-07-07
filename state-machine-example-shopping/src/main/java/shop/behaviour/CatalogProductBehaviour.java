@@ -12,8 +12,6 @@ import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.persistence.Entities;
 import com.github.davidmoten.fsm.runtime.Signaller;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
-
 public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<String> {
 
     @Override
@@ -29,7 +27,7 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
         Optional<Product> product = Entities.get().get(Product.class, event.productId);
         if (product.isPresent()) {
             return new CatalogProduct(event.catalogId, event.productId, product.get().name, product.get().description,
-                    event.quantity);
+                    product.get().tags, event.quantity);
         } else {
             throw new RuntimeException("product not found " + event.productId);
         }
@@ -39,13 +37,13 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
     public CatalogProduct onEntry_ChangedQuantity(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeQuantity event, boolean replaying) {
         System.out.println("changing quantity catalogproduct");
-        return new CatalogProduct(c.catalogId, c.productId, c.name, c.description, c.quantity + event.quantityDelta);
+        return new CatalogProduct(c.catalogId, c.productId, c.name, c.description, c.tags, c.quantity + event.quantityDelta);
     }
 
     @Override
     public CatalogProduct onEntry_ChangedProductDetails(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeProductDetails event, boolean replaying) {
-        return new CatalogProduct(c.catalogId, c.productId, event.productName, event.productDescription, c.quantity);
+        return new CatalogProduct(c.catalogId, c.productId, event.productName, event.productDescription,event.tags, c.quantity);
     }
 
 }

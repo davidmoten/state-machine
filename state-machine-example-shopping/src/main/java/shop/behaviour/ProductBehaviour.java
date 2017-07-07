@@ -23,7 +23,7 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
 
     @Override
     public Product onEntry_Created(Signaller<Product, String> signaller, String id, Create event, boolean replaying) {
-        return new Product(event.productId, event.name, event.description);
+        return new Product(event.productId, event.name, event.description, event.tags);
     }
 
     @Override
@@ -38,8 +38,8 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
         for (EntityWithId<CatalogProduct> cp : set) {
             signaller.signal(CatalogProduct.class, //
                     cp.id, //
-                    new ChangeProductDetails(event.name, event.description));
+                    new ChangeProductDetails(event.name, event.description, event.tags));
         }
-        return new Product(product.productId, event.name, event.description);
+        return new Product(product.productId, event.name, event.description, event.tags);
     }
 }

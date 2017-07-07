@@ -14,12 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
-import com.github.davidmoten.fsm.example.shop.catalog.event.Change;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
-import com.github.davidmoten.fsm.example.shop.product.Product;
-import com.github.davidmoten.fsm.example.shop.product.event.ChangeDetails;
-import com.github.davidmoten.fsm.example.shop.product.event.Create;
 import com.github.davidmoten.fsm.persistence.Persistence;
 import com.github.davidmoten.fsm.persistence.Property;
 
