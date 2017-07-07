@@ -213,6 +213,7 @@ public final class Persistence implements Entities {
             }
             if (propertiesFactory == null) {
                 propertiesFactory = new Function<Object, Iterable<Property>>() {
+
                     @Override
                     public Iterable<Property> apply(Object t) {
                         Function<Object, Iterable<Property>> f = properties.get(t.getClass());
@@ -223,6 +224,7 @@ public final class Persistence implements Entities {
                         }
                     }
                 };
+
             }
             return new Persistence(executor, clock, entitySerializer, eventSerializer, behaviourFactory, sql,
                     connectionFactory, storeSignals, errorHandler, retryIntervalMs, propertiesFactory);
@@ -476,7 +478,17 @@ public final class Persistence implements Entities {
                     throw new SQLRuntimeException(e);
                 }
             }
+
+            @Override
+            public <T> Set<EntityWithId<T>> getAnd(Class<T> cls, Iterable<Property> properties) {
+                try {
+                    return Persistence.this.get(cls, properties, con, LogicalOperation.AND);
+                } catch (SQLException e) {
+                    throw new SQLRuntimeException(e);
+                }
+            }
         };
+
     }
 
     private void saveEntityProperties(Connection con, Class<?> cls, String id, Iterable<Property> properties)
@@ -969,5 +981,15 @@ public final class Persistence implements Entities {
             throw new RuntimeException(e);
         }
         return bytes.toByteArray();
+    }
+
+    @Override
+    public <T> Set<EntityWithId<T>> getAnd(Class<T> cls, Iterable<Property> properties) {
+        try ( //
+                Connection con = createConnection()) {
+            return get(cls, properties, con, LogicalOperation.AND);
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        }
     }
 }
