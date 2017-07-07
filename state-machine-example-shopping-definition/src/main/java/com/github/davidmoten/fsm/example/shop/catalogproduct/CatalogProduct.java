@@ -27,7 +27,7 @@ public final class CatalogProduct {
         this.tags = tags;
         this.quantity = quantity;
     }
-
+    
     public static String idFrom(String catalogId, String productId) {
         return catalogId + "|" + productId;
     }

@@ -9,8 +9,7 @@
     <table>
 	     <tr th:each="cp : ${catalogProducts}">
 	        <td th:text="${cp.id}">1</td>
-	        <td th:text="${cp.entity.name}">Name</td>
-	        <td th:text="${cp.entity.description}">Description</td>
+	        <td><a th:href="@{'/product/' + ${cp.entity.productId}}" th:text="${cp.entity.name}">Name</a></td>
 	        <td th:text="${cp.entity.quantity}">3</td>
 	    </tr>
     </table>
