@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.junit.Test;
@@ -18,6 +19,7 @@ import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.example.shop.product.event.ChangeDetails;
 import com.github.davidmoten.fsm.example.shop.product.event.Create;
 import com.github.davidmoten.fsm.persistence.Persistence;
+import com.github.davidmoten.fsm.persistence.Persistence.EntityWithId;
 import com.github.davidmoten.fsm.persistence.Property;
 import com.github.davidmoten.fsm.persistence.Serializer;
 import com.github.davidmoten.guavamini.Lists;
@@ -35,6 +37,7 @@ public class ShopTest {
         Serializer.JSON.deserialize(Product.class, s);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testPersistence() throws IOException, InterruptedException {
         File file = File.createTempFile("db-test", "", new File("target"));
@@ -47,7 +50,10 @@ public class ShopTest {
                 .behaviour(Catalog.class, new CatalogBehaviour()) //
                 .behaviour(CatalogProduct.class, new CatalogProductBehaviour()) //
                 .propertiesFactory(CatalogProduct.class, //
-                        c -> Property.list("productId", c.productId, "catalogId", c.catalogId)) //
+                        c -> Property.concatenate(Property.list("productId", c.productId, "catalogId", c.catalogId), //
+                                Property.list("tag", c.tags))) //
+                .propertiesFactory(Product.class, //
+                        prod -> Property.list("tag", prod.tags)) //
                 .build();
         p.create();
         p.initialize();
@@ -73,6 +79,11 @@ public class ShopTest {
             CatalogProduct cp = p.get(CatalogProduct.class, CatalogProduct.idFrom("1", "12")).get();
             assertEquals("Castelli Senza 2 Jacket", cp.name);
             assertEquals(5, cp.quantity);
+        }
+
+        {
+            Set<EntityWithId<Product>> list = p.get(Product.class, "tag", "Clothing");
+            assertEquals(1, list.size());
         }
 
     }

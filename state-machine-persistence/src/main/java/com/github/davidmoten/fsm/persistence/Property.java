@@ -1,7 +1,9 @@
 package com.github.davidmoten.fsm.persistence;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.github.davidmoten.guavamini.Preconditions;
 
@@ -23,8 +25,14 @@ public final class Property {
         return value;
     }
 
-    public static Property create(String key, String value) {
-        return new Property(key, value);
+    public static Property create(String name, String value) {
+        return new Property(name, value);
+    }
+
+    public static List<Property> list(String name, Collection<String> values) {
+        return values.stream() //
+                .map(x -> Property.create("name", x)) //
+                .collect(Collectors.toList());
     }
 
     public static List<Property> list(String... items) {
@@ -32,6 +40,14 @@ public final class Property {
         List<Property> list = new ArrayList<>();
         for (int i = 0; i < items.length / 2; i++) {
             list.add(Property.create(items[2 * i], items[2 * i + 1]));
+        }
+        return list;
+    }
+
+    public static List<Property> concatenate(@SuppressWarnings("unchecked") List<Property>... lists) {
+        List<Property> list = new ArrayList<>();
+        for (List<Property> x : lists) {
+            list.addAll(x);
         }
         return list;
     }
