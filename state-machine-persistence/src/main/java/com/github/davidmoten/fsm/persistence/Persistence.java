@@ -31,6 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.davidmoten.fsm.persistence.exceptions.SQLRuntimeException;
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.Clock;
@@ -787,7 +789,8 @@ public final class Persistence implements Entities {
         private final String className;
         public final String id;
 
-        public EntityWithId(T entity, String id) {
+        @JsonCreator
+        public EntityWithId(@JsonProperty("entity") T entity, @JsonProperty("id") String id) {
             Preconditions.checkNotNull(entity);
             Preconditions.checkNotNull(id);
             this.entity = entity;

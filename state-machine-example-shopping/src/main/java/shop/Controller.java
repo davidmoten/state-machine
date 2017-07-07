@@ -2,8 +2,8 @@ package shop;
 
 import java.sql.Connection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
 import com.github.davidmoten.fsm.persistence.Persistence;
+import com.github.davidmoten.fsm.persistence.Persistence.EntityWithId;
 import com.github.davidmoten.fsm.persistence.Property;
 
 @RestController
@@ -32,30 +33,25 @@ public class Controller {
         StateMachine.setup(p);
     }
 
-    // Directly exposing the internal data model is not advised
-    // The api should be decoupled!
+    ////////////////////////////////////////////////////////////
+    // Directly exposing the internal data model is not
+    // advised. The internal data model should be decoupled
+    // from the REST API!
+    ///////////////////////////////////////////////////////////
+
     @RequestMapping(value = "/catalogs/{catalogId}/products", method = RequestMethod.GET)
-    public List<CatalogProduct> products(@PathVariable("catalogId") String catalogId) {
-        return p.getOr(CatalogProduct.class, Property.list("catalogId", catalogId)) //
-                .stream() //
-                .map(x -> x.entity) //
-                .collect(Collectors.toList());
+    public Set<EntityWithId<CatalogProduct>> products(@PathVariable("catalogId") String catalogId) {
+        return p.getOr(CatalogProduct.class, Property.list("catalogId", catalogId));
     }
 
     @RequestMapping(value = "/products/tagged", method = RequestMethod.GET)
-    public List<CatalogProduct> productsTagged(@RequestParam("tag") List<String> tags) {
-        return p.getOr(CatalogProduct.class, Property.list("tag", tags)) //
-                .stream() //
-                .map(x -> x.entity) //
-                .collect(Collectors.toList());
+    public Set<EntityWithId<CatalogProduct>> productsTagged(@RequestParam("tag") List<String> tags) {
+        return p.getOr(CatalogProduct.class, Property.list("tag", tags));
     }
 
     @RequestMapping(value = "/catalogs", method = RequestMethod.GET)
-    public List<Catalog> catalogs() {
-        return p.get(Catalog.class) //
-                .stream() //
-                .map(x -> x.entity) //
-                .collect(Collectors.toList());
+    public List<EntityWithId<Catalog>> catalogs() {
+        return p.get(Catalog.class);
     }
 
     @Bean
