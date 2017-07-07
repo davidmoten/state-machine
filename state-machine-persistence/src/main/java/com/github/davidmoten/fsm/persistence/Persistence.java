@@ -471,7 +471,7 @@ public final class Persistence implements Entities {
             @Override
             public <T> Set<EntityWithId<T>> getOr(Class<T> cls, Iterable<Property> properties) {
                 try {
-                    return Persistence.this.get(cls, properties, con);
+                    return Persistence.this.get(cls, properties, con, LogicalOperation.OR);
                 } catch (SQLException e) {
                     throw new SQLRuntimeException(e);
                 }
@@ -872,37 +872,55 @@ public final class Persistence implements Entities {
     }
 
     private <T> Set<EntityWithId<T>> get(Class<T> cls, String name, String value, Connection con) throws SQLException {
-        return get(cls, Property.list(name, value), con);
+        return get(cls, Property.list(name, value), con, LogicalOperation.OR);
     }
 
     @Override
     public <T> Set<EntityWithId<T>> getOr(Class<T> cls, Iterable<Property> properties) {
         try ( //
                 Connection con = createConnection()) {
-            return get(cls, properties, con);
+            return get(cls, properties, con, LogicalOperation.OR);
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
     }
 
-    private <T> Set<EntityWithId<T>> get(Class<T> cls, Iterable<Property> properties, Connection con)
-            throws SQLException {
+    private static enum LogicalOperation {
+        AND, OR;
+    }
+
+    private <T> Set<EntityWithId<T>> get(Class<T> cls, Iterable<Property> properties, Connection con,
+            LogicalOperation operation) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(sql.readEntitiesByProperty())) {
             ps.setString(1, cls.getName());
-            Set<EntityWithId<T>> list = new HashSet<>();
+            Set<EntityWithId<T>> set = new HashSet<>();
+            boolean firstTime = true;
             for (Property p : properties) {
+                Set<EntityWithId<T>> s;
+                if (operation == LogicalOperation.OR) {
+                    s = null;
+                } else {
+                    s = new HashSet<>();
+                }
                 ps.setString(2, p.name());
                 ps.setString(3, p.value());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        System.out.println(rs);
                         String id = rs.getString(1);
                         T t = (T) entitySerializer.deserialize(cls, readAll(rs.getBlob(2).getBinaryStream()));
-                        list.add(new EntityWithId<T>(t, id));
+                        EntityWithId<T> ent = new EntityWithId<T>(t, id);
+                        if (operation == LogicalOperation.OR || firstTime) {
+                            set.add(ent);
+                        } else {
+                            s.add(ent);
+                        }
                     }
                 }
+                if (operation == LogicalOperation.AND && !firstTime) {
+                    set.retainAll(s);
+                }
             }
-            return list;
+            return set;
         }
     }
 

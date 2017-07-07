@@ -1,5 +1,7 @@
 package shop;
 
+import java.util.UUID;
+
 import javax.sql.DataSource;
 
 import org.h2.Driver;
@@ -24,11 +26,13 @@ public class PersistenceService {
         return persistence;
     }
 
+    private static final String id = UUID.randomUUID().toString().replaceAll("-", "");
+
     @Bean
     public DataSource dataSource() {
         return DataSourceBuilder //
                 .create() //
-                .url("jdbc:h2:mem:" + "testing") //
+                .url("jdbc:h2:mem:" + "testing" + id) //
                 .driverClassName(Driver.class.getName()) //
                 .build();
     }
