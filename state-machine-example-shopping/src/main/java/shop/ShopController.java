@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
+import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.persistence.Property;
 
 @Controller
@@ -22,11 +23,18 @@ public class ShopController {
         return "catalogs";
     }
 
-    @RequestMapping("/catalogs/{catalogId}/products")
+    @RequestMapping("/catalog/{catalogId}/products")
     public String catalogProducts(@PathVariable("catalogId") String catalogId, Model model) {
         model.addAttribute("catalogProducts", persistence.get() //
                 .getOr(CatalogProduct.class, Property.list("catalogId", catalogId)));
         return "catalogProducts";
+    }
+
+    @RequestMapping("/product/{productId}")
+    public String products(@PathVariable("productId") String productId, Model model) {
+        model.addAttribute("product", persistence.get() //
+                .get(Product.class, productId).get());
+        return "product";
     }
 
 }
