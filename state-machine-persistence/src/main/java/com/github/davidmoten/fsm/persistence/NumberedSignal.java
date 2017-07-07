@@ -10,4 +10,10 @@ public final class NumberedSignal<T, Id> {
         this.signal = signal;
         this.number = number;
     }
+
+    @Override
+    public String toString() {
+        return "NumberedSignal [signal=" + signal + ", number=" + number + "]";
+    }
+
 }

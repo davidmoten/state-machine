@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.github.davidmoten.fsm.persistence.Persistence.Builder;
 import com.github.davidmoten.fsm.persistence.exceptions.SQLRuntimeException;
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.Clock;
@@ -226,6 +227,10 @@ public final class Persistence implements Entities {
                     connectionFactory, storeSignals, errorHandler, retryIntervalMs, propertiesFactory);
         }
 
+        public Builder errorHandlerPrintStackTrace() {
+            return errorHandler(PRINT_STACK_TRACE);
+        }
+
     }
 
     public void create() {
@@ -239,11 +244,10 @@ public final class Persistence implements Entities {
             con.setAutoCommit(true);
             String[] commands = sql.split(";");
             for (String command : commands) {
-                System.out.println(command);
                 con.prepareStatement(command).execute();
             }
             con.commit();
-            System.out.println("created");
+            System.out.println("created database from " + commands.length + " statements");
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
@@ -338,6 +342,7 @@ public final class Persistence implements Entities {
 
     @SuppressWarnings("unchecked")
     private boolean process(NumberedSignal<?, String> signal) {
+        System.out.println("processing signal " + signal);
         List<NumberedSignal<?, ?>> numberedSignalsToOther;
         List<NumberedSignal<?, ?>> delayedNumberedSignalsToOther;
         try (Connection con = createConnection()) {
@@ -486,7 +491,7 @@ public final class Persistence implements Entities {
             for (Property property : properties) {
                 ps.setString(1, cls.getName());
                 ps.setString(2, id);
-                ps.setString(3, property.key());
+                ps.setString(3, property.name());
                 ps.setString(4, property.value());
                 ps.executeUpdate();
             }
@@ -511,7 +516,7 @@ public final class Persistence implements Entities {
                 signals.signalsToSelf.offerLast(list.get(i));
             }
             for (Signal<?, ?> s : esm2.signalsToOther()) {
-                signals.signalsToOther.offerFirst((Signal<?, String>) s);
+                signals.signalsToOther.offerLast((Signal<?, String>) s);
             }
         }
         return esm2;
@@ -823,6 +828,11 @@ public final class Persistence implements Entities {
             return true;
         }
 
+        @Override
+        public String toString() {
+            return "EntityWithId [entity=" + entity + ", className=" + className + ", id=" + id + "]";
+        }
+
     }
 
     @Override
@@ -880,7 +890,7 @@ public final class Persistence implements Entities {
             ps.setString(1, cls.getName());
             Set<EntityWithId<T>> list = new HashSet<>();
             for (Property p : properties) {
-                ps.setString(2, p.key());
+                ps.setString(2, p.name());
                 ps.setString(3, p.value());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {

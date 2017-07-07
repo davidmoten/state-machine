@@ -324,13 +324,13 @@ public final class Processor<Id> {
                 signals.signalsToSelf.offerLast(list.get(i));
             }
             for (Signal<?, ?> signal : machine.signalsToOther()) {
-                signals.signalsToOther.offerFirst((Signal<?, Id>) signal);
+                signals.signalsToOther.offerLast((Signal<?, Id>) signal);
             }
         }
 
         private void applySignalsToOthers(ClassId<?, Id> cid, Worker worker, Signals<Id> signals) {
             Signal<?, Id> signal;
-            while ((signal = signals.signalsToOther.pollLast()) != null) {
+            while ((signal = signals.signalsToOther.pollFirst()) != null) {
                 Signal<?, Id> s = signal;
                 if (signal.isImmediate()) {
                     subject.onNext(signal);

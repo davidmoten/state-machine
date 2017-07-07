@@ -7,16 +7,16 @@ import com.github.davidmoten.guavamini.Preconditions;
 
 public final class Property {
 
-    private final String key;
+    private final String name;
     private final String value;
 
-    private Property(String key, String value) {
-        this.key = key;
+    private Property(String name, String value) {
+        this.name = name;
         this.value = value;
     }
 
-    public String key() {
-        return key;
+    public String name() {
+        return name;
     }
 
     public String value() {

@@ -32,6 +32,7 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
         Set<EntityWithId<CatalogProduct>> set = Entities.get() //
                 .get(CatalogProduct.class, //
                         Property.list("productId", product.productId));
+        System.out.println(set);
         for (EntityWithId<CatalogProduct> cp : set) {
             signaller.signal(CatalogProduct.class, //
                     cp.id, //

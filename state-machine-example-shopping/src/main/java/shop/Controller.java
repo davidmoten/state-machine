@@ -50,7 +50,7 @@ public class Controller {
                 .behaviour(Catalog.class, new CatalogBehaviour()) //
                 .behaviour(CatalogProduct.class, new CatalogProductBehaviour()) //
                 .properties(CatalogProduct.class, //
-                        c -> Property.list("productId", c.productId)) //
+                        c -> Property.list("productId", c.productId, "catalogId", c.catalogId)) //
                 .build();
         p.create();
         p.initialize();

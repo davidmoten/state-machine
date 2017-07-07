@@ -14,4 +14,9 @@ public final class ChangeQuantity implements Event<CatalogProduct> {
         this.quantityDelta = quantityDelta;
     }
 
+    @Override
+    public String toString() {
+        return "ChangeQuantity [quantityDelta=" + quantityDelta + "]";
+    }
+
 }

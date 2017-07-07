@@ -24,6 +24,7 @@ public final class CatalogBehaviour extends CatalogBehaviourBase<String> {
     @Override
     public Catalog onEntry_Changed(Signaller<Catalog, String> signaller, Catalog catalog, String id, Change event,
             boolean replaying) {
+        System.out.println("catalog changed quantity " + event.quantityDelta);
         String cpId = CatalogProduct.idFrom(catalog.catalogId, event.productId);
         signaller.signal(CatalogProduct.class, cpId,
                 new com.github.davidmoten.fsm.example.shop.catalogproduct.event.Create(id, event.productId, 0));

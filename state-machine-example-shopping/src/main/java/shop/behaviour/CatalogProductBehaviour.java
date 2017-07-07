@@ -12,6 +12,8 @@ import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.persistence.Entities;
 import com.github.davidmoten.fsm.runtime.Signaller;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
+
 public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<String> {
 
     @Override
@@ -22,6 +24,7 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
     @Override
     public CatalogProduct onEntry_Created(Signaller<CatalogProduct, String> signaller, String id, Create event,
             boolean replaying) {
+        System.out.println("creating catalogproduct");
         // lookup product within the transaction
         Optional<Product> product = Entities.get().get(Product.class, event.productId);
         if (product.isPresent()) {
@@ -35,6 +38,7 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
     @Override
     public CatalogProduct onEntry_ChangedQuantity(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeQuantity event, boolean replaying) {
+        System.out.println("changing quantity catalogproduct");
         return new CatalogProduct(c.catalogId, c.productId, c.name, c.description, c.quantity + event.quantityDelta);
     }
 
