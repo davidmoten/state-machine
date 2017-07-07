@@ -32,7 +32,7 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
         // do an index-based search (using entity properties set by
         // propertiesFactory)
         Set<EntityWithId<CatalogProduct>> set = Entities.get() //
-                .get(CatalogProduct.class, //
+                .getOr(CatalogProduct.class, //
                         Property.list("productId", product.productId));
         System.out.println(set);
         for (EntityWithId<CatalogProduct> cp : set) {

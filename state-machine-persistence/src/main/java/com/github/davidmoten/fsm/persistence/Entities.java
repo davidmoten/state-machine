@@ -18,7 +18,7 @@ public interface Entities {
 
     <T> Set<EntityWithId<T>> get(Class<T> cls, String key, String value);
 
-    <T> Set<EntityWithId<T>> get(Class<T> cls, Iterable<Property> properties);
+    <T> Set<EntityWithId<T>> getOr(Class<T> cls, Iterable<Property> properties);
 
     static final ThreadLocal<Entities> current = new ThreadLocal<Entities>();
 

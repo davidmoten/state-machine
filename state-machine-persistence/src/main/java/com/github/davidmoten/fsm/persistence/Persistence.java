@@ -467,7 +467,7 @@ public final class Persistence implements Entities {
             }
 
             @Override
-            public <T> Set<EntityWithId<T>> get(Class<T> cls, Iterable<Property> properties) {
+            public <T> Set<EntityWithId<T>> getOr(Class<T> cls, Iterable<Property> properties) {
                 try {
                     return Persistence.this.get(cls, properties, con);
                 } catch (SQLException e) {
@@ -873,7 +873,7 @@ public final class Persistence implements Entities {
     }
 
     @Override
-    public <T> Set<EntityWithId<T>> get(Class<T> cls, Iterable<Property> properties) {
+    public <T> Set<EntityWithId<T>> getOr(Class<T> cls, Iterable<Property> properties) {
         try ( //
                 Connection con = createConnection()) {
             return get(cls, properties, con);

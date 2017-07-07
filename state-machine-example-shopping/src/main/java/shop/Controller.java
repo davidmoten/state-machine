@@ -36,7 +36,7 @@ public class Controller {
     // The api should be decoupled!
     @RequestMapping(value = "/catalogs/{catalogId}/products", method = RequestMethod.GET)
     public List<CatalogProduct> products(@PathVariable("catalogId") String catalogId) {
-        return p.get(CatalogProduct.class, Property.list("catalogId", catalogId)) //
+        return p.getOr(CatalogProduct.class, Property.list("catalogId", catalogId)) //
                 .stream() //
                 .map(x -> x.entity) //
                 .collect(Collectors.toList());
@@ -44,7 +44,7 @@ public class Controller {
 
     @RequestMapping(value = "/products/tagged", method = RequestMethod.GET)
     public List<CatalogProduct> productsTagged(@RequestParam("tag") List<String> tags) {
-        return p.get(CatalogProduct.class, Property.list("tag", tags)) //
+        return p.getOr(CatalogProduct.class, Property.list("tag", tags)) //
                 .stream() //
                 .map(x -> x.entity) //
                 .collect(Collectors.toList());
