@@ -189,7 +189,7 @@ public final class Persistence implements Entities {
         }
 
         @SuppressWarnings("unchecked")
-        public <T> Builder properties(Class<T> cls, Function<? super T, ? extends Iterable<Property>> factory) {
+        public <T> Builder propertiesFactory(Class<T> cls, Function<? super T, ? extends Iterable<Property>> factory) {
             Preconditions.checkArgument(propertiesFactory == null);
             properties.put(cls, (Function<Object, Iterable<Property>>) factory);
             return this;

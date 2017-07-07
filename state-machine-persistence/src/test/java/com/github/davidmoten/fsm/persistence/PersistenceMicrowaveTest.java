@@ -121,7 +121,7 @@ public class PersistenceMicrowaveTest {
 
         Persistence p = createPersistence() //
                 .behaviourFactory(behaviourFactory) //
-                .properties(Microwave.class, //
+                .propertiesFactory(Microwave.class, //
                         m -> Lists.newArrayList(Property.create("colour", "white"))) //
                 .executor(executor) //
                 .build();

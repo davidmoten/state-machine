@@ -29,6 +29,8 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
     @Override
     public Product onEntry_Changed(Signaller<Product, String> signaller, Product product, String id,
             ChangeDetails event, boolean replaying) {
+        // do an index-based search (using entity properties set by
+        // propertiesFactory)
         Set<EntityWithId<CatalogProduct>> set = Entities.get() //
                 .get(CatalogProduct.class, //
                         Property.list("productId", product.productId));
