@@ -31,7 +31,7 @@ public final class Property {
 
     public static List<Property> list(String name, Collection<String> values) {
         return values.stream() //
-                .map(x -> Property.create("name", x)) //
+                .map(x -> Property.create(name, x)) //
                 .collect(Collectors.toList());
     }
 

@@ -859,17 +859,17 @@ public final class Persistence implements Entities {
     }
 
     @Override
-    public <T> Set<EntityWithId<T>> get(Class<T> cls, String key, String value) {
+    public <T> Set<EntityWithId<T>> get(Class<T> cls, String name, String value) {
         try ( //
                 Connection con = createConnection()) {
-            return get(cls, key, value, con);
+            return get(cls, name, value, con);
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
     }
 
-    private <T> Set<EntityWithId<T>> get(Class<T> cls, String key, String value, Connection con) throws SQLException {
-        return get(cls, Property.list(key, value), con);
+    private <T> Set<EntityWithId<T>> get(Class<T> cls, String name, String value, Connection con) throws SQLException {
+        return get(cls, Property.list(name, value), con);
     }
 
     @Override
@@ -892,6 +892,7 @@ public final class Persistence implements Entities {
                 ps.setString(3, p.value());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
+                        System.out.println(rs);
                         String id = rs.getString(1);
                         T t = (T) entitySerializer.deserialize(cls, readAll(rs.getBlob(2).getBinaryStream()));
                         list.add(new EntityWithId<T>(t, id));
