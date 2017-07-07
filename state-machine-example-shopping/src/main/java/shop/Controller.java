@@ -72,8 +72,8 @@ public class Controller {
     }
 
     @RequestMapping(value = "/products", method = RequestMethod.GET)
-    public List<Product> products() {
-        return p.get(Product.class) //
+    public List<CatalogProduct> products() {
+        return p.get(CatalogProduct.class, Property.list("catalogId", "1")) //
                 .stream() //
                 .map(x -> x.entity) //
                 .collect(Collectors.toList());

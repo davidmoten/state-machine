@@ -1,9 +1,9 @@
 package com.github.davidmoten.fsm.persistence;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.github.davidmoten.guavamini.Lists;
+import com.github.davidmoten.guavamini.Preconditions;
 
 public final class Property {
 
@@ -27,8 +27,13 @@ public final class Property {
         return new Property(key, value);
     }
 
-    public static List<Property> list(String key, String value) {
-        return Collections.singletonList(Property.create(key, value));
+    public static List<Property> list(String... items) {
+        Preconditions.checkArgument(items.length % 2 == 0);
+        List<Property> list = new ArrayList<>();
+        for (int i = 0; i < items.length / 2; i++) {
+            list.add(Property.create(items[2 * i], items[2 * i + 1]));
+        }
+        return list;
     }
 
 }
