@@ -6,10 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
@@ -52,7 +50,7 @@ public class ShopTest {
         p.create();
         p.initialize();
         p.signal(Product.class, "12", //
-                new Create("1", "Castelli Senza Jacket", "Fleece lined windproof cycling jacket"));
+                new Create("12", "Castelli Senza Jacket", "Fleece lined windproof cycling jacket"));
         p.signal(Catalog.class, "1",
                 new com.github.davidmoten.fsm.example.shop.catalog.event.Create("1", "Online bike shop"));
         p.signal(Catalog.class, "1", new Change("12", 3));

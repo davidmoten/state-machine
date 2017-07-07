@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.github.davidmoten.fsm.persistence.Persistence.Builder;
 import com.github.davidmoten.fsm.persistence.exceptions.SQLRuntimeException;
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
 import com.github.davidmoten.fsm.runtime.Clock;
@@ -342,7 +341,6 @@ public final class Persistence implements Entities {
 
     @SuppressWarnings("unchecked")
     private boolean process(NumberedSignal<?, String> signal) {
-        System.out.println("processing signal " + signal);
         List<NumberedSignal<?, ?>> numberedSignalsToOther;
         List<NumberedSignal<?, ?>> delayedNumberedSignalsToOther;
         try (Connection con = createConnection()) {

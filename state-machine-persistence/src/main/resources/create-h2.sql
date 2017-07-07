@@ -34,7 +34,7 @@ create table entity_property (
   id varchar(255) not null,
   key varchar(255) not null, 
   value varchar(255) not null,
-  primary key(cls, id, key),
+  primary key(cls, id, key, value),
   foreign key (cls, id) references entity (cls, id)
 );
 
