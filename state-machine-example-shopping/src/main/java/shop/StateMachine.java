@@ -74,11 +74,6 @@ public final class StateMachine {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        // p.signal(Product.class, "12",
-        // new ChangeDetails("Castelli Senza 2 Jacket",
-        // "Fleece lined windproof cycling jacket with reflective highlights",
-        // Lists.newArrayList("Clothing", "Cycling", "Windproof", "Jacket",
-        // "Castelli")));
     }
 
 }

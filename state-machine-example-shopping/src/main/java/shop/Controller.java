@@ -1,6 +1,7 @@
 package shop;
 
 import java.sql.Connection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -12,6 +13,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
@@ -39,9 +41,9 @@ public class Controller {
                 .collect(Collectors.toList());
     }
 
-    @RequestMapping(value = "/clothing", method = RequestMethod.GET)
-    public List<CatalogProduct> clothing() {
-        return p.get(CatalogProduct.class, Property.list("tag", "Clothing")) //
+    @RequestMapping(value = "/products/tagged", method = RequestMethod.GET)
+    public List<CatalogProduct> clothing(@RequestParam("tag") List<String> tags) {
+        return p.get(CatalogProduct.class, Property.list("tag", tags)) //
                 .stream() //
                 .map(x -> x.entity) //
                 .collect(Collectors.toList());
