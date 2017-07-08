@@ -61,11 +61,13 @@ public final class Persistence implements Entities {
     private final long retryIntervalMs;
     // enables indexed searches
     private final Function<Object, Iterable<Property>> propertiesFactory;
+    private final Function<Object, Optional<IntProperty>> rangeMetricFactory;
 
     private Persistence(ScheduledExecutorService executor, Clock clock, Serializer entitySerializer,
             Serializer eventSerializer, Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory, Sql sql,
             Callable<Connection> connectionFactory, boolean storeSignals, Consumer<Throwable> errorHandler,
-            long retryIntervalMs, Function<Object, Iterable<Property>> propertiesFactory) {
+            long retryIntervalMs, Function<Object, Iterable<Property>> propertiesFactory,
+            Function<Object, Optional<IntProperty>> rangeMetricFactory) {
         this.executor = executor;
         this.clock = clock;
         this.entitySerializer = entitySerializer;
@@ -77,6 +79,7 @@ public final class Persistence implements Entities {
         this.errorHandler = errorHandler;
         this.retryIntervalMs = retryIntervalMs;
         this.propertiesFactory = propertiesFactory;
+        this.rangeMetricFactory = rangeMetricFactory;
     }
 
     public static Builder connectionFactory(Callable<Connection> connectionFactory) {
@@ -109,6 +112,7 @@ public final class Persistence implements Entities {
         private final Map<Class<?>, Function<Object, Iterable<Property>>> properties = new HashMap<>();
         private Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
         private final Map<Class<?>, EntityBehaviour<?, String>> behaviour = new HashMap<>();
+        private Function<Object, Optional<IntProperty>> rangeMetricFactory = null;
 
         private Builder() {
             // do nothing
@@ -197,6 +201,11 @@ public final class Persistence implements Entities {
             return this;
         }
 
+        public <T> Builder rangeMetricFactory(Function<Object, Optional<IntProperty>> rangeMetricFactory) {
+            this.rangeMetricFactory = rangeMetricFactory;
+            return this;
+        }
+
         public Persistence build() {
             if (behaviourFactory == null) {
                 behaviourFactory = new Function<Class<?>, EntityBehaviour<?, String>>() {
@@ -227,7 +236,8 @@ public final class Persistence implements Entities {
 
             }
             return new Persistence(executor, clock, entitySerializer, eventSerializer, behaviourFactory, sql,
-                    connectionFactory, storeSignals, errorHandler, retryIntervalMs, propertiesFactory);
+                    connectionFactory, storeSignals, errorHandler, retryIntervalMs, propertiesFactory,
+                    rangeMetricFactory);
         }
 
         public Builder errorHandlerPrintStackTrace() {
@@ -412,7 +422,13 @@ public final class Persistence implements Entities {
 
             if (esm2.get().isPresent()) {
                 Iterable<Property> properties = propertiesFactory.apply(esm2.get().get());
-                saveEntityProperties(con, esm2.cls(), esm2.id(), properties);
+                Optional<IntProperty> rangeMetric;
+                if (rangeMetricFactory == null) {
+                    rangeMetric = Optional.empty();
+                } else {
+                    rangeMetric = rangeMetricFactory.apply(esm2.get().get());
+                }
+                saveEntityProperties(con, esm2.cls(), esm2.id(), properties, rangeMetric);
             }
 
             // commit the transaction
@@ -503,21 +519,39 @@ public final class Persistence implements Entities {
 
     }
 
-    private void saveEntityProperties(Connection con, Class<?> cls, String id, Iterable<Property> properties)
-            throws SQLException {
+    private void saveEntityProperties(Connection con, Class<?> cls, String id, Iterable<Property> properties,
+            Optional<IntProperty> rangeMetric) throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(sql.deleteEntityProperties())) {
             ps.setString(1, cls.getName());
             ps.setString(2, id);
             ps.executeUpdate();
         }
 
-        try (PreparedStatement ps = con.prepareStatement(sql.insertEntityProperty())) {
+        if (rangeMetric.isPresent()) {
+            try (PreparedStatement ps = con.prepareStatement(sql.deleteEntityRangeProperties())) {
+                ps.setString(1, cls.getName());
+                ps.setString(2, id);
+                ps.executeUpdate();
+            }
+        }
+
+        try (PreparedStatement ps = con.prepareStatement(sql.insertEntityProperty());
+                PreparedStatement ps2 = con.prepareStatement(sql.insertEntityRangeProperty())) {
             for (Property property : properties) {
                 ps.setString(1, cls.getName());
                 ps.setString(2, id);
                 ps.setString(3, property.name());
                 ps.setString(4, property.value());
                 ps.executeUpdate();
+                if (rangeMetric.isPresent()) {
+                    ps2.setString(1, cls.getName());
+                    ps2.setString(2, id);
+                    ps2.setString(3, property.name());
+                    ps2.setString(4, property.value());
+                    ps2.setString(5, rangeMetric.get().name);
+                    ps2.setInt(6, rangeMetric.get().value);
+                    ps2.executeUpdate();
+                }
             }
         }
     }

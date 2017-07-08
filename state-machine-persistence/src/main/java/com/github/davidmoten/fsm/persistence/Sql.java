@@ -80,7 +80,7 @@ public interface Sql {
     default String readEntitiesByPropertyAndRange(boolean startInclusive, boolean endInclusive) {
         return "select id, bytes from entity\n"//
                 + "where id in (\n" //
-                + "select id from entity_property\n" //
+                + "select id from entity_prop_range_int\n" //
                 + "where cls=? and name=? and value=?\n" //
                 + "and range_name=?\n" //
                 + "and range_value" + (startInclusive ? ">=" : ">") + "?\n"//
@@ -88,6 +88,14 @@ public interface Sql {
                 + "order by range_value, id\n" //
                 + "limit ?" //
                 + ")";
+    }
+
+    default String deleteEntityRangeProperties() {
+        return  "delete from entity_prop_range_int where cls=? and id=?";
+    }
+
+    default String insertEntityRangeProperty() {
+        return "insert into entity_prop_range_int(cls, id, name, value, range_name, range_value) values(?,?,?,?,?,?)";
     }
 
 }
