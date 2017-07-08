@@ -487,6 +487,18 @@ public final class Persistence implements Entities {
                     throw new SQLRuntimeException(e);
                 }
             }
+
+            @Override
+            public <T> List<EntityWithId<T>> get(Class<T> cls, String name, String value, String rangeName,
+                    long rangeStart, boolean startInclusive, long rangeEnd, boolean endInclusive,
+                    Optional<String> lastId) {
+                try {
+                    return Persistence.this.get(cls, name, value, rangeName, rangeStart, startInclusive, rangeEnd,
+                            endInclusive, lastId, con);
+                } catch (SQLException e) {
+                    throw new SQLRuntimeException(e);
+                }
+            }
         };
 
     }
@@ -990,6 +1002,37 @@ public final class Persistence implements Entities {
             return get(cls, properties, con, LogicalOperation.AND);
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
+        }
+    }
+
+    @Override
+    public <T> List<EntityWithId<T>> get(Class<T> cls, String name, String value, String rangeName, long rangeStart,
+            boolean startInclusive, long rangeEnd, boolean endInclusive, Optional<String> lastId) {
+        try ( //
+                Connection con = createConnection()) {
+            return get(cls, name, value, rangeName, rangeStart, startInclusive, rangeEnd, endInclusive, lastId, con);
+        } catch (SQLException e) {
+            throw new SQLRuntimeException(e);
+        }
+    }
+
+    private <T> List<EntityWithId<T>> get(Class<T> cls, String name, String value, String rangeName, long rangeStart,
+            boolean startInclusive, long rangeEnd, boolean endInclusive, Optional<String> lastId, Connection con)
+            throws SQLException {
+        try (PreparedStatement ps = con
+                .prepareStatement(sql.readEntitiesByPropertyAndRange(startInclusive, endInclusive))) {
+            ps.setString(1, cls.getName());
+            ps.setString(2, name);
+            ps.setString(3, value);
+            List<EntityWithId<T>> list = new ArrayList<>();
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString(1);
+                    T t = (T) entitySerializer.deserialize(cls, readAll(rs.getBlob(2).getBinaryStream()));
+                    list.add(new EntityWithId<T>(t, id));
+                }
+            }
+            return list;
         }
     }
 }

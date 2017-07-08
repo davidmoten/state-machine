@@ -32,40 +32,26 @@ create table entity (
 create table entity_property (
   cls varchar(512) not null, 
   id varchar(255) not null,
-  key varchar(255) not null, 
+  name varchar(255) not null, 
   value varchar(255) not null,
-  primary key(cls, id, key, value),
+  primary key(cls, id, name, value),
   foreign key (cls, id) references entity (cls, id)
 );
 
 create table entity_prop_range_int (
   cls varchar(512) not null, 
   id varchar(255) not null,
-  key varchar(255) not null, 
+  name varchar(255) not null, 
   value varchar(255) not null,
-  range_key varchar(255) not null, 
-  range_metric bigint not null,
-  primary key(cls, id, key, value),
+  range_name varchar(255) not null, 
+  range_value bigint not null,
+  primary key(cls, id, name, value),
   foreign key (cls, id) references entity (cls, id)
 );
 
-create index idx_ent_prop_int on entity_prop_range_int(cls, key, value, range_key, range_metric);
+create index idx_ent_prop__range_int on entity_prop_range_int(cls, name, value, range_name, range_value);
 
-create table entity_prop_range_str(
-  cls varchar(512) not null, 
-  id varchar(255) not null,
-  key varchar(255) not null, 
-  value varchar(255) not null,
-  range_key varchar(255) not null, 
-  range_metric varchar(512) not null,
-  primary key(cls, id, key, value),
-  foreign key (cls, id) references entity (cls, id)
-);
-
-create index idx_ent_prop_string on entity_prop_range_str(cls, key, value, range_key, range_metric);
-
-
-create index idx_ent_prop on entity_property(cls, key, value);
+create index idx_ent_prop on entity_property(cls, name, value);
    
 create table signal_store (
   seq_num identity,
