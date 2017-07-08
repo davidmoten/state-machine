@@ -85,7 +85,8 @@ public interface Sql {
                 + "and range_name=?\n" //
                 + "and range_value" + (startInclusive ? ">=" : ">") + "?\n"//
                 + "and range_value" + (endInclusive ? "<=" : "<") + "?\n"//
-                + "order by range_value, id" //
+                + "order by range_value, id\n" //
+                + "limit ?" //
                 + ")";
     }
 

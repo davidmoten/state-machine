@@ -490,11 +490,11 @@ public final class Persistence implements Entities {
 
             @Override
             public <T> List<EntityWithId<T>> get(Class<T> cls, String name, String value, String rangeName,
-                    long rangeStart, boolean startInclusive, long rangeEnd, boolean endInclusive,
+                    long rangeStart, boolean startInclusive, long rangeEnd, boolean endInclusive, int limit,
                     Optional<String> lastId) {
                 try {
                     return Persistence.this.get(cls, name, value, rangeName, rangeStart, startInclusive, rangeEnd,
-                            endInclusive, lastId, con);
+                            endInclusive, limit, lastId, con);
                 } catch (SQLException e) {
                     throw new SQLRuntimeException(e);
                 }
@@ -1007,29 +1007,41 @@ public final class Persistence implements Entities {
 
     @Override
     public <T> List<EntityWithId<T>> get(Class<T> cls, String name, String value, String rangeName, long rangeStart,
-            boolean startInclusive, long rangeEnd, boolean endInclusive, Optional<String> lastId) {
+            boolean startInclusive, long rangeEnd, boolean endInclusive, int limit, Optional<String> lastId) {
         try ( //
                 Connection con = createConnection()) {
-            return get(cls, name, value, rangeName, rangeStart, startInclusive, rangeEnd, endInclusive, lastId, con);
+            return get(cls, name, value, rangeName, rangeStart, startInclusive, rangeEnd, endInclusive, limit, lastId,
+                    con);
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
     }
 
     private <T> List<EntityWithId<T>> get(Class<T> cls, String name, String value, String rangeName, long rangeStart,
-            boolean startInclusive, long rangeEnd, boolean endInclusive, Optional<String> lastId, Connection con)
-            throws SQLException {
+            boolean startInclusive, long rangeEnd, boolean endInclusive, int limit, Optional<String> lastId,
+            Connection con) throws SQLException {
         try (PreparedStatement ps = con
                 .prepareStatement(sql.readEntitiesByPropertyAndRange(startInclusive, endInclusive))) {
             ps.setString(1, cls.getName());
             ps.setString(2, name);
             ps.setString(3, value);
+            ps.setString(4, rangeName);
+            ps.setLong(5, rangeStart);
+            ps.setLong(6, rangeEnd);
+            ps.setInt(7, limit);
             List<EntityWithId<T>> list = new ArrayList<>();
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String id = rs.getString(1);
                     T t = (T) entitySerializer.deserialize(cls, readAll(rs.getBlob(2).getBinaryStream()));
                     list.add(new EntityWithId<T>(t, id));
+                }
+            }
+            if (lastId.isPresent()) {
+                for (int i = list.size() - 1; i >= 0; i--) {
+                    if (list.get(i).id.equals(lastId.get())) {
+                        return list.subList(i, list.size());
+                    }
                 }
             }
             return list;

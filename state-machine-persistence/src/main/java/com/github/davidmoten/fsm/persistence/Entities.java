@@ -16,15 +16,15 @@ public interface Entities {
 
     <T> List<EntityWithId<T>> get(Class<T> cls);
 
-    <T> Set<EntityWithId<T>> get(Class<T> cls, String key, String value);
+    <T> Set<EntityWithId<T>> get(Class<T> cls, String name, String value);
 
     <T> Set<EntityWithId<T>> getOr(Class<T> cls, Iterable<Property> properties);
 
     <T> Set<EntityWithId<T>> getAnd(Class<T> cls, Iterable<Property> properties);
-    
+
     <T> List<EntityWithId<T>> get(Class<T> cls, String name, String value, String rangeName, long rangeStart,
-            boolean startInclusive, long rangeEnd, boolean endInclusive, Optional<String> lastId);
-    
+            boolean startInclusive, long rangeEnd, boolean endInclusive, int limit, Optional<String> lastId);
+
     static final ThreadLocal<Entities> current = new ThreadLocal<Entities>();
 
     public static void set(Entities entities) {
