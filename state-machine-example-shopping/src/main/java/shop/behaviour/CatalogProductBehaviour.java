@@ -1,6 +1,5 @@
 package shop.behaviour;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
 import com.github.davidmoten.fsm.example.generated.CatalogProductBehaviourBase;
