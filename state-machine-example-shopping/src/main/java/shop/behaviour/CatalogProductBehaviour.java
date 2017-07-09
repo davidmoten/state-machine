@@ -1,5 +1,6 @@
 package shop.behaviour;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import com.github.davidmoten.fsm.example.generated.CatalogProductBehaviourBase;
@@ -27,7 +28,7 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
         Optional<Product> product = Entities.get().get(Product.class, event.productId);
         if (product.isPresent()) {
             return new CatalogProduct(event.catalogId, event.productId, product.get().name, product.get().description,
-                    product.get().tags, event.quantity);
+                    event.price, product.get().tags, event.quantity);
         } else {
             throw new RuntimeException("product not found " + event.productId);
         }
@@ -37,14 +38,14 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
     public CatalogProduct onEntry_ChangedQuantity(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeQuantity event, boolean replaying) {
         System.out.println("changing quantity catalogproduct");
-        return new CatalogProduct(c.catalogId, c.productId, c.name, c.description, c.tags,
+        return new CatalogProduct(c.catalogId, c.productId, c.name, c.description, c.price, c.tags,
                 c.quantity + event.quantityDelta);
     }
 
     @Override
     public CatalogProduct onEntry_ChangedProductDetails(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeProductDetails event, boolean replaying) {
-        return new CatalogProduct(c.catalogId, c.productId, event.productName, event.productDescription, event.tags,
+        return new CatalogProduct(c.catalogId, c.productId, event.productName, event.productDescription,c.price, event.tags,
                 c.quantity);
     }
 

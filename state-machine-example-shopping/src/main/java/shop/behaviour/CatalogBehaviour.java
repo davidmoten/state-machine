@@ -27,7 +27,8 @@ public final class CatalogBehaviour extends CatalogBehaviourBase<String> {
         System.out.println("catalog changed quantity " + event.quantityDelta);
         String cpId = CatalogProduct.idFrom(catalog.catalogId, event.productId);
         signaller.signal(CatalogProduct.class, cpId,
-                new com.github.davidmoten.fsm.example.shop.catalogproduct.event.Create(id, event.productId, 0));
+                new com.github.davidmoten.fsm.example.shop.catalogproduct.event.Create(id, event.productId, event.price,
+                        0));
         signaller.signal(CatalogProduct.class, cpId, new ChangeQuantity(event.quantityDelta));
         return catalog;
     }

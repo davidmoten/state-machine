@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Collections;
@@ -62,8 +63,8 @@ public class ShopTest {
                         Collections.emptyList()));
         p.signal(Catalog.class, "1",
                 new com.github.davidmoten.fsm.example.shop.catalog.event.Create("1", "Online bike shop"));
-        p.signal(Catalog.class, "1", new Change("12", 3));
-        p.signal(Catalog.class, "1", new Change("12", 2));
+        p.signal(Catalog.class, "1", new Change("12", new BigDecimal(141.30), 3));
+        p.signal(Catalog.class, "1", new Change("12", new BigDecimal(151.75), 2));
         Thread.sleep(500);
         {
             CatalogProduct cp = p.get(CatalogProduct.class, CatalogProduct.idFrom("1", "12")).get();

@@ -2,6 +2,7 @@ package shop;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.List;
@@ -54,8 +55,8 @@ public final class StateMachine {
         p.initialize();
         p.signal(Catalog.class, MAIN_CATALOG_ID,
                 new com.github.davidmoten.fsm.example.shop.catalog.event.Create(MAIN_CATALOG_ID, "Online bike shop"));
-        p.signal(Catalog.class, MAIN_CATALOG_ID, new Change("12", 3));
-        p.signal(Catalog.class, MAIN_CATALOG_ID, new Change("12", 2));
+        p.signal(Catalog.class, MAIN_CATALOG_ID, new Change("12", new BigDecimal("142.50"), 3));
+        p.signal(Catalog.class, MAIN_CATALOG_ID, new Change("12", new BigDecimal("142.50"), 2));
         InputStreamReader in = new InputStreamReader(StateMachine.class.getResourceAsStream("/products.txt"));
         try {
             for (CSVRecord record : CSVFormat.DEFAULT.parse(in)) {
@@ -69,7 +70,7 @@ public final class StateMachine {
                         productId, //
                         new Create(productId, name, description, tags));
                 p.signal(Catalog.class, //
-                        MAIN_CATALOG_ID, new Change(productId, quantity));
+                        MAIN_CATALOG_ID, new Change(productId, new BigDecimal("144.70"),quantity));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
