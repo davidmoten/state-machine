@@ -40,7 +40,7 @@ public class ShopController {
         return "product";
     }
 
-    @RequestMapping("/catalog/{catalogId}/products")
+    @RequestMapping("/catalog/{catalogId}/products/search")
     public String catalogProductsRange(@PathVariable("catalogId") String catalogId, @RequestParam("name") String name,
             @RequestParam("vaue") String value, @RequestParam("rangeName") String rangeName,
             @RequestParam("start") int start, @RequestParam("end") int end, @RequestParam("limit") int limit,

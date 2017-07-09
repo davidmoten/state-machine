@@ -108,11 +108,13 @@ public final class Persistence implements Entities {
         private boolean storeSignals = true;
         private Consumer<Throwable> errorHandler = PRINT_STACK_TRACE;
         private long retryIntervalMs = DEFAULT_RETRY_INTERVAL_MS;
-        private Function<Object, Iterable<Property>> propertiesFactory = null;
+        private Function<Object, Iterable<Property>> propertiesFactory;
         private final Map<Class<?>, Function<Object, Iterable<Property>>> properties = new HashMap<>();
         private Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory;
         private final Map<Class<?>, EntityBehaviour<?, String>> behaviour = new HashMap<>();
-        private Function<Object, Optional<IntProperty>> rangeMetricFactory = null;
+        private Function<Object, Optional<IntProperty>> rangeMetricFactory;
+
+        private final Map<Class<?>, Function<Object, Optional<IntProperty>>> rangeMetrics = new HashMap<>();
 
         private Builder() {
             // do nothing
@@ -201,8 +203,16 @@ public final class Persistence implements Entities {
             return this;
         }
 
-        public <T> Builder rangeMetricFactory(Function<Object, Optional<IntProperty>> rangeMetricFactory) {
+        public Builder rangeMetricFactory(Function<Object, Optional<IntProperty>> rangeMetricFactory) {
+            Preconditions.checkArgument(rangeMetrics.isEmpty());
             this.rangeMetricFactory = rangeMetricFactory;
+            return this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public <T> Builder rangeMetricFactory(Class<T> cls, Function<? super T, Optional<IntProperty>> rangeMetric) {
+            Preconditions.checkArgument(rangeMetricFactory == null);
+            rangeMetrics.put((Class<?>) cls, (Function<Object, Optional<IntProperty>>) rangeMetric);
             return this;
         }
 
@@ -234,6 +244,20 @@ public final class Persistence implements Entities {
                     }
                 };
 
+            }
+            if (rangeMetricFactory == null) {
+                rangeMetricFactory = new Function<Object, Optional<IntProperty>>() {
+
+                    @Override
+                    public Optional<IntProperty> apply(Object t) {
+                        Function<Object, Optional<IntProperty>> f = rangeMetrics.get(t.getClass());
+                        if (f == null) {
+                            return Optional.empty();
+                        } else {
+                            return f.apply(t);
+                        }
+                    }
+                };
             }
             return new Persistence(executor, clock, entitySerializer, eventSerializer, behaviourFactory, sql,
                     connectionFactory, storeSignals, errorHandler, retryIntervalMs, propertiesFactory,
