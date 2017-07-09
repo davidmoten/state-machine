@@ -1,6 +1,7 @@
 package com.github.davidmoten.fsm.persistence;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,6 +51,10 @@ public final class Property {
             list.addAll(x);
         }
         return list;
+    }
+
+    public static String combineNames(String... names) {
+        return Arrays.stream(names).collect(Collectors.joining("|"));
     }
 
 }
