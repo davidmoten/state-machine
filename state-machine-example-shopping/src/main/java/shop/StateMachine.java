@@ -6,7 +6,9 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVFormat;
@@ -17,6 +19,7 @@ import com.github.davidmoten.fsm.example.shop.catalog.event.Change;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
 import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.example.shop.product.event.Create;
+import com.github.davidmoten.fsm.persistence.IntProperty;
 import com.github.davidmoten.fsm.persistence.Persistence;
 import com.github.davidmoten.fsm.persistence.Property;
 
@@ -30,6 +33,12 @@ public final class StateMachine {
 
     @SuppressWarnings("unchecked")
     public static Persistence createPersistence(Callable<Connection> connectionFactory) {
+        Function<CatalogProduct, Optional<IntProperty>> rf = cp -> Optional
+                .of(new IntProperty(Property.combineNames("catalogId", cp.catalogId, "price"),
+                        (int) Math.floor(Math.round(cp.price.floatValue() * 100))));
+        Function<CatalogProduct, Iterable<Property>> pf = c -> Property.concatenate(
+                Property.list("productId", c.productId, "catalogId", c.catalogId), //
+                Property.list("tag", c.tags));
         return Persistence //
                 .connectionFactory(connectionFactory) //
                 .errorHandlerPrintStackTrace() //
@@ -38,9 +47,8 @@ public final class StateMachine {
                 .behaviour(CatalogProduct.class, new CatalogProductBehaviour()) //
                 // set up search indexes which must exist for ProductBehaviour
                 // to find stuff for instance
-                .propertiesFactory(CatalogProduct.class, //
-                        c -> Property.concatenate(Property.list("productId", c.productId, "catalogId", c.catalogId), //
-                                Property.list("tag", c.tags))) //
+                .propertiesFactory(CatalogProduct.class, pf) //
+                .rangeMetricFactory(CatalogProduct.class, rf) //
                 .propertiesFactory(Product.class, //
                         prod -> Property.list("tag", prod.tags)) //
                 .build();
@@ -70,7 +78,7 @@ public final class StateMachine {
                         productId, //
                         new Create(productId, name, description, tags));
                 p.signal(Catalog.class, //
-                        MAIN_CATALOG_ID, new Change(productId, new BigDecimal("144.70"),quantity));
+                        MAIN_CATALOG_ID, new Change(productId, new BigDecimal("144.70"), quantity));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

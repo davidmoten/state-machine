@@ -9,5 +9,9 @@ public final class IntProperty {
         this.name = name;
         this.value = value;
     }
+    
+    public static IntProperty create(String name, int value) {
+        return new IntProperty(name,value);
+    }
 
 }

@@ -9,10 +9,8 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -130,6 +128,36 @@ public class PersistenceMicrowaveTest {
         signal(p, new DoorOpened());
         Set<EntityWithId<Microwave>> set = p.get(Microwave.class, "colour", "white");
         assertEquals(1, set.size());
+    }
+
+    @Test
+    public void testRangeQuery() throws IOException {
+        MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
+        Function<Class<?>, EntityBehaviour<?, String>> behaviourFactory = cls -> behaviour;
+        TestExecutor executor = new TestExecutor();
+
+        Persistence p = createPersistence() //
+                .behaviourFactory(behaviourFactory) //
+                .propertiesFactory(Microwave.class, //
+                        m -> Lists.newArrayList(Property.create("colour", "white"))) //
+                .rangeMetricFactory(Microwave.class, m -> Optional.of(IntProperty.create("range", 123))) //
+                .executor(executor) //
+                .build();
+        p.create();
+        p.initialize();
+        signal(p, new DoorOpened());
+        Set<EntityWithId<Microwave>> set = p.get(Microwave.class, "colour", "white");
+        assertEquals(1, set.size());
+        {
+            List<EntityWithId<Microwave>> list = p.get(Microwave.class, "colour", "white", "range", 80, true, 140,
+                    false, 100, Optional.empty());
+            assertEquals(1, list.size());
+        }
+        {
+            List<EntityWithId<Microwave>> list = p.get(Microwave.class, "colour", "white", "range", 150, true, 160,
+                    false, 100, Optional.empty());
+            assertEquals(0, list.size());
+        }
     }
 
     private MicrowaveBehaviour<String> createMicrowaveBehaviourThatThrows() {
