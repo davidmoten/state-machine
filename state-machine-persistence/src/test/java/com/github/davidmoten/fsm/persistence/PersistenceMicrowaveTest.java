@@ -158,6 +158,11 @@ public class PersistenceMicrowaveTest {
                     false, 100, Optional.empty());
             assertEquals(0, list.size());
         }
+        {
+            List<EntityWithId<Microwave>> list = p.get(Microwave.class, "colour", "white", "range", 70, true, 160,
+                    false, 100, Optional.of("1"));
+            assertEquals(0, list.size());
+        }
     }
 
     private MicrowaveBehaviour<String> createMicrowaveBehaviourThatThrows() {

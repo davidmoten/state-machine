@@ -1098,7 +1098,7 @@ public final class Persistence implements Entities {
             if (lastId.isPresent()) {
                 for (int i = list.size() - 1; i >= 0; i--) {
                     if (list.get(i).id.equals(lastId.get())) {
-                        return list.subList(i, list.size());
+                        return list.subList(i + 1, list.size());
                     }
                 }
             }
