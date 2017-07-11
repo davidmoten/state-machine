@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.github.davidmoten.guavamini.Preconditions;
 
@@ -54,7 +55,15 @@ public final class Property {
     }
 
     public static String combineNames(String... names) {
-        return Arrays.stream(names).collect(Collectors.joining("|"));
+        return combineNames(Arrays.stream(names));
+    }
+
+    public static String combineNames(List<String> names) {
+        return combineNames(names.stream());
+    }
+
+    public static String combineNames(Stream<String> names) {
+        return names.collect(Collectors.joining("|"));
     }
 
 }

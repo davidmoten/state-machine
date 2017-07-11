@@ -1,5 +1,6 @@
 package shop;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,13 +55,13 @@ public class ShopController {
 
     @RequestMapping("/catalog/{catalogId}/products/search")
     public String catalogProductsRange(@PathVariable("catalogId") String catalogId, @RequestParam("name") String name,
-            @RequestParam("vaue") String value, @RequestParam("rangeName") String rangeName,
+            @RequestParam("vaue") String value, @RequestParam("rangeName") List<String> rangeNames,
             @RequestParam("start") int start, @RequestParam("end") int end, @RequestParam("limit") int limit,
-            @RequestParam String lastId, Model model) {
+            @RequestParam Optional<String> lastId, Model model) {
         model.addAttribute("catalogProducts",
                 persistence.get() //
-                        .get(CatalogProduct.class, name, value, rangeName, start, true, end, false, limit,
-                                Optional.ofNullable(lastId)));
+                        .get(CatalogProduct.class, name, value, Property.combineNames(rangeNames), start, true, end,
+                                false, limit, lastId));
         return "catalogProducts";
     }
 
