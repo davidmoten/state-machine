@@ -21,8 +21,8 @@ public final class CatalogProduct {
     @JsonCreator
     public CatalogProduct(@JsonProperty("catalogId") String catalogId, @JsonProperty("productId") String productId,
             @JsonProperty("name") String name, @JsonProperty("description") String description,
-            @JsonProperty("price") BigDecimal price,
-            @JsonProperty("tags") List<String> tags, @JsonProperty("quantity") int quantity) {
+            @JsonProperty("price") BigDecimal price, @JsonProperty("tags") List<String> tags,
+            @JsonProperty("quantity") int quantity) {
         this.catalogId = catalogId;
         this.productId = productId;
         this.name = name;
@@ -31,7 +31,7 @@ public final class CatalogProduct {
         this.tags = tags;
         this.quantity = quantity;
     }
-    
+
     public static String idFrom(String catalogId, String productId) {
         return catalogId + "|" + productId;
     }

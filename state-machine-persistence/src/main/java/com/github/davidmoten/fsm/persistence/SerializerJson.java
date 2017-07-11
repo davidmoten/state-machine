@@ -15,7 +15,7 @@ public class SerializerJson implements Serializer {
             .setVisibility(PropertyAccessor.FIELD, Visibility.PUBLIC_ONLY)
             .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS) //
             .registerModule(new Jdk8Module());
-
+    
     @Override
     public byte[] serialize(Object t) {
         try {
