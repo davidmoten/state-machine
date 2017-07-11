@@ -101,7 +101,9 @@
                     <configuration>
                         <source>${compiler.source.version}</source>
                         <target>${compiler.source.version}</target>
-                        <compilerArgs>-parameters</compilerArgs>
+                        <compilerArgs>
+                            <compilerArg>-parameters</compilerArg>
+                        </compilerArgs>
                     </configuration>
                 </plugin>
             </plugins>
