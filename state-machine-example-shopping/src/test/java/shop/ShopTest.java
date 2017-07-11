@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -39,7 +40,7 @@ public class ShopTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test
+    @Test(timeout = 30000)
     public void testPersistence() throws IOException, InterruptedException {
         File file = File.createTempFile("db-test", "", new File("target"));
         Callable<Connection> connectionFactory = //
@@ -65,23 +66,29 @@ public class ShopTest {
                 new com.github.davidmoten.fsm.example.shop.catalog.event.Create("1", "Online bike shop"));
         p.signal(Catalog.class, "1", new Change("12", new BigDecimal(141.30), 3));
         p.signal(Catalog.class, "1", new Change("12", new BigDecimal(151.75), 2));
-        Thread.sleep(500);
-        {
-            CatalogProduct cp = p.get(CatalogProduct.class, CatalogProduct.idFrom("1", "12")).get();
-            assertEquals("Castelli Senza Jacket", cp.name);
-            assertEquals(5, cp.quantity);
+
+        while (true) {
+            Thread.sleep(100);
+            Optional<CatalogProduct> cp = p.get(CatalogProduct.class, CatalogProduct.idFrom("1", "12"));
+            if (cp.isPresent()) {
+                assertEquals("Castelli Senza Jacket", cp.get().name);
+                if (cp.get().quantity == 5) {
+                    break;
+                }
+            }
         }
         p.signal(Product.class, "12",
                 new ChangeDetails("Castelli Senza 2 Jacket",
                         "Fleece lined windproof cycling jacket with reflective highlights",
                         Lists.newArrayList("Clothing", "Cycling", "Windproof", "Jacket", "Castelli")));
-        Thread.sleep(500);
-        {
-            CatalogProduct cp = p.get(CatalogProduct.class, CatalogProduct.idFrom("1", "12")).get();
-            assertEquals("Castelli Senza 2 Jacket", cp.name);
-            assertEquals(5, cp.quantity);
-        }
+        while (true) {
+            Optional<CatalogProduct> cp = p.get(CatalogProduct.class, CatalogProduct.idFrom("1", "12"));
+            if (cp.get().name.equals("Castelli Senza 2 Jacket")) {
+                assertEquals(5, cp.get().quantity);
+                break;
+            }
 
+        }
         {
             Set<EntityWithId<Product>> list = p.get(Product.class, "tag", "Clothing");
             assertEquals(1, list.size());
