@@ -18,7 +18,6 @@ public final class CatalogProduct {
     public final BigDecimal price;
     public final List<String> tags;
 
-    @JsonCreator
     public CatalogProduct(@JsonProperty("catalogId") String catalogId, @JsonProperty("productId") String productId,
             @JsonProperty("name") String name, @JsonProperty("description") String description,
             @JsonProperty("price") BigDecimal price, @JsonProperty("tags") List<String> tags,

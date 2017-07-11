@@ -2,7 +2,6 @@ package com.github.davidmoten.fsm.persistence;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class JacksonTest {
@@ -26,7 +25,6 @@ public final class JacksonTest {
     }
 
     @Test
-    @Ignore
     public void testSerialize() {
         byte[] bytes = Serializer.JSON.serialize(new Example("boo", 123));
         System.out.println(new String(bytes));
