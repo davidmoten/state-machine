@@ -3,9 +3,6 @@ package com.github.davidmoten.fsm.example.shop.catalogproduct;
 import java.math.BigDecimal;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public final class CatalogProduct {
 
     public final String catalogId;
@@ -18,10 +15,8 @@ public final class CatalogProduct {
     public final BigDecimal price;
     public final List<String> tags;
 
-    public CatalogProduct(@JsonProperty("catalogId") String catalogId, @JsonProperty("productId") String productId,
-            @JsonProperty("name") String name, @JsonProperty("description") String description,
-            @JsonProperty("price") BigDecimal price, @JsonProperty("tags") List<String> tags,
-            @JsonProperty("quantity") int quantity) {
+    public CatalogProduct(String catalogId, String productId, String name, String description, BigDecimal price,
+            List<String> tags, int quantity) {
         this.catalogId = catalogId;
         this.productId = productId;
         this.name = name;
