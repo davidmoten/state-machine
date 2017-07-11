@@ -63,8 +63,6 @@ public final class StateMachine {
         p.initialize();
         p.signal(Catalog.class, MAIN_CATALOG_ID,
                 new com.github.davidmoten.fsm.example.shop.catalog.event.Create(MAIN_CATALOG_ID, "Online bike shop"));
-        p.signal(Catalog.class, MAIN_CATALOG_ID, new Change("12", new BigDecimal("142.50"), 3));
-        p.signal(Catalog.class, MAIN_CATALOG_ID, new Change("12", new BigDecimal("142.50"), 2));
         InputStreamReader in = new InputStreamReader(StateMachine.class.getResourceAsStream("/products.txt"));
         try {
             for (CSVRecord record : CSVFormat.DEFAULT.parse(in)) {
@@ -73,12 +71,13 @@ public final class StateMachine {
                 String description = record.get(2).trim();
                 List<String> tags = Arrays.asList(record.get(3).split("\\|")).stream().map(x -> x.trim())
                         .collect(Collectors.toList());
-                int quantity = Integer.parseInt(record.get(4).trim());
+                BigDecimal price = new BigDecimal(record.get(4).trim());
+                int quantity = Integer.parseInt(record.get(5).trim());
                 p.signal(Product.class, //
                         productId, //
                         new Create(productId, name, description, tags));
                 p.signal(Catalog.class, //
-                        MAIN_CATALOG_ID, new Change(productId, new BigDecimal("144.70"), quantity));
+                        MAIN_CATALOG_ID, new Change(productId, price, quantity));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
