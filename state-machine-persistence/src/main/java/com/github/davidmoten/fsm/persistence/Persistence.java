@@ -1096,6 +1096,8 @@ public final class Persistence implements Entities {
                 }
             }
             if (lastId.isPresent()) {
+                // don't return the items up to lastId because they were
+                // returned in the last query (in theory)
                 for (int i = list.size() - 1; i >= 0; i--) {
                     if (list.get(i).id.equals(lastId.get())) {
                         return list.subList(i + 1, list.size());
