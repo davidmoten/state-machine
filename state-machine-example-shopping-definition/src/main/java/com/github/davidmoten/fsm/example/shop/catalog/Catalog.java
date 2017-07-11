@@ -1,8 +1,5 @@
 package com.github.davidmoten.fsm.example.shop.catalog;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public final class Catalog {
 
     public final String catalogId;

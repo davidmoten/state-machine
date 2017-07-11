@@ -35,7 +35,7 @@ public class ShopRestController {
     // from the REST API!
     ///////////////////////////////////////////////////////////
 
-    @RequestMapping(value = "/api/catalogs/{catalogId}/products", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/catalog/{catalogId}/products", method = RequestMethod.GET)
     public Set<EntityWithId<CatalogProduct>> products(@PathVariable("catalogId") String catalogId) {
         return p.get().getOr(CatalogProduct.class, Property.list("catalogId", catalogId));
     }
@@ -45,7 +45,7 @@ public class ShopRestController {
         return p.get().getOr(CatalogProduct.class, Property.list("tag", tags));
     }
 
-    @RequestMapping(value = "/api/catalogs", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/catalog", method = RequestMethod.GET)
     public List<EntityWithId<Catalog>> catalogs() {
         return p.get().get(Catalog.class);
     }

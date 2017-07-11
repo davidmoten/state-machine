@@ -33,6 +33,18 @@ public class ShopController {
         return "catalogProducts";
     }
 
+    @RequestMapping("/catalog/{catalogId}/productsPaged")
+    public String catalogProductsPaged(@PathVariable("catalogId") String catalogId, @RequestParam("name") String name,
+            @RequestParam("value") String value, @RequestParam("rangeName") String rangeName,
+            @RequestParam("rangeStart") int rangeStart, @RequestParam("rangeEnd") int rangeEnd,
+            @RequestParam("limit") int limit, Model model) {
+        model.addAttribute("catalogProducts",
+                persistence.get() //
+                        .get(CatalogProduct.class, name, value, rangeName, rangeStart, true, rangeEnd, false, limit,
+                                Optional.empty()));
+        return "catalogProducts";
+    }
+
     @RequestMapping("/product/{productId}")
     public String products(@PathVariable("productId") String productId, Model model) {
         model.addAttribute("product", persistence.get() //
