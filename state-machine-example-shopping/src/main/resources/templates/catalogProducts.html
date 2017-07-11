@@ -10,10 +10,14 @@
 	     <tr th:each="cp : ${catalogProducts}">
 	        <td th:text="${cp.id}">1</td>
 	        <td><a th:href="@{'/product/' + ${cp.entity.productId}}" th:text="${cp.entity.name}">Name</a></td>
+	        <td th:text="${cp.entity.price}"></td>
 	        <td th:text="${cp.entity.quantity}">3</td>
 	        <td><form><input type="submit" value="Buy"/></form></td>
 	    </tr>
     </table>
+    <br/>
+    <a href="/catalog/1/products/search?name=catalogId&amp;value=1&amp;rangeName=catalogId&amp;rangeName=1&amp;rangeName=price&amp;start=10000&amp;end=500000&amp;limit=3">Search between 100 and 5000 dollars</a>
+    <br/>
     <br/>
     <a href="/catalogs">Catalogs</a>
 </body>
