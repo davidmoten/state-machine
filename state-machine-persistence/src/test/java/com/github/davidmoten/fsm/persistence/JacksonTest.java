@@ -7,20 +7,12 @@ import org.junit.Test;
 public final class JacksonTest {
 
     public static final class Example {
-        private final String a;
-        private final int b;
+        public final String a;
+        public final int b;
 
         public Example(String a, int b) {
             this.a = a;
             this.b = b;
-        }
-
-        public String getA() {
-            return a;
-        }
-
-        public int getB() {
-            return b;
         }
     }
 

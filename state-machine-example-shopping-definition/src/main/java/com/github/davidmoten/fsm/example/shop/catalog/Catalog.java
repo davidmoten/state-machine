@@ -8,8 +8,7 @@ public final class Catalog {
     public final String catalogId;
     public final String name;
 
-    @JsonCreator
-    public Catalog(@JsonProperty("catalogId") String catalogId, @JsonProperty("name") String name) {
+    public Catalog( String catalogId,  String name) {
         this.catalogId = catalogId;
         this.name = name;
     }
