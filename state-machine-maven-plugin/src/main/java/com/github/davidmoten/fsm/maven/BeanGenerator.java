@@ -2,13 +2,14 @@ package com.github.davidmoten.fsm.maven;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 public final class BeanGenerator {
@@ -24,7 +25,7 @@ public final class BeanGenerator {
         Map<Class<?>, String> imports = new HashMap<>();
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintStream out = new PrintStream(bytes);
-        out.format("public final class %s {\n", className);
+        out.format("public class %s {\n", className);
         out.println();
         for (Field field : cls.getDeclaredFields()) {
             Class<?> type = field.getType();
@@ -81,13 +82,28 @@ public final class BeanGenerator {
         out.println();
         out.format("    @%s\n", resolve(imports, Override.class));
         out.format("    public boolean equals(Object o) {\n");
-        out.format("        return %s.hashCode(%s);\n", resolve(imports, Objects.class), fields);
+        out.format("        return %s.equals(this, o);\n", resolve(imports, Objects.class));
         out.format("    }\n");
-        
+
         out.println("}\n");
         out.close();
 
+        StringBuffer w = new StringBuffer();
+        w.append("package " + pkg2 + ";\n");
+        w.append("\n");
+
+        for (Entry<Class<?>, String> entry : imports.entrySet()) {
+            Class<?> c = entry.getKey();
+            if (!c.isPrimitive() && !c.getName().startsWith("java.lang.")) {
+                if (entry.getKey().isArray()) {
+                    w.append("import " + c.getComponentType().getName() + ";\n");
+                }
+            }
+        }
+        w.append("\n");
+
         try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(w.toString().getBytes(StandardCharsets.UTF_8));
             fos.write(bytes.toByteArray());
         } catch (IOException e) {
             throw new RuntimeException(e);
