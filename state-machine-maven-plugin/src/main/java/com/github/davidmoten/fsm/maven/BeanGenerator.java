@@ -139,19 +139,28 @@ public final class BeanGenerator {
     }
 
     public String resolve(Map<Class<?>, String> map, Class<?> cls) {
+        Class<?> c;
         if (cls.isArray()) {
-            cls = cls.getComponentType();
-        }
-        if (map.containsKey(cls)) {
-            return map.get(cls);
+            c = cls.getComponentType();
         } else {
-            if (map.values().contains(cls.getSimpleName())) {
-                map.put(cls, cls.getName());
-                return cls.getName();
+            c = cls;
+        }
+        final String name;
+        if (map.containsKey(c)) {
+            name = map.get(c);
+        } else {
+            if (map.values().contains(c.getSimpleName())) {
+                map.put(c, c.getName());
+                name = c.getName();
             } else {
-                map.put(cls, cls.getSimpleName());
-                return cls.getSimpleName();
+                map.put(c, c.getSimpleName());
+                name = c.getSimpleName();
             }
+        }
+        if (cls.isArray()) {
+            return name + "[]";
+        } else {
+            return name;
         }
     }
 
