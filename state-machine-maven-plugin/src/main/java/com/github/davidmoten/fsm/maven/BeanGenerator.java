@@ -7,9 +7,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.Objects;
 
 public final class BeanGenerator {
@@ -27,7 +30,11 @@ public final class BeanGenerator {
         PrintStream out = new PrintStream(bytes);
         out.format("public class %s {\n", className);
         out.println();
-        for (Field field : cls.getDeclaredFields()) {
+
+        List<Field> fields = Arrays.stream(cls.getDeclaredFields()).filter(c -> !c.getName().startsWith("$"))
+                .collect(Collectors.toList());
+
+        for (Field field : fields) {
             Class<?> type = field.getType();
             String name = field.getName();
             out.format("    private final %s %s;\n", resolve(imports, type), name);
@@ -35,7 +42,7 @@ public final class BeanGenerator {
 
         // constructor params
         StringBuffer params = new StringBuffer();
-        for (Field field : cls.getDeclaredFields()) {
+        for (Field field : fields) {
             Class<?> type = field.getType();
             String name = field.getName();
             if (params.length() > 0) {
@@ -47,7 +54,7 @@ public final class BeanGenerator {
         // constructor
         out.println();
         out.format("    public %s(%s) {\n", cls.getSimpleName(), params);
-        for (Field field : cls.getDeclaredFields()) {
+        for (Field field : fields) {
             Class<?> type = field.getType();
             String name = field.getName();
             out.format("        this.%s = %s;\n", name, name);
@@ -55,7 +62,7 @@ public final class BeanGenerator {
         out.format("    }\n");
 
         // getters
-        for (Field field : cls.getDeclaredFields()) {
+        for (Field field : fields) {
             Class<?> type = field.getType();
             String name = field.getName();
             out.println();
@@ -65,18 +72,18 @@ public final class BeanGenerator {
         }
 
         // hashCode
-        StringBuffer fields = new StringBuffer();
+        StringBuffer flds = new StringBuffer();
         for (Field field : cls.getDeclaredFields()) {
             String name = field.getName();
-            if (fields.length() > 0) {
-                fields.append(", ");
+            if (flds.length() > 0) {
+                flds.append(", ");
             }
-            fields.append(name);
+            flds.append(name);
         }
         out.println();
         out.format("    @%s\n", resolve(imports, Override.class));
         out.format("    public int hashCode() {\n");
-        out.format("        return %s.hashCode(%s);\n", resolve(imports, Objects.class), fields);
+        out.format("        return %s.hashCode(%s);\n", resolve(imports, Objects.class), flds);
         out.format("    }\n");
 
         out.println();
