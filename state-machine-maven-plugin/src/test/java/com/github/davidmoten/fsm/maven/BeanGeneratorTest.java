@@ -7,11 +7,6 @@ import org.junit.Test;
 
 public final class BeanGeneratorTest {
 
-    public static final class Example {
-        String id;
-        int number;
-        Date[] values;
-    }
     
     @Test
     public void testGenerate() {
