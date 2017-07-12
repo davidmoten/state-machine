@@ -12,8 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;;
 
 public final class BeanGenerator {
 
@@ -48,14 +51,15 @@ public final class BeanGenerator {
             if (params.length() > 0) {
                 params.append(", ");
             }
+            params.append(String.format("\n          @%s(\"%s\") ", resolve(imports, JsonProperty.class), name));
             params.append(resolve(imports, type) + " " + name);
         }
 
         // constructor
         out.println();
+        out.format("    @%s\n", resolve(imports, JsonCreator.class));
         out.format("    public %s(%s) {\n", cls.getSimpleName(), params);
         for (Field field : fields) {
-            Class<?> type = field.getType();
             String name = field.getName();
             out.format("        this.%s = %s;\n", name, name);
         }
@@ -80,6 +84,17 @@ public final class BeanGenerator {
             }
             flds.append(name);
         }
+
+        // with fields
+        for (Field field : fields) {
+            Class<?> type = field.getType();
+            String name = field.getName();
+            out.println();
+            out.format("    public %s with%s(%s %s) {\n", className, capFirst(name), resolve(imports, type), name);
+            out.format("        return new %s(%s);\n", className, flds);
+            out.format("    }\n");
+        }
+
         out.println();
         out.format("    @%s\n", resolve(imports, Override.class));
         out.format("    public int hashCode() {\n");
@@ -102,9 +117,7 @@ public final class BeanGenerator {
         for (Entry<Class<?>, String> entry : imports.entrySet()) {
             Class<?> c = entry.getKey();
             if (!c.isPrimitive() && !c.getName().startsWith("java.lang.")) {
-                if (entry.getKey().isArray()) {
-                    w.append("import " + c.getComponentType().getName() + ";\n");
-                }
+                w.append("import " + c.getName() + ";\n");
             }
         }
         w.append("\n");
@@ -117,7 +130,18 @@ public final class BeanGenerator {
         }
     }
 
+    private static String capFirst(String name) {
+        if (name.length() <= 1) {
+            return name.toUpperCase();
+        } else {
+            return name.substring(0, 1).toUpperCase() + name.substring(1);
+        }
+    }
+
     public String resolve(Map<Class<?>, String> map, Class<?> cls) {
+        if (cls.isArray()) {
+            cls = cls.getComponentType();
+        }
         if (map.containsKey(cls)) {
             return map.get(cls);
         } else {
