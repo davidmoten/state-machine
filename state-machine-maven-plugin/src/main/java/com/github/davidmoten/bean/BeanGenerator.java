@@ -117,7 +117,7 @@ public final class BeanGenerator {
 
         // build comma delimited params
         StringBuffer flds = new StringBuffer();
-        for (Field field : cls.getDeclaredFields()) {
+        for (Field field : fields) {
             String name = field.getName();
             if (flds.length() > 0) {
                 flds.append(", ");
