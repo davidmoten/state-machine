@@ -6,7 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
 @Documented
 @Target(value = { ElementType.TYPE })
 @Retention(value = RetentionPolicy.CLASS)

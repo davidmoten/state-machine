@@ -23,11 +23,11 @@ import com.github.davidmoten.bean.annotation.NonNull;
 
 public final class BeanGenerator {
 
-    public void scanAndGenerate(File sourceDirectory) {
+    public static void scanAndGenerate(File sourceDirectory) {
         scanAndGenerate(sourceDirectory, sourceDirectory, "");
     }
 
-    private void scanAndGenerate(File sourceDirectory, File directory, String pkg) {
+    private static void scanAndGenerate(File sourceDirectory, File directory, String pkg) {
         for (File file : directory.listFiles()) {
             if (file.isDirectory()) {
                 scanAndGenerate(sourceDirectory, file, pkg + "." + file.getName());
@@ -35,7 +35,9 @@ public final class BeanGenerator {
                 String className = pkg + "." + file.getName().substring(0, file.getName().lastIndexOf("."));
                 try {
                     Class<?> cls = Class.forName(className);
-                    if (Arrays.stream(cls.getAnnotations()).anyMatch(x -> x instanceof ImmutableBean)) {
+                    if (Arrays //
+                            .stream(cls.getAnnotations()) //
+                            .anyMatch(x -> x instanceof ImmutableBean)) {
                         generate(cls, sourceDirectory);
                     }
                 } catch (ClassNotFoundException e) {
@@ -45,7 +47,7 @@ public final class BeanGenerator {
         }
     }
 
-    public void generate(Class<?> cls, File generatedSource) {
+    public static void generate(Class<?> cls, File generatedSource) {
         String pkg = cls.getPackage().getName();
         String pkg2 = pkg + ".bean";
         String className = cls.getSimpleName();
@@ -105,6 +107,33 @@ public final class BeanGenerator {
         }
         out.format("    }\n");
 
+        // build comma delimited params
+        StringBuffer flds = new StringBuffer();
+        for (Field field : cls.getDeclaredFields()) {
+            String name = field.getName();
+            if (flds.length() > 0) {
+                flds.append(", ");
+            }
+            flds.append(name);
+        }
+
+        // static factory
+        // build create method params
+        StringBuffer params2 = new StringBuffer();
+        for (Field field : fields) {
+            Class<?> type = field.getType();
+            String name = field.getName();
+            if (params2.length() > 0) {
+                params2.append(", ");
+            }
+            params2.append(String.format("%s %s", resolve(imports, type), name));
+        }
+        out.println();
+        out.format("    public static %s create(%s) {\n", className, params2);
+        out.format("        return new %s(%s);\n", className, flds);
+        out.format("    }");
+        out.println();
+
         // getters
         for (Field field : fields) {
             Class<?> type = field.getType();
@@ -113,16 +142,6 @@ public final class BeanGenerator {
             out.format("    public %s %s() {\n", resolve(imports, type), name);
             out.format("        return %s;\n", name);
             out.format("    }\n");
-        }
-
-        // hashCode
-        StringBuffer flds = new StringBuffer();
-        for (Field field : cls.getDeclaredFields()) {
-            String name = field.getName();
-            if (flds.length() > 0) {
-                flds.append(", ");
-            }
-            flds.append(name);
         }
 
         // with fields
@@ -191,7 +210,7 @@ public final class BeanGenerator {
         }
     }
 
-    public String resolve(Map<Class<?>, String> map, Class<?> cls) {
+    public static String resolve(Map<Class<?>, String> map, Class<?> cls) {
         Class<?> c;
         if (cls.isArray()) {
             c = cls.getComponentType();
