@@ -185,7 +185,11 @@ public final class BeanGenerator {
         w.append("\n");
 
         // imports
-        for (Entry<Class<?>, String> entry : imports.entrySet()) {
+        for (Entry<Class<?>, String> entry : imports //
+                .entrySet() //
+                .stream() //
+                .sorted((a, b) -> a.getKey().getName().compareTo(b.getKey().getName())) //
+                .collect(Collectors.toList())) {
             Class<?> c = entry.getKey();
             if (!c.isPrimitive() && !c.getName().startsWith("java.lang.")) {
                 w.append("import " + c.getName() + ";\n");
