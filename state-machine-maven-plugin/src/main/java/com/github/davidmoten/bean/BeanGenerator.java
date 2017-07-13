@@ -1,4 +1,4 @@
-package com.github.davidmoten.fsm.maven;
+package com.github.davidmoten.bean;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -59,6 +59,20 @@ public final class BeanGenerator {
         out.println();
         out.format("    @%s\n", resolve(imports, JsonCreator.class));
         out.format("    public %s(%s) {\n", cls.getSimpleName(), params);
+        // TODO make checkForNull configurable
+        boolean checkForNull = false;
+        if (checkForNull) {
+            for (Field field : fields) {
+                String name = field.getName();
+                Class<?> type = field.getType();
+                if (!type.isPrimitive() || type.isArray()) {
+                    out.format("        if (%s == null) {\n", name);
+                    out.format("            throw new %s(\"'%s' parameter cannot be null\");\n",
+                            resolve(imports, NullPointerException.class), name);
+                    out.format("        }\n");
+                }
+            }
+        }
         for (Field field : fields) {
             String name = field.getName();
             out.format("        this.%s = %s;\n", name, name);
@@ -98,7 +112,7 @@ public final class BeanGenerator {
         out.println();
         out.format("    @%s\n", resolve(imports, Override.class));
         out.format("    public int hashCode() {\n");
-        out.format("        return %s.hashCode(%s);\n", resolve(imports, Objects.class), flds);
+        out.format("        return %s.hash(%s);\n", resolve(imports, Objects.class), flds);
         out.format("    }\n");
 
         out.println();

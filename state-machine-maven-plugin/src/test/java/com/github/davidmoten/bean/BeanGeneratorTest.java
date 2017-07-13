@@ -1,9 +1,10 @@
-package com.github.davidmoten.fsm.maven;
+package com.github.davidmoten.bean;
 
 import java.io.File;
-import java.util.Date;
 
 import org.junit.Test;
+
+import com.github.davidmoten.bean.BeanGenerator;
 
 public final class BeanGeneratorTest {
 
