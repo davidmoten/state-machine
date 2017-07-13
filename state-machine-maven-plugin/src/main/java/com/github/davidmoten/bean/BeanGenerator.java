@@ -47,6 +47,10 @@ public final class BeanGenerator {
         }
     }
 
+    /**
+     * @param cls
+     * @param generatedSource
+     */
     public static void generate(Class<?> cls, File generatedSource) {
         String pkg = cls.getPackage().getName();
         String pkg2 = pkg + ".bean";
@@ -58,6 +62,7 @@ public final class BeanGenerator {
         Map<Class<?>, String> imports = new HashMap<>();
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintStream out = new PrintStream(bytes);
+        out.format("@%s\n", resolve(imports, ImmutableBean.class));
         out.format("public class %s {\n", className);
         out.println();
 
@@ -75,7 +80,7 @@ public final class BeanGenerator {
                     out.format("    @%s\n", resolve(imports, NonNull.class));
                 }
             }
-            out.format("    private final %s %s;\n", resolve(imports, type), name);
+            out.format("    private %s %s;\n", resolve(imports, type), name);
         }
 
         // constructor params
