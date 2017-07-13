@@ -61,12 +61,20 @@ public final class BeanGenerator {
         out.format("public class %s {\n", className);
         out.println();
 
-        List<Field> fields = Arrays.stream(cls.getDeclaredFields()).filter(c -> !c.getName().startsWith("$"))
+        List<Field> fields = Arrays //
+                .stream(cls.getDeclaredFields()) //
+                .filter(c -> !c.getName().startsWith("$")) //
                 .collect(Collectors.toList());
 
         for (Field field : fields) {
             Class<?> type = field.getType();
             String name = field.getName();
+            for (Annotation a : field.getAnnotations()) {
+                System.out.println(a);
+                if (a.annotationType().equals(NonNull.class)) {
+                    out.format("    @%s\n", resolve(imports, NonNull.class));
+                }
+            }
             out.format("    private final %s %s;\n", resolve(imports, type), name);
         }
 
