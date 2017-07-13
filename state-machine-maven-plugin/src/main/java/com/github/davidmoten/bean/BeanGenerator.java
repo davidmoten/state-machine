@@ -18,9 +18,32 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.davidmoten.bean.annotation.ImmutableBean;
 import com.github.davidmoten.bean.annotation.NonNull;
 
 public final class BeanGenerator {
+
+    public void scanAndGenerate(File sourceDirectory) {
+        scanAndGenerate(sourceDirectory, sourceDirectory, "");
+    }
+
+    private void scanAndGenerate(File sourceDirectory, File directory, String pkg) {
+        for (File file : directory.listFiles()) {
+            if (file.isDirectory()) {
+                scanAndGenerate(sourceDirectory, file, pkg + "." + file.getName());
+            } else if (file.getName().endsWith(".java")) {
+                String className = pkg + "." + file.getName().substring(0, file.getName().lastIndexOf("."));
+                try {
+                    Class<?> cls = Class.forName(className);
+                    if (Arrays.stream(cls.getAnnotations()).anyMatch(x -> x instanceof ImmutableBean)) {
+                        generate(cls, sourceDirectory);
+                    }
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
 
     public void generate(Class<?> cls, File generatedSource) {
         String pkg = cls.getPackage().getName();
@@ -61,6 +84,7 @@ public final class BeanGenerator {
         out.println();
         out.format("    @%s\n", resolve(imports, JsonCreator.class));
         out.format("    public %s(%s) {\n", cls.getSimpleName(), params);
+
         // TODO make checkForNull configurable
         boolean checkForNull = false;
         if (checkForNull) {
@@ -111,12 +135,14 @@ public final class BeanGenerator {
             out.format("    }\n");
         }
 
+        // hashCode
         out.println();
         out.format("    @%s\n", resolve(imports, Override.class));
         out.format("    public int hashCode() {\n");
         out.format("        return %s.hash(%s);\n", resolve(imports, Objects.class), flds);
         out.format("    }\n");
 
+        // equals
         out.println();
         out.format("    @%s\n", resolve(imports, Override.class));
         out.format("    public boolean equals(Object o) {\n");
@@ -126,10 +152,12 @@ public final class BeanGenerator {
         out.println("}\n");
         out.close();
 
+        // package
         StringBuffer w = new StringBuffer();
         w.append("package " + pkg2 + ";\n");
         w.append("\n");
 
+        // imports
         for (Entry<Class<?>, String> entry : imports.entrySet()) {
             Class<?> c = entry.getKey();
             if (!c.isPrimitive() && !c.getName().startsWith("java.lang.")) {
