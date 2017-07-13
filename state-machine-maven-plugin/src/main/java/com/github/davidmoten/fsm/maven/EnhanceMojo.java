@@ -1,6 +1,6 @@
 package com.github.davidmoten.fsm.maven;
 
-import java.util.List;
+import java.io.File;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -8,13 +8,16 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-@Mojo(name = "generate-beans", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
-public class BeanGeneratorMojo extends AbstractMojo {
+import com.github.davidmoten.bean.BeanGenerator;
 
-    @Parameter(name = "sources", required = true)
-    List<String> sources;
+@Mojo(name = "enhance", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
+public class EnhanceMojo extends AbstractMojo {
+
+    @Parameter(name = "sourceDirectory", required = true)
+    File sourceDirectory;
 
     @Override
     public void execute() throws MojoExecutionException {
+        BeanGenerator.scanAndGenerate(sourceDirectory);
     }
 }
