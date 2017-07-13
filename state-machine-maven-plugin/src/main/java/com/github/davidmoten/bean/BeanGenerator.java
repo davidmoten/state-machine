@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -16,7 +17,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.davidmoten.bean.annotation.NonNull;
 
 public final class BeanGenerator {
 
@@ -65,7 +67,7 @@ public final class BeanGenerator {
             for (Field field : fields) {
                 String name = field.getName();
                 Class<?> type = field.getType();
-                if (!type.isPrimitive() || type.isArray()) {
+                if ((!type.isPrimitive() || type.isArray()) && isNonNull(type.getAnnotations())) {
                     out.format("        if (%s == null) {\n", name);
                     out.format("            throw new %s(\"'%s' parameter cannot be null\");\n",
                             resolve(imports, NullPointerException.class), name);
@@ -142,6 +144,15 @@ public final class BeanGenerator {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static boolean isNonNull(Annotation[] annotations) {
+        for (Annotation a : annotations) {
+            if (a.annotationType().equals(NonNull.class)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String capFirst(String name) {

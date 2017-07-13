@@ -90,6 +90,7 @@
         <module>state-machine-persistence</module>
         <module>state-machine-example-shopping-definition</module>
         <module>state-machine-example-shopping</module>
+        <module>state-machine-annotations</module>
     </modules>
     <build>
         <pluginManagement>
