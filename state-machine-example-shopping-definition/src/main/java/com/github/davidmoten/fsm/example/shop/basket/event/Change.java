@@ -2,10 +2,10 @@ package com.github.davidmoten.fsm.example.shop.basket.event;
 
 import java.math.BigDecimal;
 
-import com.github.davidmoten.fsm.example.shop.basket.Basket;
+import com.github.davidmoten.fsm.example.shop.customer.Customer;
 import com.github.davidmoten.fsm.runtime.Event;
 
-public final class Change implements Event<Basket>{
+public final class Change implements Event<Customer>{
 
     public final String productId;
     public final int quantity;

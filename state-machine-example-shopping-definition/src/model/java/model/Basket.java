@@ -1,10 +1,11 @@
-package com.github.davidmoten.fsm.example.shop.basket;
+package model;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.github.davidmoten.bean.annotation.ImmutableBean;
 
+@ImmutableBean
 public final class Basket {
 
     public final String id;
