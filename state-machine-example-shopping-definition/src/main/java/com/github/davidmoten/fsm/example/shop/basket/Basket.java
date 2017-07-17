@@ -3,7 +3,7 @@ package com.github.davidmoten.fsm.example.shop.basket;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.davidmoten.bean.annotation.ImmutableBean;
+import com.github.davidmoten.bean.annotation.GenerateImmutable;
 
 public final class Basket {
 

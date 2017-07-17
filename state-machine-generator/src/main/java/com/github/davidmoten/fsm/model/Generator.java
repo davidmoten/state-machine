@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.davidmoten.bean.annotation.ImmutableBean;
+import com.github.davidmoten.bean.annotation.GenerateImmutable;
 import com.github.davidmoten.fsm.Util;
 import com.github.davidmoten.fsm.runtime.Action3;
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
@@ -50,7 +50,7 @@ public final class Generator<T> {
 
     private static String getClassName(StateMachineDefinition<?> machine) {
         String clsName = machine.cls().getName().replace("$", ".");
-        if (machine.cls().isAnnotationPresent(ImmutableBean.class)) {
+        if (machine.cls().isAnnotationPresent(GenerateImmutable.class)) {
             int i = clsName.lastIndexOf(".");
             if (i == -1) {
                 return "immutable." + clsName;

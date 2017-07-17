@@ -9,5 +9,5 @@ import java.lang.annotation.Target;
 @Documented
 @Target(value = { ElementType.TYPE })
 @Retention(value = RetentionPolicy.CLASS)
-public @interface ImmutableBean {
+public @interface GenerateImmutable {
 }

@@ -2,10 +2,10 @@ package com.github.davidmoten.bean;
 
 import java.util.Date;
 
-import com.github.davidmoten.bean.annotation.ImmutableBean;
+import com.github.davidmoten.bean.annotation.GenerateImmutable;
 import com.github.davidmoten.bean.annotation.NonNull;
 
-@ImmutableBean
+@GenerateImmutable
 public final class Example {
     @NonNull
     String id;
