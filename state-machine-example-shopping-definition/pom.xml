@@ -54,65 +54,12 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>${build.helper.version}</version>
-                <executions>
-                    <execution>
-                        <id>add-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>src/model/java</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler.plugin.version}</version>
                 <configuration>
                     <source>${maven.compiler.target}</source>
                     <target>${maven.compiler.target}</target>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>default-compile</id>
-                        <phase>process-sources</phase>
-                        <configuration>
-                            <includes>
-                                <include>**/model/**/*</include>
-                            </includes>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>build-all</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>${project.parent.groupId}</groupId>
-                <artifactId>state-machine-maven-plugin</artifactId>
-                <version>${project.parent.version}</version>
-                <executions>
-                    <execution>
-                        <id>gen</id>
-                        <goals>
-                            <goal>bean-generate</goal>
-                        </goals>
-                        <configuration>
-                            <packageToScan>model</packageToScan>
-                            <outputSourceDirectory>${project.build.directory}/generated-sources/java</outputSourceDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
