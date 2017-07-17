@@ -64,6 +64,15 @@ public final class Generator<T> {
         }
     }
 
+    private static String getPackage(String cls) {
+        int i = cls.lastIndexOf(".");
+        if (i == -1) {
+            return "";
+        } else {
+            return cls.substring(0, i);
+        }
+    }
+
     private static String getSimpleName(String clsName) {
         int i = clsName.lastIndexOf(".");
         if (i == -1) {
@@ -170,7 +179,9 @@ public final class Generator<T> {
     }
 
     private void generateImmutableClass() {
-        BeanGenerator.generate(fromCls,pkg, directory);
+        if (fromCls.isAnnotationPresent(GenerateImmutable.class)) {
+        BeanGenerator.generate(fromCls, getPackage(clsName), directory);
+        }
     }
 
     private Stream<State<T, ? extends Event<? super T>>> states() {

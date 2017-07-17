@@ -3,6 +3,9 @@ package com.github.davidmoten.fsm.example.shop.catalogproduct;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.github.davidmoten.bean.annotation.GenerateImmutable;
+
+@GenerateImmutable
 public final class CatalogProduct {
 
     public final String catalogId;

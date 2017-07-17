@@ -160,7 +160,7 @@ public final class BeanGenerator {
                 out.format("    }\n\n");
             }
             out.format("    private static final class Builder {\n");
-            for (Field field : fields) { 
+            for (Field field : fields) {
                 Class<?> type = field.getType();
                 String name = field.getName();
                 out.format("        %s %s;\n", resolve(imports, type), name);
@@ -241,6 +241,7 @@ public final class BeanGenerator {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        System.out.println("written generated data class " + file);
     }
 
     private static boolean isNonNull(Annotation[] annotations) {
