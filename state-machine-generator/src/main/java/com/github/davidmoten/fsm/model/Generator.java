@@ -43,6 +43,7 @@ public final class Generator<T> {
         this.machine = machine;
         this.fromCls = machine.cls();
         this.clsName = getClassName(machine);
+        System.out.println("clsName="+ clsName);
         this.clsSimpleName = getSimpleName(clsName);
         this.directory = directory;
         this.pkg = pkg;

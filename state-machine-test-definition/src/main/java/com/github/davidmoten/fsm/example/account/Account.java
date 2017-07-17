@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.davidmoten.bean.annotation.GenerateImmutable;
 
+@GenerateImmutable
 public final class Account {
 
     public final String id;
