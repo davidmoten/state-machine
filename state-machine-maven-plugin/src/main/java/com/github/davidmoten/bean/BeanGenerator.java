@@ -16,71 +16,29 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.maven.plugin.logging.Log;
-import org.reflections.Reflections;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.davidmoten.bean.annotation.ImmutableBean;
 import com.github.davidmoten.bean.annotation.NonNull;
 
 public final class BeanGenerator {
-
-    public static void scanAndGenerate(File sourceDirectory, File outputSourceDirectory) {
-        scanAndGenerate(sourceDirectory, sourceDirectory, "", outputSourceDirectory);
-    }
-
-    private static void scanAndGenerate(File sourceDirectory, File directory, String pkg, File outputSourceDirectory) {
-        for (File file : directory.listFiles()) {
-            if (file.isDirectory()) {
-                scanAndGenerate(sourceDirectory, file, pkg + "." + file.getName(), outputSourceDirectory);
-            } else if (file.getName().endsWith(".java")) {
-                String className = pkg + ".bean." + file.getName().substring(0, file.getName().lastIndexOf("."));
-                try {
-                    Class<?> cls = Class.forName(className);
-                    if (Arrays //
-                            .stream(cls.getAnnotations()) //
-                            .anyMatch(x -> x instanceof ImmutableBean)) {
-                        generate(cls, outputSourceDirectory);
-                    }
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-    }
-
-    public static void scanAndGenerate(String packageName, File outputSourceDirectory) {
-        System.out.println("scanning "+ packageName);
-        Reflections r = new Reflections(packageName);
-        for (Class<?> cls: r.getTypesAnnotatedWith(ImmutableBean.class)) {
-            System.out.println(cls);
-            generate(cls, outputSourceDirectory);
-        }
-    }
-
     /**
      * @param cls
      * @param generatedSource
      */
-    public static void generate(Class<?> cls, File generatedSource) {
-        String pkg = cls.getPackage().getName();
-        String pkg2 = pkg + ".bean";
+    public static void generate(Class<?> cls, String newPkg, File generatedSource) {
         String className = cls.getSimpleName();
-        String path = pkg2.replace(".", File.separator);
+        String path = newPkg.replace(".", File.separator);
         File directory = new File(generatedSource, path);
         directory.mkdirs();
         File file = new File(directory, className + ".java");
         Map<Class<?>, String> imports = new HashMap<>();
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintStream out = new PrintStream(bytes);
-        out.format(
-                "/////////////////////////////////////////////////////\n" + //
-                        "// WARNING - Generated data class! \n" //
-                        + "/////////////////////////////////////////////////////\n", //
-                resolve(imports, ImmutableBean.class));
+        out.format("/////////////////////////////////////////////////////\n" + //
+                "// WARNING - Generated data class! \n" //
+                + "/////////////////////////////////////////////////////\n");
         out.println();
-        out.format("@%s\n", resolve(imports, ImmutableBean.class));
+        // out.format("@%s\n", resolve(imports, ImmutableBean.class));
         out.format("public class %s {\n", className);
         out.println();
 
@@ -98,7 +56,7 @@ public final class BeanGenerator {
                     out.format("    @%s\n", resolve(imports, NonNull.class));
                 }
             }
-            out.format("    private %s %s;\n", resolve(imports, type), name);
+            out.format("    private final %s %s;\n", resolve(imports, type), name);
         }
 
         // constructor params
@@ -204,7 +162,7 @@ public final class BeanGenerator {
 
         // package
         StringBuffer w = new StringBuffer();
-        w.append("package " + pkg2 + ";\n");
+        w.append("package " + newPkg + ";\n");
         w.append("\n");
 
         // imports

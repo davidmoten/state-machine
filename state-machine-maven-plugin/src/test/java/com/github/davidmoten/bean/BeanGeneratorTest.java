@@ -8,9 +8,8 @@ import com.github.davidmoten.bean.BeanGenerator;
 
 public final class BeanGeneratorTest {
 
-    
     @Test
     public void testGenerate() {
-        new BeanGenerator().generate(Example.class, new File("target"));
+        BeanGenerator.generate(Example.class, "test.immutable", new File("target"));
     }
 }

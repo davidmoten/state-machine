@@ -37,9 +37,11 @@ public final class Generator<T> {
     private final StateMachineDefinition<T> machine;
     private final String clsName;
     private String clsSimpleName;
+    private final Class<T> fromCls;
 
     public Generator(StateMachineDefinition<T> machine, File directory, String pkg) {
         this.machine = machine;
+        this.fromCls = machine.cls();
         this.clsName = getClassName(machine);
         this.clsSimpleName = getSimpleName(clsName);
         this.directory = directory;
