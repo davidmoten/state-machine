@@ -143,6 +143,31 @@ public final class BeanGenerator {
             out.format("    }\n");
         }
 
+        for (int i = 1; i <= fields.size(); i++) {
+            Field field = fields.get(i - 1);
+            Class<?> type = field.getType();
+            String name = field.getName();
+            out.println();
+            out.format("    public static final class Builder%s {\n", i);
+            if (i == fields.size() - 1) {
+                out.format("        public %s %s(%s %s) {\n", className, name, resolve(imports, type), name);
+                out.format("            this.%s = %s;\n", name, name);
+                out.format("            return null;\n");
+                out.format("        }\n");
+            } else {
+                out.format("        public Builder%s %s(%s %s) {\n", //
+                        i, name, resolve(imports, type), name);
+                out.format("            this.%s = %s;\n", name, name);
+                out.format("            return new Builder%s(b);\n", i + 1);
+                out.format("        }\n");
+            }
+            out.format("    }\n");
+        }
+
+        // builder
+
+        // TODO toString
+
         // hashCode
         out.println();
         out.format("    @%s\n", resolve(imports, Override.class));
