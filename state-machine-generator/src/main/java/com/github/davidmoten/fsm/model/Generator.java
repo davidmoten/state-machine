@@ -40,10 +40,24 @@ public final class Generator<T> {
 
     public Generator(StateMachineDefinition<T> machine, File directory, String pkg) {
         this.machine = machine;
-        this.clsName = machine.cls().getName().replace("$", ".");
+        this.clsName = getClassName(machine);
         this.clsSimpleName = getSimpleName(clsName);
         this.directory = directory;
         this.pkg = pkg;
+    }
+
+    private static String getClassName(StateMachineDefinition<?> machine) {
+        String clsName = machine.cls().getName().replace("$", ".");
+        if (machine.cls().isAnnotationPresent(ImmutableBean.class)) {
+            int i = clsName.lastIndexOf(".");
+            if (i == -1) {
+                return "immutable." + clsName;
+            } else {
+                return clsName.substring(0, i) + ".immutable" + clsName.substring(i);
+            }
+        } else {
+            return clsName;
+        }
     }
 
     private static String getSimpleName(String clsName) {
@@ -197,12 +211,13 @@ public final class Generator<T> {
             states().filter(state -> !state.name().equals("Initial")).forEach(state -> {
                 if (state.isCreationDestination()) {
                     out.format("%s%s %s(%s<%s, Id> signaller, Id id, %s event, boolean replaying);\n", indent,
-                            imports.add(clsName), onEntryMethodName(state), imports.add(Signaller.class), imports.add(clsName),
-                            imports.add(state.eventClass()));
+                            imports.add(clsName), onEntryMethodName(state), imports.add(Signaller.class),
+                            imports.add(clsName), imports.add(state.eventClass()));
                 } else {
                     out.format("%s%s %s(%s<%s, Id> signaller, %s %s, Id id, %s event, boolean replaying);\n", indent,
-                            imports.add(clsName), onEntryMethodName(state), imports.add(Signaller.class), imports.add(clsName),
-                            imports.add(clsName), instanceName(), imports.add(state.eventClass()));
+                            imports.add(clsName), onEntryMethodName(state), imports.add(Signaller.class),
+                            imports.add(clsName), imports.add(clsName), instanceName(),
+                            imports.add(state.eventClass()));
                 }
                 out.println();
             });
@@ -237,7 +252,8 @@ public final class Generator<T> {
                     out.format("%s@%s\n", indent, imports.add(Override.class));
                     out.format("%spublic %s %s(%s<%s, Id> signaller, %s %s, Id id, %s event, boolean replaying) {\n",
                             indent, imports.add(clsName), onEntryMethodName(state), imports.add(Signaller.class),
-                            imports.add(clsName), imports.add(clsName), instanceName(), imports.add(state.eventClass()));
+                            imports.add(clsName), imports.add(clsName), instanceName(),
+                            imports.add(state.eventClass()));
                     out.format("%sreturn %s;\n", indent.right(), instanceName());
                     out.format("%s}\n", indent.left());
                     out.println();
@@ -289,7 +305,8 @@ public final class Generator<T> {
             out.format("%sprivate final boolean replaying;\n", indent);
             out.format("%sprivate final %s<? super %s<%s, T>, ? super %s<? super %s>, ? super %s<%s>> preTransition;\n",
                     indent, imports.add(Action3.class), imports.add(EntityStateMachine.class), imports.add(clsName),
-                    imports.add(Event.class), imports.add(clsName), imports.add(EntityState.class), imports.add(clsName));
+                    imports.add(Event.class), imports.add(clsName), imports.add(EntityState.class),
+                    imports.add(clsName));
 
             out.println();
 
@@ -301,8 +318,8 @@ public final class Generator<T> {
                     imports.add(Event.class), imports.add(clsName), imports.add(List.class), imports.add(Signal.class),
                     imports.add(Search.class), imports.add(Clock.class), imports.add(Optional.class),
                     imports.add(Event.class), imports.add(clsName), imports.add(Action3.class),
-                    imports.add(EntityStateMachine.class), imports.add(clsName), imports.add(Event.class), imports.add(clsName),
-                    imports.add(EntityState.class), imports.add(clsName));
+                    imports.add(EntityStateMachine.class), imports.add(clsName), imports.add(Event.class),
+                    imports.add(clsName), imports.add(EntityState.class), imports.add(clsName));
             out.format("%s%s.checkNotNull(behaviour, \"behaviour cannot be null\");\n", indent.right(),
                     imports.add(Preconditions.class));
             out.format("%s%s.checkNotNull(id, \"id cannot be null\");\n", indent, imports.add(Preconditions.class));
@@ -339,8 +356,8 @@ public final class Generator<T> {
             out.println();
 
             out.format("%spublic static <T> %s<T> create(%s %s, T id, %s<T> behaviour, State state) {\n", indent,
-                    stateMachineClassSimpleName(), imports.add(clsName), instanceName(), imports.add(behaviourClassName()),
-                    imports.add(Clock.class));
+                    stateMachineClassSimpleName(), imports.add(clsName), instanceName(),
+                    imports.add(behaviourClassName()), imports.add(Clock.class));
             indent.right();
             out.format(
                     "%sreturn new %s<T>(%s, id, behaviour, %s.empty(), state, false, new %s<%s<? super %s>>(), new %s<%s<?, T>>(), %s.instance(), %s.instance(), %s.empty(), false, %s.<%s, %s, %s>doNothing());\n",
@@ -407,8 +424,8 @@ public final class Generator<T> {
             out.format(
                     "%spublic %s<T> withPreTransition(%s<? super %s<%s, T>, ? super %s<? super %s>, ? super %s<%s>> preTransition) {\n",
                     indent, stateMachineClassSimpleName(), imports.add(Action3.class),
-                    imports.add(EntityStateMachine.class), imports.add(clsName), imports.add(Event.class), imports.add(clsName),
-                    imports.add(EntityState.class), imports.add(clsName));
+                    imports.add(EntityStateMachine.class), imports.add(clsName), imports.add(Event.class),
+                    imports.add(clsName), imports.add(EntityState.class), imports.add(clsName));
             out.format(
                     "%sreturn new %s<T>(%s, id, behaviour, previousState, state, transitionOccurred, signalsToSelf, signalsToOther, search, clock, _event, replaying, preTransition);\n",
                     indent.right(), stateMachineClassSimpleName(), instanceName());
