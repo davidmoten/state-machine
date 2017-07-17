@@ -143,28 +143,60 @@ public final class BeanGenerator {
             out.format("    }\n");
         }
 
+        // builder
+
+        if (!fields.isEmpty()) {
+            out.println();
+            Field f = fields.get(0);
+            if (fields.size() > 1) {
+                out.format("    public static Builder2 %s(%s %s) {\n", f.getName(), resolve(imports, f.getType()),
+                        f.getName());
+                out.format("        return new Builder1(new Builder()).%s(%s);\n", f.getName(), f.getName());
+                out.format("    }\n\n");
+            } else {
+                out.format("    public static %s %s(%s %s) {\n", className, f.getName(), resolve(imports, f.getType()),
+                        f.getName());
+                out.format("        return new Builder1(new Builder()).%s(%s);\n", f.getName(), f.getName());
+                out.format("    }\n\n");
+            }
+            out.format("    private static final class Builder {\n");
+            for (Field field : fields) { 
+                Class<?> type = field.getType();
+                String name = field.getName();
+                out.format("        %s %s;\n", resolve(imports, type), name);
+            }
+            out.println();
+            out.format("        %s create() {\n", className);
+            out.format("            return new %s(%s);\n", className, flds);
+            out.format("        }\n");
+            out.format("    }\n");
+        }
+
         for (int i = 1; i <= fields.size(); i++) {
             Field field = fields.get(i - 1);
             Class<?> type = field.getType();
             String name = field.getName();
             out.println();
             out.format("    public static final class Builder%s {\n", i);
-            if (i == fields.size() - 1) {
+            out.format("        final Builder b;\n\n");
+            out.format("        Builder%s(Builder b) {\n", i);
+            out.format("            this.b = b;\n");
+            out.format("        }\n\n");
+            if (i == fields.size()) {
                 out.format("        public %s %s(%s %s) {\n", className, name, resolve(imports, type), name);
-                out.format("            this.%s = %s;\n", name, name);
-                out.format("            return null;\n");
+                out.format("            this.b.%s = %s;\n", name, name);
+
+                out.format("            return b.create();\n");
                 out.format("        }\n");
             } else {
                 out.format("        public Builder%s %s(%s %s) {\n", //
-                        i, name, resolve(imports, type), name);
-                out.format("            this.%s = %s;\n", name, name);
+                        i + 1, name, resolve(imports, type), name);
+                out.format("            this.b.%s = %s;\n", name, name);
                 out.format("            return new Builder%s(b);\n", i + 1);
                 out.format("        }\n");
             }
             out.format("    }\n");
         }
-
-        // builder
 
         // TODO toString
 
