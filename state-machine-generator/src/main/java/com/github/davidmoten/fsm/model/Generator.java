@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.github.davidmoten.bean.BeanGenerator;
 import com.github.davidmoten.bean.annotation.GenerateImmutable;
 import com.github.davidmoten.fsm.Util;
 import com.github.davidmoten.fsm.runtime.Action3;
@@ -43,7 +44,7 @@ public final class Generator<T> {
         this.machine = machine;
         this.fromCls = machine.cls();
         this.clsName = getClassName(machine);
-        System.out.println("clsName="+ clsName);
+        System.out.println("clsName=" + clsName);
         this.clsSimpleName = getSimpleName(clsName);
         this.directory = directory;
         this.pkg = pkg;
@@ -159,12 +160,17 @@ public final class Generator<T> {
     }
 
     public void generate() {
+        generateImmutableClass();
         generateStateMachine();
         System.out.println("generated " + stateMachineClassFile());
         generateBehaviourInterface();
         System.out.println("generated " + behaviourClassFile());
         generateBehaviourBase();
         System.out.println("generated " + behaviourBaseClassFile());
+    }
+
+    private void generateImmutableClass() {
+        BeanGenerator.generate(fromCls,pkg, directory);
     }
 
     private Stream<State<T, ? extends Event<? super T>>> states() {
