@@ -8,6 +8,6 @@ import java.lang.annotation.Target;
 
 @Documented
 @Target(value = { ElementType.TYPE })
-@Retention(value = RetentionPolicy.CLASS)
+@Retention(value = RetentionPolicy.RUNTIME)
 public @interface GenerateImmutable {
 }

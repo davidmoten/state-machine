@@ -180,7 +180,7 @@ public final class Generator<T> {
 
     private void generateImmutableClass() {
         if (fromCls.isAnnotationPresent(GenerateImmutable.class)) {
-        BeanGenerator.generate(fromCls, getPackage(clsName), directory);
+            BeanGenerator.generate(fromCls, getPackage(clsName), directory);
         }
     }
 

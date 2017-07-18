@@ -19,13 +19,68 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.davidmoten.bean.annotation.NonNull;
+import com.github.davidmoten.guavamini.Preconditions;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public final class BeanGenerator {
+
+    private static final String NL = "\n";
+
+    public static void generate(String code, String newPkg, File generatedSource) {
+        CompilationUnit cu = JavaParser.parse(code);
+        StringBuilder s = new StringBuilder();
+        cu.getPackageDeclaration() //
+                .ifPresent(p -> s.append(p));
+        {
+            NodeList<ImportDeclaration> n = cu.getImports();
+            if (n != null) {
+                for (ImportDeclaration node : n) {
+                    s.append(node.toString());
+                }
+            }
+        }
+        // add placeholder for more imports
+        s.append("<IMPORTS>\n");
+        {
+            for (Node n : cu.getChildNodes()) {
+                if (n instanceof ClassOrInterfaceDeclaration) {
+                    ClassOrInterfaceDeclaration c = (ClassOrInterfaceDeclaration) n;
+                    s.append("\npublic class " + c.getName());
+                    if (c.getImplementedTypes() != null) {
+                        s.append(" implements");
+                        for (ClassOrInterfaceType iface : c.getImplementedTypes()) {
+                            s.append(" " + iface);
+                        }
+                    }
+                    s.append(" {\n");
+                    Preconditions.checkArgument(c.getExtendedTypes().size() == 0);
+                    System.out.println(c.getName());
+                    System.out.println(c.getClass());
+                    for (Node m : c.getChildNodes()) {
+                        System.out.println(m.getClass());
+                        System.out.println(m);
+                    }
+                    break;
+                }
+            }
+        }
+        //
+        //
+        System.out.println(s);
+    }
+
     /**
      * @param cls
      * @param generatedSource
      */
     public static void generate(Class<?> cls, String newPkg, File generatedSource) {
+        System.out.format("generating immutable bean for %s, newPkg=%s, genSrc=%s", cls, newPkg, generatedSource);
         String className = cls.getSimpleName();
         String path = newPkg.replace(".", File.separator);
         File directory = new File(generatedSource, path);
@@ -48,6 +103,7 @@ public final class BeanGenerator {
                 .collect(Collectors.toList());
 
         for (Field field : fields) {
+            String declaration = getDeclaration(field, imports);
             Class<?> type = field.getType();
             String name = field.getName();
             for (Annotation a : field.getAnnotations()) {
@@ -242,6 +298,11 @@ public final class BeanGenerator {
             throw new RuntimeException(e);
         }
         System.out.println("written generated data class " + file);
+    }
+
+    private static String getDeclaration(Field field, Map<Class<?>, String> imports) {
+        StringBuilder s = new StringBuilder();
+        return null;
     }
 
     private static boolean isNonNull(Annotation[] annotations) {
