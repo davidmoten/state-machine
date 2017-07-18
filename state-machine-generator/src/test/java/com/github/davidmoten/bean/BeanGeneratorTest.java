@@ -22,6 +22,9 @@ public final class BeanGeneratorTest {
         Assert.assertTrue(Example.class.isAnnotationPresent(GenerateImmutable.class));
     }
 
+    /**
+     * @throws IOException
+     */
     @Test
     public void testJavaParser() throws IOException {
         String code = new String(

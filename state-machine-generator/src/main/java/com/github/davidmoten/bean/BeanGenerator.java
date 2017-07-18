@@ -26,6 +26,7 @@ import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public final class BeanGenerator {
@@ -46,7 +47,7 @@ public final class BeanGenerator {
             }
         }
         // add placeholder for more imports
-        s.append("<IMPORTS>\n");
+//        s.append("<IMPORTS>\n");
         {
             for (Node n : cu.getChildNodes()) {
                 if (n instanceof ClassOrInterfaceDeclaration) {
@@ -60,13 +61,16 @@ public final class BeanGenerator {
                     }
                     s.append(" {\n");
                     Preconditions.checkArgument(c.getExtendedTypes().size() == 0);
-                    System.out.println(c.getName());
-                    System.out.println(c.getClass());
-                    for (Node m : c.getChildNodes()) {
-                        System.out.println(m.getClass());
-                        System.out.println(m);
-                    }
-                    break;
+                    String flds = c.getChildNodes() //
+                            .stream() //
+                            .filter(x -> x instanceof FieldDeclaration) //
+                            .map(x -> x.toString()) //
+                            .map(x -> Arrays.stream(x.split("\n")) //
+                                    .map(y -> "\n    " + y) //
+                                    .collect(Collectors.joining())) //
+                            .collect(Collectors.joining("\n"));
+                    s.append(flds);
+                    s.append("\n}");
                 }
             }
         }
