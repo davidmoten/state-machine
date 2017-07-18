@@ -52,7 +52,7 @@ public final class Generator<T> {
 
     private static String getClassName(StateMachineDefinition<?> machine) {
         String clsName = machine.cls().getName().replace("$", ".");
-        if (machine.cls().isAnnotationPresent(GenerateImmutable.class)) {
+        if (false && machine.cls().isAnnotationPresent(GenerateImmutable.class)) {
             int i = clsName.lastIndexOf(".");
             if (i == -1) {
                 return "immutable." + clsName;
@@ -180,7 +180,7 @@ public final class Generator<T> {
 
     private void generateImmutableClass() {
         if (fromCls.isAnnotationPresent(GenerateImmutable.class)) {
-            BeanGenerator.generate(fromCls, getPackage(clsName), directory);
+            //BeanGenerator.generate(fromCls, getPackage(clsName), directory);
         }
     }
 
