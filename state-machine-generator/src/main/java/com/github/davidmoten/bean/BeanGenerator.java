@@ -72,11 +72,14 @@ public final class BeanGenerator {
                             .map(x -> (FieldDeclaration) x) //
                             .collect(Collectors.toList());
 
+                    // fields
                     String flds = fields.stream() //
                             .map(x -> variableDeclarator(x)) //
                             .map(x -> NL + indent + "private final " + x.getType() + " " + x.getName() + ";") //
                             .collect(Collectors.joining());
                     s.append(flds);
+
+                    // constructor
                     String params = fields.stream() //
                             .map(x -> declaration(x)) //
                             .collect(Collectors.joining(", "));
@@ -85,6 +88,16 @@ public final class BeanGenerator {
                             .map(x -> variableDeclarator(x)) //
                             .forEach(x -> s.format("\n%s%sthis.%s = %s;", indent, indent, x.getName(), x.getName()));
                     s.format("\n%s}\n", indent);
+
+                    // getters
+                    fields.stream() //
+                            .map(x -> variableDeclarator(x)) //
+                            .forEach(x -> {
+                                s.format("\n\n%spublic %s %s() {", indent, x.getType(), x.getName());
+                                s.format("\n%s%sreturn %s;", indent, indent, x.getName());
+                                s.format("\n%s}", indent);
+                            });
+
                     s.append("\n}");
 
                     break;
