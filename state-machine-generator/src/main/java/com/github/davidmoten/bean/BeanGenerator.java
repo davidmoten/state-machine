@@ -28,6 +28,7 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public final class BeanGenerator {
@@ -72,34 +73,53 @@ public final class BeanGenerator {
                             .map(x -> (FieldDeclaration) x) //
                             .collect(Collectors.toList());
 
+                    List<VariableDeclarator> vars = fields.stream().map(x -> variableDeclarator(x))
+                            .collect(Collectors.toList());
+
                     // fields
-                    String flds = fields.stream() //
-                            .map(x -> variableDeclarator(x)) //
+                    String flds = vars.stream() //
                             .map(x -> NL + indent + "private final " + x.getType() + " " + x.getName() + ";") //
                             .collect(Collectors.joining());
                     s.append(flds);
 
                     // constructor
-                    String params = fields.stream() //
+                    String typedParams = fields.stream() //
                             .map(x -> declaration(x)) //
                             .collect(Collectors.joining(", "));
-                    s.format("\n\n%s%s(%s) {", indent, c.getName(), params);
-                    fields.stream() //
-                            .map(x -> variableDeclarator(x)) //
+                    s.format("\n\n%s%s(%s) {", indent, c.getName(), typedParams);
+                    vars.stream() //
                             .forEach(x -> s.format("\n%s%sthis.%s = %s;", indent, indent, x.getName(), x.getName()));
                     s.format("\n%s}\n", indent);
 
                     // getters
-                    fields.stream() //
-                            .map(x -> variableDeclarator(x)) //
+                    vars.stream() //
                             .forEach(x -> {
                                 s.format("\n\n%spublic %s %s() {", indent, x.getType(), x.getName());
                                 s.format("\n%s%sreturn %s;", indent, indent, x.getName());
                                 s.format("\n%s}", indent);
                             });
 
-                    s.append("\n}");
+                    // with
+                    vars.stream() //
+                            .forEach(x -> {
+                                s.format("\n\n%spublic %s with%s(%s %s) {", indent, c.getName(),
+                                        capFirst(x.getName().toString()), x.getType(), x.getName());
+                                s.format("\n%s%sreturn new %s(%s);", indent, indent, c.getName(), //
+                                        vars.stream() //
+                                                .map(y -> y.getName().toString()) //
+                                                .collect(Collectors.joining(", ")));
+                                s.format("\n%s}", indent);
+                            });
 
+                    // equals
+
+                    // hashCode
+
+                    // builder
+
+                    // toString
+
+                    s.append("\n}");
                     break;
                 }
             }
