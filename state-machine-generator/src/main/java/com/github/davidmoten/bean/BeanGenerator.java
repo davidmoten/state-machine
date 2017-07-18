@@ -27,6 +27,7 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public final class BeanGenerator {
@@ -35,9 +36,11 @@ public final class BeanGenerator {
 
     public static void generate(String code, String newPkg, File generatedSource) {
         CompilationUnit cu = JavaParser.parse(code);
-        StringBuilder s = new StringBuilder();
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        PrintStream s = new PrintStream(bytes);
+
         cu.getPackageDeclaration() //
-                .ifPresent(p -> s.append(p));
+                .ifPresent(p -> s.format(p.toString()));
         {
             NodeList<ImportDeclaration> n = cu.getImports();
             if (n != null) {
@@ -46,37 +49,66 @@ public final class BeanGenerator {
                 }
             }
         }
+        String indent = "    ";
+
         // add placeholder for more imports
-//        s.append("<IMPORTS>\n");
+        // s.append("<IMPORTS>\n");
         {
             for (Node n : cu.getChildNodes()) {
                 if (n instanceof ClassOrInterfaceDeclaration) {
                     ClassOrInterfaceDeclaration c = (ClassOrInterfaceDeclaration) n;
-                    s.append("\npublic class " + c.getName());
+                    s.format("\npublic class %s", c.getName());
                     if (c.getImplementedTypes() != null) {
-                        s.append(" implements");
+                        s.format(" implements");
                         for (ClassOrInterfaceType iface : c.getImplementedTypes()) {
                             s.append(" " + iface);
                         }
                     }
                     s.append(" {\n");
                     Preconditions.checkArgument(c.getExtendedTypes().size() == 0);
-                    String flds = c.getChildNodes() //
+                    List<FieldDeclaration> fields = c.getChildNodes() //
                             .stream() //
                             .filter(x -> x instanceof FieldDeclaration) //
+                            .map(x -> (FieldDeclaration) x) //
+                            .collect(Collectors.toList()); //
+                    String flds = fields.stream() //
                             .map(x -> x.toString()) //
                             .map(x -> Arrays.stream(x.split("\n")) //
                                     .map(y -> "\n    " + y) //
                                     .collect(Collectors.joining())) //
                             .collect(Collectors.joining("\n"));
                     s.append(flds);
+                    String params = fields.stream() //
+                            .map(x -> declaration(x)) //
+                            .collect(Collectors.joining(", "));
+                    s.format("\n\n%s%s(%s) {", indent, c.getName(), params);
+                    fields.stream() //
+                            .map(x -> variableDeclarator(x)) //
+                            .forEach(x -> s.format("\n%s%sthis.%s=%s", indent, indent, x.getName(), x.getName()));
+                    s.format("\n%s}\n", indent);
                     s.append("\n}");
+
+                    break;
                 }
             }
         }
         //
         //
-        System.out.println(s);
+        System.out.println(new String(bytes.toByteArray(), StandardCharsets.UTF_8));
+    }
+
+    private static VariableDeclarator variableDeclarator(FieldDeclaration f) {
+        for (Node node : f.getChildNodes()) {
+            if (node instanceof VariableDeclarator) {
+                return (VariableDeclarator) node;
+            }
+        }
+        throw new RuntimeException("declaration not found!");
+    }
+
+    private static String declaration(FieldDeclaration f) {
+        VariableDeclarator v = variableDeclarator(f);
+        return v.getType() + " " + v.getName();
     }
 
     /**
