@@ -28,7 +28,6 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public final class BeanGenerator {
@@ -42,12 +41,17 @@ public final class BeanGenerator {
 
         cu.getPackageDeclaration() //
                 .ifPresent(p -> s.format(p.toString()));
+        Map<String, String> imports;
         {
             NodeList<ImportDeclaration> n = cu.getImports();
             if (n != null) {
+                imports = new HashMap<>(n.stream().collect(Collectors.<ImportDeclaration, String, String>toMap(
+                        x -> simpleName(x.getName().toString()), x -> x.getName().toString())));
                 for (ImportDeclaration node : n) {
                     s.append(node.toString());
                 }
+            } else {
+                imports = new HashMap<>();
             }
         }
         String indent = "    ";
@@ -73,7 +77,8 @@ public final class BeanGenerator {
                             .map(x -> (FieldDeclaration) x) //
                             .collect(Collectors.toList());
 
-                    List<VariableDeclarator> vars = fields.stream().map(x -> variableDeclarator(x))
+                    List<VariableDeclarator> vars = fields.stream() //
+                            .map(x -> variableDeclarator(x)) //
                             .collect(Collectors.toList());
 
                     // fields
@@ -111,13 +116,36 @@ public final class BeanGenerator {
                                 s.format("\n%s}", indent);
                             });
 
-                    // equals
-
                     // hashCode
+                    s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
+                    s.format("\n%spublic int hashCode() {", indent);
+                    s.format("\n%s%sreturn %s.hash(%s);", indent, indent, resolve2(imports, Objects.class), //
+                            vars.stream() //
+                                    .map(y -> y.getName().toString()) //
+                                    .collect(Collectors.joining(", ")));
+                    s.format("\n%s}", indent);
+
+                    // equals
+                    s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
+                    s.format("\n%spublic boolean equals(Object o) {", indent);
+                    s.format("\n%s%sif (o == null) {", indent, indent);
+                    s.format("\n%s%s%sreturn false;", indent, indent, indent);
+                    s.format("\n%s%s} else if (!(o instanceof %s)) {", indent, indent, c.getName());
+                    s.format("\n%s%s%sreturn false;", indent, indent, indent);
+                    s.format("\n%s%s} else {", indent, indent);
+                    s.format("\n%s%s%s%s other = (%s) o;", indent, indent, indent, c.getName(), c.getName());
+                    s.format("\n%s%s%sreturn", indent, indent, indent);
+                    String expression = vars.stream().map(x -> String.format("%s.deepEquals(this.%s, other.%s)",
+                            resolve2(imports, Objects.class), x.getName(), x.getName())) //
+                            .collect(Collectors.joining(String.format("\n%s%s%s%s&& ", indent, indent, indent, indent)));
+                    s.format("\n%s%s%s%s%s;", indent, indent, indent, indent, expression);
+                    s.format("\n%s%s}", indent, indent);
+                    s.format("\n%s}", indent);
 
                     // builder
 
                     // toString
+                    
 
                     s.append("\n}");
                     break;
@@ -127,6 +155,32 @@ public final class BeanGenerator {
         //
         //
         System.out.println(new String(bytes.toByteArray(), StandardCharsets.UTF_8));
+    }
+
+    private static String resolve2(Map<String, String> imports, Class<?> cls) {
+        return resolve2(imports, cls.getName());
+    }
+
+    private static String resolve2(Map<String, String> imports, String className) {
+        String simple = simpleName(className);
+        for (Entry<String, String> entry : imports.entrySet()) {
+            if (entry.getValue().equals(className)) {
+                return entry.getKey();
+            } else if (entry.getKey().equals(simple)) {
+                return className;
+            }
+        }
+        imports.put(simple, className);
+        return simple;
+    }
+
+    private static String simpleName(String s) {
+        int i = s.lastIndexOf('.');
+        if (i == -1) {
+            return s;
+        } else {
+            return s.substring(i + 1);
+        }
     }
 
     private static VariableDeclarator variableDeclarator(FieldDeclaration f) {
