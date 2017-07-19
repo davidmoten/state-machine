@@ -8,7 +8,9 @@ import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,15 +43,13 @@ public final class BeanGenerator {
 
         cu.getPackageDeclaration() //
                 .ifPresent(p -> s.format(p.toString()));
+        s.format("<IMPORTS>\n");
         Map<String, String> imports;
         {
             NodeList<ImportDeclaration> n = cu.getImports();
             if (n != null) {
                 imports = new HashMap<>(n.stream().collect(Collectors.<ImportDeclaration, String, String>toMap(
                         x -> simpleName(x.getName().toString()), x -> x.getName().toString())));
-                for (ImportDeclaration node : n) {
-                    s.append(node.toString());
-                }
             } else {
                 imports = new HashMap<>();
             }
@@ -167,9 +167,19 @@ public final class BeanGenerator {
                 }
             }
         }
-        //
-        //
-        System.out.println(new String(bytes.toByteArray(), StandardCharsets.UTF_8));
+        // imports
+        {
+            String s2 = new String(bytes.toByteArray(), StandardCharsets.UTF_8);
+            List<Entry<String, String>> sorted = new ArrayList<Entry<String, String>>();
+            sorted.addAll(imports.entrySet());
+            Collections.sort(sorted, (a, b) -> a.getValue().compareTo(b.getValue()));
+            s2 = s2.replace("<IMPORTS>", sorted.stream() //
+                    .filter(x -> !x.getKey().contains(".")) //
+                    .filter(x -> !x.getValue().startsWith("java.lang.")) //
+                    .map(x -> "import " + x.getValue() + ";") //
+                    .collect(Collectors.joining("\n")));
+            System.out.println(s2);
+        }
     }
 
     private static String resolve2(Map<String, String> imports, Class<?> cls) {
