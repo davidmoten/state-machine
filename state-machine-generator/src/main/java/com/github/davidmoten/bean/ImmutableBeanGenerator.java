@@ -279,11 +279,11 @@ public final class ImmutableBeanGenerator {
         s.format("\n%s%s} else if (!(o instanceof %s)) {", indent, indent, c.getName());
         s.format("\n%s%s%sreturn false;", indent, indent, indent);
         s.format("\n%s%s} else {", indent, indent);
-        s.format("\n%s%s%s%s other = (%s) o;", indent, indent, indent, c.getName(), c.getName());
-        s.format("\n%s%s%sreturn", indent, indent, indent);
         if (vars.isEmpty()) {
-            s.format("\n%s%s%s%strue;", indent, indent, indent, indent);
+            s.format("\n%s%s%sreturn true;", indent, indent, indent);
         } else {
+            s.format("\n%s%s%s%s other = (%s) o;", indent, indent, indent, c.getName(), c.getName());
+            s.format("\n%s%s%sreturn", indent, indent, indent);
             String expression = vars.stream() ///
                     .map(x -> String.format("%s.deepEquals(this.%s, other.%s)", //
                             resolve2(imports, Objects.class), x.getName(), x.getName())) //
@@ -359,7 +359,7 @@ public final class ImmutableBeanGenerator {
     }
 
     private static void writeClassDeclaration(PrintStream s, ClassOrInterfaceDeclaration c) {
-        s.format("\npublic class %s", c.getName());
+        s.format("\npublic%s class %s", c.isFinal() ? " final" : "", c.getName());
         if (c.getImplementedTypes() != null && !c.getImplementedTypes().isEmpty()) {
             s.format(" implements");
             for (ClassOrInterfaceType iface : c.getImplementedTypes()) {
