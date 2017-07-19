@@ -41,7 +41,7 @@ public final class ImmutableBeanGenerator {
         File file = new File(generatedSource, g.className().replace(".", File.separator) + ".java");
         file.getParentFile().mkdirs();
         try (FileOutputStream fos = new FileOutputStream(file)) {
-            fos.write(code.getBytes(StandardCharsets.UTF_8));
+            fos.write(g.generatedCode().getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -327,7 +327,7 @@ public final class ImmutableBeanGenerator {
 
     private static void writeClassDeclaration(PrintStream s, ClassOrInterfaceDeclaration c) {
         s.format("\npublic class %s", c.getName());
-        if (c.getImplementedTypes() != null) {
+        if (c.getImplementedTypes() != null && !c.getImplementedTypes().isEmpty()) {
             s.format(" implements");
             for (ClassOrInterfaceType iface : c.getImplementedTypes()) {
                 s.append(" " + iface);

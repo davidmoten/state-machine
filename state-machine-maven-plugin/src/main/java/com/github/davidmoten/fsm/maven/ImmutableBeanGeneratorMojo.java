@@ -23,8 +23,6 @@ public class ImmutableBeanGeneratorMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        
-        
         ImmutableBeanGenerator.scanAndGenerate(sourceDirectory, generatedSourceDirectory);
     }
 

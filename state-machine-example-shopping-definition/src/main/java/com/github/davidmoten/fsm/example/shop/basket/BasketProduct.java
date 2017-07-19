@@ -1,15 +1,12 @@
 package com.github.davidmoten.fsm.example.shop.basket;
 
+import com.github.davidmoten.bean.annotation.GenerateImmutable;
+
+@GenerateImmutable
 public final class BasketProduct {
 
-    public final String basketId;
-    public final String productId;
-    public final int quantity;
-
-    public BasketProduct(String basketId, String productId, int quantity) {
-        this.basketId = basketId;
-        this.productId = productId;
-        this.quantity = quantity;
-    }
+    String basketId;
+    String productId;
+    int quantity;
 
 }
