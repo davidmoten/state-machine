@@ -135,9 +135,11 @@ public final class BeanGenerator {
                     s.format("\n%s%s} else {", indent, indent);
                     s.format("\n%s%s%s%s other = (%s) o;", indent, indent, indent, c.getName(), c.getName());
                     s.format("\n%s%s%sreturn", indent, indent, indent);
-                    String expression = vars.stream().map(x -> String.format("%s.deepEquals(this.%s, other.%s)",
-                            resolve2(imports, Objects.class), x.getName(), x.getName())) //
-                            .collect(Collectors.joining(String.format("\n%s%s%s%s&& ", indent, indent, indent, indent)));
+                    String expression = vars.stream() ///
+                            .map(x -> String.format("%s.deepEquals(this.%s, other.%s)", //
+                                    resolve2(imports, Objects.class), x.getName(), x.getName())) //
+                            .collect(
+                                    Collectors.joining(String.format("\n%s%s%s%s&& ", indent, indent, indent, indent)));
                     s.format("\n%s%s%s%s%s;", indent, indent, indent, indent, expression);
                     s.format("\n%s%s}", indent, indent);
                     s.format("\n%s}", indent);
@@ -145,7 +147,20 @@ public final class BeanGenerator {
                     // builder
 
                     // toString
-                    
+                    // equals
+                    s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
+                    s.format("\n%spublic %s toString() {", indent, resolve2(imports, String.class));
+                    s.format("\n%s%s%s b = new %s();", indent, indent, resolve2(imports, StringBuilder.class),
+                            resolve2(imports, StringBuilder.class));
+                    s.format("\n%s%sb.append(\"%s[\");", indent, indent, c.getName());
+                    String ex = vars.stream() //
+                            .map(x -> String.format("\n%s%sb.append(\"%s=\" + this.%s);", indent, indent, x.getName(),
+                                    x.getName())) //
+                            .collect(Collectors.joining(String.format("\n%s%sb.append(\",\");", indent, indent)));
+                    s.format("%s", ex);
+                    s.format("\n%s%sb.append(\"]\");", indent, indent);
+                    s.format("\n%s%sreturn b.toString();", indent, indent);
+                    s.format("\n%s}", indent);
 
                     s.append("\n}");
                     break;
