@@ -35,17 +35,54 @@ import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.MarkerAnnotationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
-public final class BeanGenerator {
+public final class ImmutableBeanGenerator {
 
     private static final String NL = "\n";
 
-    public static void generate(String code, String newPkg, File generatedSource) {
+    public static void generate(String code, File generatedSource) {
+        Generated g = generate(code);
+        File file = new File(generatedSource, g.className().replace(".", ""));
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(code.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static final class Generated {
+        private final String generatedCode;
+        private final String className;
+
+        public Generated(String generatedCode, String className) {
+            this.generatedCode = generatedCode;
+            this.className = className;
+        }
+
+        public String generatedCode() {
+            return generatedCode;
+        }
+
+        public String className() {
+            return className;
+        }
+
+        public String pkgName() {
+            int i = className.lastIndexOf(".");
+            if (i == -1) {
+                return "";
+            } else {
+                return className.substring(0, i);
+            }
+        }
+    }
+
+    public static Generated generate(String code) {
         CompilationUnit cu = JavaParser.parse(code);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintStream s = new PrintStream(bytes);
 
-        s.format("package %s.immutable;\n\n",
-                cu.getPackageDeclaration().map(p -> p.getName().toString()).orElse("immutable"));
+        String newPkg = cu.getPackageDeclaration().map(p -> p.getName().toString()).orElse("") + ".immutable";
+        s.format("package %s;\n\n", newPkg);
         s.format("<IMPORTS>\n");
         Map<String, String> imports;
         {
@@ -153,12 +190,14 @@ public final class BeanGenerator {
                     writeToString(s, imports, indent, c, vars);
 
                     s.append("\n}");
-                    break;
+
+                    // imports
+                    return new Generated(insertImports(bytes, imports), newPkg + "." + c.getName());
                 }
             }
         }
-        // imports
-        System.out.println(insertImports(bytes, imports));
+        throw new RuntimeException("expected class structure not found");
+
     }
 
     private static void writeGetters(PrintStream s, String indent, List<VariableDeclarator> vars) {

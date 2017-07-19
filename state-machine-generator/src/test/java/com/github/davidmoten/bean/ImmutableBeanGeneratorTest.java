@@ -10,11 +10,11 @@ import org.junit.Test;
 
 import com.github.davidmoten.bean.annotation.GenerateImmutable;
 
-public final class BeanGeneratorTest {
+public final class ImmutableBeanGeneratorTest {
 
     @Test
     public void testGenerate() {
-        BeanGenerator.generate(Example.class, "test.immutable", new File("target"));
+        ImmutableBeanGenerator.generate(Example.class, "test.immutable", new File("target"));
     }
 
     @Test
@@ -30,6 +30,6 @@ public final class BeanGeneratorTest {
         String code = new String(
                 Files.readAllBytes(new File("src/test/java/com/github/davidmoten/bean/Example.java").toPath()),
                 StandardCharsets.UTF_8);
-        BeanGenerator.generate(code, "test2.immutable", new File("target"));
+        System.out.println(ImmutableBeanGenerator.generate(code).generatedCode());
     }
 }
