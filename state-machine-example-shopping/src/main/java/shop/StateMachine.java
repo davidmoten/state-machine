@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
-import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
-import com.github.davidmoten.fsm.example.shop.catalog.event.Change;
+import com.github.davidmoten.fsm.example.shop.catalog.immutable.Catalog;
+import com.github.davidmoten.fsm.example.shop.catalog.immutable.Change;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
 import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.example.shop.product.event.Create;
@@ -61,8 +61,8 @@ public final class StateMachine {
             e.printStackTrace();
         }
         p.initialize();
-        p.signal(Catalog.class, MAIN_CATALOG_ID,
-                new com.github.davidmoten.fsm.example.shop.catalog.event.Create(MAIN_CATALOG_ID, "Online bike shop"));
+        p.signal(Catalog.class, MAIN_CATALOG_ID, com.github.davidmoten.fsm.example.shop.catalog.immutable.Create
+                .create(MAIN_CATALOG_ID, "Online bike shop"));
         InputStreamReader in = new InputStreamReader(StateMachine.class.getResourceAsStream("/products.txt"));
         try {
             for (CSVRecord record : CSVFormat.DEFAULT.parse(in)) {
@@ -77,7 +77,7 @@ public final class StateMachine {
                         productId, //
                         new Create(productId, name, description, tags));
                 p.signal(Catalog.class, //
-                        MAIN_CATALOG_ID, new Change(productId, price, quantity));
+                        MAIN_CATALOG_ID, Change.create(productId, quantity, price));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

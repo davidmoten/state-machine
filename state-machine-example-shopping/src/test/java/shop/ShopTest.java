@@ -14,8 +14,8 @@ import java.util.concurrent.Callable;
 
 import org.junit.Test;
 
-import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
-import com.github.davidmoten.fsm.example.shop.catalog.event.Change;
+import com.github.davidmoten.fsm.example.shop.catalog.immutable.Catalog;
+import com.github.davidmoten.fsm.example.shop.catalog.immutable.Change;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
 import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.example.shop.product.event.ChangeDetails;
@@ -63,9 +63,9 @@ public class ShopTest {
                 new Create("12", "Castelli Senza Jacket", "Fleece lined windproof cycling jacket",
                         Collections.emptyList()));
         p.signal(Catalog.class, "1",
-                new com.github.davidmoten.fsm.example.shop.catalog.event.Create("1", "Online bike shop"));
-        p.signal(Catalog.class, "1", new Change("12", new BigDecimal(141.30), 3));
-        p.signal(Catalog.class, "1", new Change("12", new BigDecimal(151.75), 2));
+                com.github.davidmoten.fsm.example.shop.catalog.immutable.Create.create("1", "Online bike shop"));
+        p.signal(Catalog.class, "1", Change.create("12", 3, new BigDecimal(141.30)));
+        p.signal(Catalog.class, "1", Change.create("12", 2, new BigDecimal(151.75)));
 
         while (true) {
             Thread.sleep(100);

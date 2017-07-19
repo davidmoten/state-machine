@@ -9,7 +9,7 @@ import com.github.davidmoten.fsm.example.shop.basket.event.Checkout;
 import com.github.davidmoten.fsm.example.shop.basket.event.Clear;
 import com.github.davidmoten.fsm.example.shop.basket.event.Payment;
 import com.github.davidmoten.fsm.example.shop.basket.event.Timeout;
-import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
+import com.github.davidmoten.fsm.example.shop.catalog.immutable.Catalog;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
 import com.github.davidmoten.fsm.example.shop.customer.Customer;
 import com.github.davidmoten.fsm.example.shop.product.Product;
@@ -63,10 +63,10 @@ public final class StateMachineDefinitions implements Supplier<List<StateMachine
 
     private static StateMachineDefinition<Catalog> createCatalogStateMachine() {
         StateMachineDefinition<Catalog> m = StateMachineDefinition.create(Catalog.class);
-        State<Catalog, com.github.davidmoten.fsm.example.shop.catalog.event.Create> created = m.createState("Created",
-                com.github.davidmoten.fsm.example.shop.catalog.event.Create.class);
-        State<Catalog, com.github.davidmoten.fsm.example.shop.catalog.event.Change> changed = m.createState("Changed",
-                com.github.davidmoten.fsm.example.shop.catalog.event.Change.class);
+        State<Catalog, com.github.davidmoten.fsm.example.shop.catalog.immutable.Create> created = m.createState("Created",
+                com.github.davidmoten.fsm.example.shop.catalog.immutable.Create.class);
+        State<Catalog, com.github.davidmoten.fsm.example.shop.catalog.immutable.Change> changed = m.createState("Changed",
+                com.github.davidmoten.fsm.example.shop.catalog.immutable.Change.class);
         created.initial().to(changed).to(changed);
         return m;
     }
