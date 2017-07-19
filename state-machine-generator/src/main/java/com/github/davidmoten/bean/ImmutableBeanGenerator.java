@@ -122,6 +122,9 @@ public final class ImmutableBeanGenerator {
                     // constructor
                     writeConstructor(s, indent, c, fields, vars, imports);
 
+                    // create
+                    writeCreateMethod(s, indent, c, vars);
+
                     // getters
                     writeGetters(s, indent, vars);
 
@@ -200,6 +203,15 @@ public final class ImmutableBeanGenerator {
         }
         throw new RuntimeException("expected class structure not found");
 
+    }
+
+    private static void writeCreateMethod(PrintStream s, String indent, ClassOrInterfaceDeclaration c,
+            List<VariableDeclarator> vars) {
+        s.format("\n\n%spublic static %s create(%s) {", indent, c.getName(),
+                vars.stream().map(x -> x.getType() + " " + x.getName()).collect(Collectors.joining(", ")));
+        s.format("\n%s%sreturn new %s(%s);", indent, indent, c.getName(),
+                vars.stream().map(x -> x.getName().toString()).collect(Collectors.joining(", ")));
+        s.format("\n%s}", indent);
     }
 
     private static void writeGetters(PrintStream s, String indent, List<VariableDeclarator> vars) {
