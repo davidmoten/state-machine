@@ -5,8 +5,8 @@ import com.github.davidmoten.fsm.example.generated.CatalogStateMachine;
 import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
 import com.github.davidmoten.fsm.example.shop.catalog.event.Change;
 import com.github.davidmoten.fsm.example.shop.catalog.event.Create;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.event.ChangeQuantity;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.ChangeQuantity;
 import com.github.davidmoten.fsm.runtime.Signaller;
 
 public final class CatalogBehaviour extends CatalogBehaviourBase<String> {
@@ -27,9 +27,9 @@ public final class CatalogBehaviour extends CatalogBehaviourBase<String> {
         System.out.println("catalog changed quantity " + event.quantityDelta);
         String cpId = CatalogProduct.idFrom(catalog.catalogId, event.productId);
         signaller.signal(CatalogProduct.class, cpId,
-                new com.github.davidmoten.fsm.example.shop.catalogproduct.event.Create(id, event.productId, event.price,
-                        0));
-        signaller.signal(CatalogProduct.class, cpId, new ChangeQuantity(event.quantityDelta));
+                com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.Create.create(id, event.productId, 0,
+                        event.price));
+        signaller.signal(CatalogProduct.class, cpId, ChangeQuantity.create(event.quantityDelta));
         return catalog;
     }
 

@@ -1,5 +1,6 @@
 package com.github.davidmoten.bean;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -16,4 +17,8 @@ public final class Example implements Serializable{
     String id;
     int number;
     Date[] values;
+    
+    public static File getFile() {
+        return null;
+    }
 }

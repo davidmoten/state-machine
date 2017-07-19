@@ -131,6 +131,13 @@ public final class ImmutableBeanGenerator {
                     // with
                     writeWiths(s, indent, c, vars);
 
+                    // static methods
+                    if (!c.getMethods().isEmpty()) {
+                        c.getMethods().stream().filter(x -> x.isStatic()).forEach(x -> {
+                            s.format("\n\n%s%s", indent, x.toString().replaceAll("\n", "\n" + indent));
+                        });
+                    }
+
                     // builder
                     if (!vars.isEmpty()) {
                         Iterator<VariableDeclarator> it = vars.iterator();

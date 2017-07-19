@@ -10,7 +10,7 @@ import com.github.davidmoten.fsm.example.shop.basket.event.Clear;
 import com.github.davidmoten.fsm.example.shop.basket.event.Payment;
 import com.github.davidmoten.fsm.example.shop.basket.event.Timeout;
 import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
 import com.github.davidmoten.fsm.example.shop.customer.Customer;
 import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.model.State;
@@ -30,27 +30,24 @@ public final class StateMachineDefinitions implements Supplier<List<StateMachine
 
     private static StateMachineDefinition<Customer> createBasketStateMachine() {
         StateMachineDefinition<Customer> m = StateMachineDefinition.create(Customer.class);
-        State<Customer, Create> created = m.createState("Created", Create.class)
-                .documentation("<pre>onEntry/ \n" //
-                        + "send Clear to self \n" //
-                        + "</pre>");
+        State<Customer, Create> created = m.createState("Created", Create.class).documentation("<pre>onEntry/ \n" //
+                + "send Clear to self \n" //
+                + "</pre>");
         State<Customer, Clear> empty = m.createState("Empty", Clear.class);
-        State<Customer, Change> changed = m.createState("Changed", Change.class)
-                .documentation("<pre>onEntry/ \n" //
-                        + "update changed items \n" //
-                        + "if empty then\n" //
-                        + "  send Clear to self\n" //
-                        + "send Timeout to self in 1 day " //
-                        + "</pre>");
+        State<Customer, Change> changed = m.createState("Changed", Change.class).documentation("<pre>onEntry/ \n" //
+                + "update changed items \n" //
+                + "if empty then\n" //
+                + "  send Clear to self\n" //
+                + "send Timeout to self in 1 day " //
+                + "</pre>");
         State<Customer, Checkout> checkedOut = m.createState("CheckedOut", Checkout.class)
                 .documentation("<pre>onEntry/\n" //
                         + "send Timeout to self in 1 day " //
                         + "</pre>");
-        State<Customer, Payment> paid = m.createState("Paid", Payment.class)
-                .documentation("<pre>onEntry/ \n" //
-                        + "create order\n" //
-                        + "send order to Order \n" //
-                        + "</pre>");
+        State<Customer, Payment> paid = m.createState("Paid", Payment.class).documentation("<pre>onEntry/ \n" //
+                + "create order\n" //
+                + "send order to Order \n" //
+                + "</pre>");
         State<Customer, Timeout> timedOut = m.createState("TimedOut", Timeout.class);
         created.initial() //
                 .to(empty //
@@ -86,14 +83,14 @@ public final class StateMachineDefinitions implements Supplier<List<StateMachine
 
     private static StateMachineDefinition<CatalogProduct> createCatalogProductStateMachine() {
         StateMachineDefinition<CatalogProduct> m = StateMachineDefinition.create(CatalogProduct.class);
-        State<CatalogProduct, com.github.davidmoten.fsm.example.shop.catalogproduct.event.Create> created = m
-                .createState("Created", com.github.davidmoten.fsm.example.shop.catalogproduct.event.Create.class);
-        State<CatalogProduct, com.github.davidmoten.fsm.example.shop.catalogproduct.event.ChangeQuantity> changedQuantity = m
+        State<CatalogProduct, com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.Create> created = m
+                .createState("Created", com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.Create.class);
+        State<CatalogProduct, com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.ChangeQuantity> changedQuantity = m
                 .createState("ChangedQuantity",
-                        com.github.davidmoten.fsm.example.shop.catalogproduct.event.ChangeQuantity.class);
-        State<CatalogProduct, com.github.davidmoten.fsm.example.shop.catalogproduct.event.ChangeProductDetails> changedProductDetails = m
+                        com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.ChangeQuantity.class);
+        State<CatalogProduct, com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.ChangeProductDetails> changedProductDetails = m
                 .createState("ChangedProductDetails",
-                        com.github.davidmoten.fsm.example.shop.catalogproduct.event.ChangeProductDetails.class);
+                        com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.ChangeProductDetails.class);
         created.initial() //
                 .to(changedQuantity) //
                 .to(changedQuantity) //

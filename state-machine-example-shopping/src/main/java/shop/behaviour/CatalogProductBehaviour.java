@@ -4,10 +4,10 @@ import java.util.Optional;
 
 import com.github.davidmoten.fsm.example.generated.CatalogProductBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.CatalogProductStateMachine;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.event.ChangeProductDetails;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.event.ChangeQuantity;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.event.Create;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.ChangeProductDetails;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.ChangeQuantity;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.Create;
 import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.persistence.Entities;
 import com.github.davidmoten.fsm.runtime.Signaller;
@@ -24,12 +24,17 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
             boolean replaying) {
         System.out.println("creating catalogproduct");
         // lookup product within the transaction
-        Optional<Product> product = Entities.get().get(Product.class, event.productId);
+        Optional<Product> product = Entities.get().get(Product.class, event.productId());
         if (product.isPresent()) {
-            return new CatalogProduct(event.catalogId, event.productId, product.get().name, product.get().description,
-                    event.price, product.get().tags, event.quantity);
+            return CatalogProduct.catalogId(event.catalogId()) //
+                    .productId(event.productId()) //
+                    .name(product.get().name) //
+                    .description(product.get().description) //
+                    .quantity(event.quantity()) //
+                    .price(event.price()) //
+                    .tags(product.get().tags);
         } else {
-            throw new RuntimeException("product not found " + event.productId);
+            throw new RuntimeException("product not found " + event.productId());
         }
     }
 
@@ -37,15 +42,17 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
     public CatalogProduct onEntry_ChangedQuantity(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeQuantity event, boolean replaying) {
         System.out.println("changing quantity catalogproduct");
-        return new CatalogProduct(c.catalogId, c.productId, c.name, c.description, c.price, c.tags,
-                c.quantity + event.quantityDelta);
+        // return CatalogProduct.create(c.catalogId(), c.productId(), c.name(),
+        // c.description(),
+        // c.quantity() + event.quantityDelta(), c.price(), c.tags());
+        return c.withQuantity(c.quantity() + event.quantityDelta());
     }
 
     @Override
     public CatalogProduct onEntry_ChangedProductDetails(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeProductDetails event, boolean replaying) {
-        return new CatalogProduct(c.catalogId, c.productId, event.productName, event.productDescription,c.price, event.tags,
-                c.quantity);
+        return CatalogProduct.create(c.catalogId(), c.productId(), event.productName(), event.productDescription(),
+                c.quantity(), c.price(), event.tags());
     }
 
 }

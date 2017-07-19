@@ -16,7 +16,7 @@ import org.apache.commons.csv.CSVRecord;
 
 import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
 import com.github.davidmoten.fsm.example.shop.catalog.event.Change;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
 import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.example.shop.product.event.Create;
 import com.github.davidmoten.fsm.persistence.IntProperty;
@@ -34,11 +34,11 @@ public final class StateMachine {
     @SuppressWarnings("unchecked")
     public static Persistence createPersistence(Callable<Connection> connectionFactory) {
         Function<CatalogProduct, Optional<IntProperty>> rf = cp -> Optional
-                .of(new IntProperty(Property.combineNames("catalogId", cp.catalogId, "price"),
-                        (int) Math.floor(Math.round(cp.price.floatValue() * 100))));
+                .of(new IntProperty(Property.combineNames("catalogId", cp.catalogId(), "price"),
+                        (int) Math.floor(Math.round(cp.price().floatValue() * 100))));
         Function<CatalogProduct, Iterable<Property>> pf = c -> Property.concatenate(
-                Property.list("productId", c.productId, "catalogId", c.catalogId), //
-                Property.list("tag", c.tags));
+                Property.list("productId", c.productId(), "catalogId", c.catalogId()), //
+                Property.list("tag", c.tags()));
         return Persistence //
                 .connectionFactory(connectionFactory) //
                 .errorHandlerPrintStackTrace() //

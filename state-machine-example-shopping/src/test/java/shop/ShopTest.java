@@ -16,7 +16,7 @@ import org.junit.Test;
 
 import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
 import com.github.davidmoten.fsm.example.shop.catalog.event.Change;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
 import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.example.shop.product.event.ChangeDetails;
 import com.github.davidmoten.fsm.example.shop.product.event.Create;
@@ -52,8 +52,8 @@ public class ShopTest {
                 .behaviour(Catalog.class, new CatalogBehaviour()) //
                 .behaviour(CatalogProduct.class, new CatalogProductBehaviour()) //
                 .propertiesFactory(CatalogProduct.class, //
-                        c -> Property.concatenate(Property.list("productId", c.productId, "catalogId", c.catalogId), //
-                                Property.list("tag", c.tags))) //
+                        c -> Property.concatenate(Property.list("productId", c.productId(), "catalogId", c.catalogId()), //
+                                Property.list("tag", c.tags()))) //
                 .propertiesFactory(Product.class, //
                         prod -> Property.list("tag", prod.tags)) //
                 .build();
@@ -71,8 +71,8 @@ public class ShopTest {
             Thread.sleep(100);
             Optional<CatalogProduct> cp = p.get(CatalogProduct.class, CatalogProduct.idFrom("1", "12"));
             if (cp.isPresent()) {
-                assertEquals("Castelli Senza Jacket", cp.get().name);
-                if (cp.get().quantity == 5) {
+                assertEquals("Castelli Senza Jacket", cp.get().name());
+                if (cp.get().quantity() == 5) {
                     break;
                 }
             }
@@ -83,8 +83,8 @@ public class ShopTest {
                         Lists.newArrayList("Clothing", "Cycling", "Windproof", "Jacket", "Castelli")));
         while (true) {
             Optional<CatalogProduct> cp = p.get(CatalogProduct.class, CatalogProduct.idFrom("1", "12"));
-            if (cp.get().name.equals("Castelli Senza 2 Jacket")) {
-                assertEquals(5, cp.get().quantity);
+            if (cp.get().name().equals("Castelli Senza 2 Jacket")) {
+                assertEquals(5, cp.get().quantity());
                 break;
             }
 

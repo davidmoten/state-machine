@@ -4,8 +4,8 @@ import java.util.Set;
 
 import com.github.davidmoten.fsm.example.generated.ProductBehaviourBase;
 import com.github.davidmoten.fsm.example.generated.ProductStateMachine;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.event.ChangeProductDetails;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.ChangeProductDetails;
 import com.github.davidmoten.fsm.example.shop.product.Product;
 import com.github.davidmoten.fsm.example.shop.product.event.ChangeDetails;
 import com.github.davidmoten.fsm.example.shop.product.event.Create;
@@ -38,7 +38,7 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
         for (EntityWithId<CatalogProduct> cp : set) {
             signaller.signal(CatalogProduct.class, //
                     cp.id, //
-                    new ChangeProductDetails(event.name, event.description, event.tags));
+                    ChangeProductDetails.create(event.name, event.description, event.tags));
         }
         return new Product(product.productId, event.name, event.description, event.tags);
     }
