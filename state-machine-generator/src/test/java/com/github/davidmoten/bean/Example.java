@@ -9,6 +9,9 @@ import com.github.davidmoten.bean.annotation.NonNull;
 @SuppressWarnings("serial")
 @GenerateImmutable
 public final class Example implements Serializable{
+    /**
+     * identifier.
+     */
     @NonNull
     String id;
     int number;

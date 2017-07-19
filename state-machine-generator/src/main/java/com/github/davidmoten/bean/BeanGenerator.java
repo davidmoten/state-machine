@@ -32,6 +32,7 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.MarkerAnnotationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public final class BeanGenerator {
@@ -77,12 +78,12 @@ public final class BeanGenerator {
                             .collect(Collectors.toList());
 
                     // fields
-                    writeFields(s, indent, vars);
+                    writeFields(s, indent, fields);
 
                     // constructor
-                    writeConstructor(s, indent, c, fields, vars);
-                    
-                    //getters
+                    writeConstructor(s, indent, c, fields, vars, imports);
+
+                    // getters
                     writeGetters(s, indent, vars);
 
                     // with
@@ -161,13 +162,13 @@ public final class BeanGenerator {
     }
 
     private static void writeGetters(PrintStream s, String indent, List<VariableDeclarator> vars) {
-     // getters
+        // getters
         vars.stream() //
                 .forEach(x -> {
                     s.format("\n\n%spublic %s %s() {", indent, x.getType(), x.getName());
                     s.format("\n%s%sreturn %s;", indent, indent, x.getName());
                     s.format("\n%s}", indent);
-                });        
+                });
     }
 
     private static String insertImports(ByteArrayOutputStream bytes, Map<String, String> imports) {
@@ -245,21 +246,35 @@ public final class BeanGenerator {
     }
 
     private static void writeConstructor(PrintStream s, String indent, ClassOrInterfaceDeclaration c,
-            List<FieldDeclaration> fields, List<VariableDeclarator> vars) {
+            List<FieldDeclaration> fields, List<VariableDeclarator> vars, Map<String, String> imports) {
         String typedParams = fields.stream() //
-                .map(x -> declaration(x)) //
-                .collect(Collectors.joining(", "));
-        s.format("\n\n%s%s(%s) {", indent, c.getName(), typedParams);
+                .map(x -> declaration(x, imports)) //
+                .collect(Collectors.joining(String.format(",\n%s  ", indent)));
+        s.format("\n\n%s@%s", indent, resolve2(imports, JsonCreator.class));
+        s.format("\n%s%s(\n%s%s%s) {", indent, c.getName(), indent, "  ", typedParams);
         vars.stream() //
                 .forEach(x -> s.format("\n%s%sthis.%s = %s;", indent, indent, x.getName(), x.getName()));
         s.format("\n%s}", indent);
     }
 
-    private static void writeFields(PrintStream s, String indent, List<VariableDeclarator> vars) {
-        String flds = vars.stream() //
-                .map(x -> NL + indent + "private final " + x.getType() + " " + x.getName() + ";") //
+    private static void writeFields(PrintStream s, String indent, List<FieldDeclaration> fields) {
+        String flds = fields.stream() //
+                .map(x -> fieldDeclaration(indent, x)) //
                 .collect(Collectors.joining());
         s.append(flds);
+    }
+
+    private static String fieldDeclaration(String indent, FieldDeclaration x) {
+        StringBuilder s = new StringBuilder();
+        for (Node n : x.getChildNodes()) {
+            if (n instanceof VariableDeclarator) {
+                VariableDeclarator v = (VariableDeclarator) n;
+                s.append(NL + indent + "private final " + v.getType() + " " + v.getName() + ";");
+            } else if (n instanceof MarkerAnnotationExpr) {
+                s.append(NL + indent + n);
+            }
+        }
+        return s.toString();
     }
 
     private static void writeBuilderFields(PrintStream s, String indent, List<VariableDeclarator> vars) {
@@ -316,9 +331,10 @@ public final class BeanGenerator {
         throw new RuntimeException("declaration not found!");
     }
 
-    private static String declaration(FieldDeclaration f) {
+    private static String declaration(FieldDeclaration f, Map<String, String> imports) {
         VariableDeclarator v = variableDeclarator(f);
-        return v.getType() + " " + v.getName();
+        return String.format("@%s(\"%s\") %s %s", resolve2(imports, JsonProperty.class), v.getName(), v.getType(),
+                v.getName());
     }
 
     /**
