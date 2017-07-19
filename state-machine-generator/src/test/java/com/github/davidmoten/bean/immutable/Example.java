@@ -11,6 +11,7 @@ import java.util.Objects;
 // WARNING - Generated data class! 
 /////////////////////////////////////////////////////
 
+@SuppressWarnings("serial")
 public class Example implements Serializable {
 
     @NonNull
