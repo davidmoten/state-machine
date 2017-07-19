@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.davidmoten.bean.annotation.GenerateImmutable;
 import com.github.davidmoten.bean.annotation.NonNull;
 import com.github.davidmoten.guavamini.Preconditions;
 import com.github.javaparser.JavaParser;
@@ -41,15 +43,17 @@ public final class BeanGenerator {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintStream s = new PrintStream(bytes);
 
-        cu.getPackageDeclaration() //
-                .ifPresent(p -> s.format(p.toString()));
+        s.format("package %s.immutable;\n\n",
+                cu.getPackageDeclaration().map(p -> p.getName().toString()).orElse("immutable"));
         s.format("<IMPORTS>\n");
         Map<String, String> imports;
         {
             NodeList<ImportDeclaration> n = cu.getImports();
             if (n != null) {
-                imports = new HashMap<>(n.stream().collect(Collectors.<ImportDeclaration, String, String>toMap(
-                        x -> simpleName(x.getName().toString()), x -> x.getName().toString())));
+                imports = new HashMap<>(n.stream() //
+                        .filter(x -> !x.getName().toString().equals(GenerateImmutable.class.getName())) //
+                        .collect(Collectors.<ImportDeclaration, String, String>toMap(
+                                x -> simpleName(x.getName().toString()), x -> x.getName().toString())));
             } else {
                 imports = new HashMap<>();
             }
@@ -77,17 +81,72 @@ public final class BeanGenerator {
 
                     // constructor
                     writeConstructor(s, indent, c, fields, vars);
+                    
+                    //getters
+                    writeGetters(s, indent, vars);
 
                     // with
                     writeWiths(s, indent, c, vars);
+
+                    // builder
+                    if (!vars.isEmpty()) {
+                        Iterator<VariableDeclarator> it = vars.iterator();
+                        s.format("\n\n%s// Constructor synchronized builder pattern.", indent);
+                        s.format("\n%s// Changing the parameter list in the source", indent);
+                        s.format("\n%s// and regenerating will provoke compiler errors", indent);
+                        s.format("\n%s// wherever the builder is used.", indent);
+
+                        VariableDeclarator first = it.next();
+                        if (vars.size() == 1) {
+                            s.format("\n\n%spublic static %s %s(%s %s) {", indent, c.getName(), first.getName(),
+                                    first.getType(), first.getName());
+                            s.format("\n%s%sreturn new %s(%s);", indent, indent, c.getName(), first.getName());
+                            s.format("\n%s}", indent);
+                        } else {
+                            s.format("\n\n%spublic static Builder2 %s(%s %s) {", indent, first.getName(),
+                                    first.getType(), first.getName());
+                            s.format("\n%s%sBuilder b = new Builder();", indent, indent);
+                            s.format("\n%s%sb.%s = %s;", indent, indent, first.getName(), first.getName());
+                            s.format("\n%s%sreturn new Builder2(b);", indent, indent, first.getName());
+                            s.format("\n%s}", indent);
+                            s.format("\n\n%sprivate static final class Builder {", indent);
+                            writeBuilderFields(s, indent, vars);
+                            s.format("\n%s}", indent);
+                        }
+                        int i = 2;
+                        while (it.hasNext()) {
+                            VariableDeclarator v = it.next();
+                            s.format("\n\n%spublic static final class Builder%s {", indent, i);
+                            s.format("\n\n%s%sprivate final Builder b;", indent, indent);
+                            s.format("\n\n%s%sBuilder%s(Builder b) {", indent, indent, i);
+                            s.format("\n%s%s%sthis.b = b;", indent, indent, indent);
+                            s.format("\n%s%s}", indent, indent);
+                            if (i < vars.size()) {
+                                s.format("\n\n%s%spublic Builder%s %s(%s %s) {", indent, indent, i + 1, v.getName(),
+                                        v.getType(), v.getName());
+                                s.format("\n%s%s%sb.%s = %s;", indent, indent, indent, v.getName(), v.getName());
+                                s.format("\n%s%s%sreturn new Builder%s(b);", indent, indent, indent, i + 1);
+                                s.format("\n%s%s}", indent, indent);
+                                s.format("\n%s}", indent);
+                            } else {
+                                s.format("\n\n%s%spublic %s %s(%s %s) {", indent, indent, c.getName(), v.getName(),
+                                        v.getType(), v.getName());
+                                s.format("\n%s%s%sb.%s = %s;", indent, indent, indent, v.getName(), v.getName());
+                                s.format("\n%s%s%sreturn new %s(%s);", indent, indent, indent, c.getName(), //
+                                        vars.stream().map(x -> "b." + x.getName().toString())
+                                                .collect(Collectors.joining(", ")));
+                                s.format("\n%s%s}", indent, indent);
+                                s.format("\n%s}", indent);
+                            }
+                            i++;
+                        }
+                    }
 
                     // hashCode
                     writeHashCode(s, imports, indent, vars);
 
                     // equals
                     writeEquals(s, imports, indent, c, vars);
-
-                    // builder
 
                     // toString
                     writeToString(s, imports, indent, c, vars);
@@ -99,6 +158,16 @@ public final class BeanGenerator {
         }
         // imports
         System.out.println(insertImports(bytes, imports));
+    }
+
+    private static void writeGetters(PrintStream s, String indent, List<VariableDeclarator> vars) {
+     // getters
+        vars.stream() //
+                .forEach(x -> {
+                    s.format("\n\n%spublic %s %s() {", indent, x.getType(), x.getName());
+                    s.format("\n%s%sreturn %s;", indent, indent, x.getName());
+                    s.format("\n%s}", indent);
+                });        
     }
 
     private static String insertImports(ByteArrayOutputStream bytes, Map<String, String> imports) {
@@ -183,20 +252,19 @@ public final class BeanGenerator {
         s.format("\n\n%s%s(%s) {", indent, c.getName(), typedParams);
         vars.stream() //
                 .forEach(x -> s.format("\n%s%sthis.%s = %s;", indent, indent, x.getName(), x.getName()));
-        s.format("\n%s}\n", indent);
-
-        // getters
-        vars.stream() //
-                .forEach(x -> {
-                    s.format("\n\n%spublic %s %s() {", indent, x.getType(), x.getName());
-                    s.format("\n%s%sreturn %s;", indent, indent, x.getName());
-                    s.format("\n%s}", indent);
-                });
+        s.format("\n%s}", indent);
     }
 
     private static void writeFields(PrintStream s, String indent, List<VariableDeclarator> vars) {
         String flds = vars.stream() //
                 .map(x -> NL + indent + "private final " + x.getType() + " " + x.getName() + ";") //
+                .collect(Collectors.joining());
+        s.append(flds);
+    }
+
+    private static void writeBuilderFields(PrintStream s, String indent, List<VariableDeclarator> vars) {
+        String flds = vars.stream() //
+                .map(x -> NL + indent + indent + x.getType() + " " + x.getName() + ";") //
                 .collect(Collectors.joining());
         s.append(flds);
     }
