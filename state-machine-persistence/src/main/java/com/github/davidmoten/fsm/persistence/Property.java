@@ -3,6 +3,7 @@ package com.github.davidmoten.fsm.persistence;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,9 +33,13 @@ public final class Property {
     }
 
     public static List<Property> list(String name, Collection<String> values) {
-        return values.stream() //
-                .map(x -> Property.create(name, x)) //
-                .collect(Collectors.toList());
+        if (values == null) {
+            return Collections.emptyList();
+        } else {
+            return values.stream() //
+                    .map(x -> Property.create(name, x)) //
+                    .collect(Collectors.toList());
+        }
     }
 
     public static List<Property> list(String... items) {

@@ -159,7 +159,8 @@ public final class ImmutableBeanGenerator {
                             s.format("\n%s%sb.%s = %s;", indent, indent, first.getName(), first.getName());
                             s.format("\n%s%sreturn new Builder2(b);", indent, indent, first.getName());
                             s.format("\n%s}", indent);
-                            s.format("\n\n%sprivate static final class Builder {", indent);
+                            // Builder
+                            s.format("\n\n%sstatic final class Builder {", indent);
                             writeBuilderFields(s, indent, vars);
                             s.format("\n%s}", indent);
                         }
