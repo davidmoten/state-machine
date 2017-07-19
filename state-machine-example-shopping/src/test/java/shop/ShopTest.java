@@ -17,9 +17,9 @@ import org.junit.Test;
 import com.github.davidmoten.fsm.example.shop.catalog.immutable.Catalog;
 import com.github.davidmoten.fsm.example.shop.catalog.immutable.Change;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
-import com.github.davidmoten.fsm.example.shop.product.Product;
-import com.github.davidmoten.fsm.example.shop.product.event.ChangeDetails;
-import com.github.davidmoten.fsm.example.shop.product.event.Create;
+import com.github.davidmoten.fsm.example.shop.product.immutable.ChangeDetails;
+import com.github.davidmoten.fsm.example.shop.product.immutable.Create;
+import com.github.davidmoten.fsm.example.shop.product.immutable.Product;
 import com.github.davidmoten.fsm.persistence.Persistence;
 import com.github.davidmoten.fsm.persistence.Persistence.EntityWithId;
 import com.github.davidmoten.fsm.persistence.Property;
@@ -34,7 +34,7 @@ public class ShopTest {
 
     @Test
     public void testSerializeProduct() {
-        Product p = new Product("a", "name", "description", Lists.newArrayList());
+        Product p = Product.create("a", "name", "description", Lists.newArrayList());
         byte[] s = Serializer.JSON.serialize(p);
         Serializer.JSON.deserialize(Product.class, s);
     }
@@ -55,12 +55,12 @@ public class ShopTest {
                         c -> Property.concatenate(Property.list("productId", c.productId(), "catalogId", c.catalogId()), //
                                 Property.list("tag", c.tags()))) //
                 .propertiesFactory(Product.class, //
-                        prod -> Property.list("tag", prod.tags)) //
+                        prod -> Property.list("tag", prod.tags())) //
                 .build();
         p.create();
         p.initialize();
         p.signal(Product.class, "12", //
-                new Create("12", "Castelli Senza Jacket", "Fleece lined windproof cycling jacket",
+                Create.create("12", "Castelli Senza Jacket", "Fleece lined windproof cycling jacket",
                         Collections.emptyList()));
         p.signal(Catalog.class, "1",
                 com.github.davidmoten.fsm.example.shop.catalog.immutable.Create.create("1", "Online bike shop"));
@@ -78,7 +78,7 @@ public class ShopTest {
             }
         }
         p.signal(Product.class, "12",
-                new ChangeDetails("Castelli Senza 2 Jacket",
+                ChangeDetails.create("Castelli Senza 2 Jacket",
                         "Fleece lined windproof cycling jacket with reflective highlights",
                         Lists.newArrayList("Clothing", "Cycling", "Windproof", "Jacket", "Castelli")));
         while (true) {

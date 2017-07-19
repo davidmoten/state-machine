@@ -17,8 +17,8 @@ import org.apache.commons.csv.CSVRecord;
 import com.github.davidmoten.fsm.example.shop.catalog.immutable.Catalog;
 import com.github.davidmoten.fsm.example.shop.catalog.immutable.Change;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
-import com.github.davidmoten.fsm.example.shop.product.Product;
-import com.github.davidmoten.fsm.example.shop.product.event.Create;
+import com.github.davidmoten.fsm.example.shop.product.immutable.Create;
+import com.github.davidmoten.fsm.example.shop.product.immutable.Product;
 import com.github.davidmoten.fsm.persistence.IntProperty;
 import com.github.davidmoten.fsm.persistence.Persistence;
 import com.github.davidmoten.fsm.persistence.Property;
@@ -50,7 +50,7 @@ public final class StateMachine {
                 .propertiesFactory(CatalogProduct.class, pf) //
                 .rangeMetricFactory(CatalogProduct.class, rf) //
                 .propertiesFactory(Product.class, //
-                        prod -> Property.list("tag", prod.tags)) //
+                        prod -> Property.list("tag", prod.tags())) //
                 .build();
     }
 
@@ -75,7 +75,7 @@ public final class StateMachine {
                 int quantity = Integer.parseInt(record.get(5).trim());
                 p.signal(Product.class, //
                         productId, //
-                        new Create(productId, name, description, tags));
+                        Create.create(productId, name, description, tags));
                 p.signal(Catalog.class, //
                         MAIN_CATALOG_ID, Change.create(productId, quantity, price));
             }

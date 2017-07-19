@@ -132,66 +132,10 @@ public final class ImmutableBeanGenerator {
                     writeWiths(s, indent, c, vars);
 
                     // static methods
-                    if (!c.getMethods().isEmpty()) {
-                        c.getMethods().stream().filter(x -> x.isStatic()).forEach(x -> {
-                            s.format("\n\n%s%s", indent, x.toString().replaceAll("\n", "\n" + indent));
-                        });
-                    }
+                    writeStaticMethods(s, indent, c);
 
                     // builder
-                    if (!vars.isEmpty()) {
-                        Iterator<VariableDeclarator> it = vars.iterator();
-                        s.format("\n\n%s// Constructor synchronized builder pattern.", indent);
-                        s.format("\n%s// Changing the parameter list in the source", indent);
-                        s.format("\n%s// and regenerating will provoke compiler errors", indent);
-                        s.format("\n%s// wherever the builder is used.", indent);
-
-                        VariableDeclarator first = it.next();
-                        if (vars.size() == 1) {
-                            s.format("\n\n%spublic static %s %s(%s %s) {", indent, c.getName(), first.getName(),
-                                    first.getType(), first.getName());
-                            s.format("\n%s%sreturn new %s(%s);", indent, indent, c.getName(), first.getName());
-                            s.format("\n%s}", indent);
-                        } else {
-                            s.format("\n\n%spublic static Builder2 %s(%s %s) {", indent, first.getName(),
-                                    first.getType(), first.getName());
-                            s.format("\n%s%sBuilder b = new Builder();", indent, indent);
-                            s.format("\n%s%sb.%s = %s;", indent, indent, first.getName(), first.getName());
-                            s.format("\n%s%sreturn new Builder2(b);", indent, indent, first.getName());
-                            s.format("\n%s}", indent);
-                            // Builder
-                            s.format("\n\n%sstatic final class Builder {", indent);
-                            writeBuilderFields(s, indent, vars);
-                            s.format("\n%s}", indent);
-                        }
-                        int i = 2;
-                        while (it.hasNext()) {
-                            VariableDeclarator v = it.next();
-                            s.format("\n\n%spublic static final class Builder%s {", indent, i);
-                            s.format("\n\n%s%sprivate final Builder b;", indent, indent);
-                            s.format("\n\n%s%sBuilder%s(Builder b) {", indent, indent, i);
-                            s.format("\n%s%s%sthis.b = b;", indent, indent, indent);
-                            s.format("\n%s%s}", indent, indent);
-                            if (i < vars.size()) {
-                                s.format("\n\n%s%spublic Builder%s %s(%s %s) {", indent, indent, i + 1, v.getName(),
-                                        v.getType(), v.getName());
-                                s.format("\n%s%s%sb.%s = %s;", indent, indent, indent, v.getName(), v.getName());
-                                s.format("\n%s%s%sreturn new Builder%s(b);", indent, indent, indent, i + 1);
-                                s.format("\n%s%s}", indent, indent);
-                                s.format("\n%s}", indent);
-                            } else {
-                                s.format("\n\n%s%spublic %s %s(%s %s) {", indent, indent, c.getName(), v.getName(),
-                                        v.getType(), v.getName());
-                                s.format("\n%s%s%sb.%s = %s;", indent, indent, indent, v.getName(), v.getName());
-                                s.format("\n%s%s%sreturn new %s(%s);", indent, indent, indent, c.getName(), //
-                                        vars.stream().map(x -> "b." + x.getName().toString())
-                                                .collect(Collectors.joining(", ")));
-                                s.format("\n%s%s}", indent, indent);
-                                s.format("\n%s}", indent);
-                            }
-                            i++;
-                        }
-                    }
+                    writeBuilder(s, indent, c, vars);
 
                     // hashCode
                     writeHashCode(s, imports, indent, vars);
@@ -211,6 +155,70 @@ public final class ImmutableBeanGenerator {
         }
         throw new RuntimeException("expected class structure not found");
 
+    }
+
+    private static void writeStaticMethods(PrintStream s, String indent, ClassOrInterfaceDeclaration c) {
+        if (!c.getMethods().isEmpty()) {
+            c.getMethods().stream().filter(x -> x.isStatic()).forEach(x -> {
+                s.format("\n\n%s%s", indent, x.toString().replaceAll("\n", "\n" + indent));
+            });
+        }
+    }
+
+    private static void writeBuilder(PrintStream s, String indent, ClassOrInterfaceDeclaration c,
+            List<VariableDeclarator> vars) {
+        if (!vars.isEmpty()) {
+            Iterator<VariableDeclarator> it = vars.iterator();
+            s.format("\n\n%s// Constructor synchronized builder pattern.", indent);
+            s.format("\n%s// Changing the parameter list in the source", indent);
+            s.format("\n%s// and regenerating will provoke compiler errors", indent);
+            s.format("\n%s// wherever the builder is used.", indent);
+
+            VariableDeclarator first = it.next();
+            if (vars.size() == 1) {
+                s.format("\n\n%spublic static %s %s(%s %s) {", indent, c.getName(), first.getName(), first.getType(),
+                        first.getName());
+                s.format("\n%s%sreturn new %s(%s);", indent, indent, c.getName(), first.getName());
+                s.format("\n%s}", indent);
+            } else {
+                s.format("\n\n%spublic static Builder2 %s(%s %s) {", indent, first.getName(), first.getType(),
+                        first.getName());
+                s.format("\n%s%sBuilder b = new Builder();", indent, indent);
+                s.format("\n%s%sb.%s = %s;", indent, indent, first.getName(), first.getName());
+                s.format("\n%s%sreturn new Builder2(b);", indent, indent, first.getName());
+                s.format("\n%s}", indent);
+                // Builder
+                s.format("\n\n%sstatic final class Builder {", indent);
+                writeBuilderFields(s, indent, vars);
+                s.format("\n%s}", indent);
+            }
+            int i = 2;
+            while (it.hasNext()) {
+                VariableDeclarator v = it.next();
+                s.format("\n\n%spublic static final class Builder%s {", indent, i);
+                s.format("\n\n%s%sprivate final Builder b;", indent, indent);
+                s.format("\n\n%s%sBuilder%s(Builder b) {", indent, indent, i);
+                s.format("\n%s%s%sthis.b = b;", indent, indent, indent);
+                s.format("\n%s%s}", indent, indent);
+                if (i < vars.size()) {
+                    s.format("\n\n%s%spublic Builder%s %s(%s %s) {", indent, indent, i + 1, v.getName(), v.getType(),
+                            v.getName());
+                    s.format("\n%s%s%sb.%s = %s;", indent, indent, indent, v.getName(), v.getName());
+                    s.format("\n%s%s%sreturn new Builder%s(b);", indent, indent, indent, i + 1);
+                    s.format("\n%s%s}", indent, indent);
+                    s.format("\n%s}", indent);
+                } else {
+                    s.format("\n\n%s%spublic %s %s(%s %s) {", indent, indent, c.getName(), v.getName(), v.getType(),
+                            v.getName());
+                    s.format("\n%s%s%sb.%s = %s;", indent, indent, indent, v.getName(), v.getName());
+                    s.format("\n%s%s%sreturn new %s(%s);", indent, indent, indent, c.getName(), //
+                            vars.stream().map(x -> "b." + x.getName().toString()).collect(Collectors.joining(", ")));
+                    s.format("\n%s%s}", indent, indent);
+                    s.format("\n%s}", indent);
+                }
+                i++;
+            }
+        }
     }
 
     private static void writeCreateMethod(PrintStream s, String indent, ClassOrInterfaceDeclaration c,
@@ -237,11 +245,12 @@ public final class ImmutableBeanGenerator {
         List<Entry<String, String>> sorted = new ArrayList<Entry<String, String>>();
         sorted.addAll(imports.entrySet());
         Collections.sort(sorted, (a, b) -> a.getValue().compareTo(b.getValue()));
-        s2 = s2.replace("<IMPORTS>", sorted.stream() //
-                .filter(x -> !x.getKey().contains(".")) //
-                .filter(x -> !x.getValue().startsWith("java.lang.")) //
-                .map(x -> "import " + x.getValue() + ";") //
-                .collect(Collectors.joining("\n")));
+        s2 = s2.replace("<IMPORTS>",
+                sorted.stream() //
+                        .filter(x -> !x.getKey().contains(".")) //
+                        .filter(x -> !x.getValue().startsWith("java.lang.")) //
+                        .map(x -> "import " + x.getValue() + ";") //
+                        .collect(Collectors.joining("\n")));
         return s2;
     }
 
@@ -272,11 +281,15 @@ public final class ImmutableBeanGenerator {
         s.format("\n%s%s} else {", indent, indent);
         s.format("\n%s%s%s%s other = (%s) o;", indent, indent, indent, c.getName(), c.getName());
         s.format("\n%s%s%sreturn", indent, indent, indent);
-        String expression = vars.stream() ///
-                .map(x -> String.format("%s.deepEquals(this.%s, other.%s)", //
-                        resolve2(imports, Objects.class), x.getName(), x.getName())) //
-                .collect(Collectors.joining(String.format("\n%s%s%s%s&& ", indent, indent, indent, indent)));
-        s.format("\n%s%s%s%s%s;", indent, indent, indent, indent, expression);
+        if (vars.isEmpty()) {
+            s.format("\n%s%s%s%strue;", indent, indent, indent, indent);
+        } else {
+            String expression = vars.stream() ///
+                    .map(x -> String.format("%s.deepEquals(this.%s, other.%s)", //
+                            resolve2(imports, Objects.class), x.getName(), x.getName())) //
+                    .collect(Collectors.joining(String.format("\n%s%s%s%s&& ", indent, indent, indent, indent)));
+            s.format("\n%s%s%s%s%s;", indent, indent, indent, indent, expression);
+        }
         s.format("\n%s%s}", indent, indent);
         s.format("\n%s}", indent);
     }
