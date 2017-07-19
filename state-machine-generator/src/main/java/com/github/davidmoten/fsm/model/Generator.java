@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.davidmoten.bean.annotation.GenerateImmutable;
 import com.github.davidmoten.fsm.Util;
 import com.github.davidmoten.fsm.runtime.Action3;
 import com.github.davidmoten.fsm.runtime.CancelTimedSignal;
