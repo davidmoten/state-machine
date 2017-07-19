@@ -33,13 +33,9 @@ public final class Property {
     }
 
     public static List<Property> list(String name, Collection<String> values) {
-        if (values == null) {
-            return Collections.emptyList();
-        } else {
-            return values.stream() //
-                    .map(x -> Property.create(name, x)) //
-                    .collect(Collectors.toList());
-        }
+        return values.stream() //
+                .map(x -> Property.create(name, x)) //
+                .collect(Collectors.toList());
     }
 
     public static List<Property> list(String... items) {
