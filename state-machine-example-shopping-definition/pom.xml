@@ -139,6 +139,9 @@
 										</versionRange>
 										<goals>
 											<goal>bean-generate</goal>
+											<goal>
+											    generate-immutable
+											</goal>
 										</goals>
 									</pluginExecutionFilter>
 									<action>
