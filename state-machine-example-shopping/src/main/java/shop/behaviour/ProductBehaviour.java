@@ -38,7 +38,10 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
         for (EntityWithId<CatalogProduct> cp : set) {
             signaller.signal(CatalogProduct.class, //
                     cp.id, //
-                    ChangeProductDetails.create(event.name, event.description, event.tags));
+                    ChangeProductDetails //
+                            .productName(event.name) //
+                            .productDescription(event.description) //
+                            .tags(event.tags));
         }
         return new Product(product.productId, event.name, event.description, event.tags);
     }

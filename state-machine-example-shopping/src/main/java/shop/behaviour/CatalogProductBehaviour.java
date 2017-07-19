@@ -42,9 +42,6 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
     public CatalogProduct onEntry_ChangedQuantity(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeQuantity event, boolean replaying) {
         System.out.println("changing quantity catalogproduct");
-        // return CatalogProduct.create(c.catalogId(), c.productId(), c.name(),
-        // c.description(),
-        // c.quantity() + event.quantityDelta(), c.price(), c.tags());
         CatalogProduct result = c.withQuantity(c.quantity() + event.quantityDelta());
         return result;
     }
