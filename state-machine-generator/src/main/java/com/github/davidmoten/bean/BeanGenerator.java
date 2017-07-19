@@ -56,21 +56,12 @@ public final class BeanGenerator {
         }
         String indent = "    ";
 
-        // add placeholder for more imports
-        // s.append("<IMPORTS>\n");
         {
             for (Node n : cu.getChildNodes()) {
                 if (n instanceof ClassOrInterfaceDeclaration) {
                     ClassOrInterfaceDeclaration c = (ClassOrInterfaceDeclaration) n;
-                    s.format("\npublic class %s", c.getName());
-                    if (c.getImplementedTypes() != null) {
-                        s.format(" implements");
-                        for (ClassOrInterfaceType iface : c.getImplementedTypes()) {
-                            s.append(" " + iface);
-                        }
-                    }
-                    s.append(" {\n");
-                    Preconditions.checkArgument(c.getExtendedTypes().size() == 0);
+                    writeClassDeclaration(s, c);
+
                     List<FieldDeclaration> fields = c.getChildNodes() //
                             .stream() //
                             .filter(x -> x instanceof FieldDeclaration) //
@@ -82,85 +73,24 @@ public final class BeanGenerator {
                             .collect(Collectors.toList());
 
                     // fields
-                    String flds = vars.stream() //
-                            .map(x -> NL + indent + "private final " + x.getType() + " " + x.getName() + ";") //
-                            .collect(Collectors.joining());
-                    s.append(flds);
+                    writeFields(s, indent, vars);
 
                     // constructor
-                    String typedParams = fields.stream() //
-                            .map(x -> declaration(x)) //
-                            .collect(Collectors.joining(", "));
-                    s.format("\n\n%s%s(%s) {", indent, c.getName(), typedParams);
-                    vars.stream() //
-                            .forEach(x -> s.format("\n%s%sthis.%s = %s;", indent, indent, x.getName(), x.getName()));
-                    s.format("\n%s}\n", indent);
-
-                    // getters
-                    vars.stream() //
-                            .forEach(x -> {
-                                s.format("\n\n%spublic %s %s() {", indent, x.getType(), x.getName());
-                                s.format("\n%s%sreturn %s;", indent, indent, x.getName());
-                                s.format("\n%s}", indent);
-                            });
+                    writeConstructor(s, indent, c, fields, vars);
 
                     // with
-                    vars.stream() //
-                            .forEach(x -> {
-                                s.format("\n\n%spublic %s with%s(%s %s) {", indent, c.getName(),
-                                        capFirst(x.getName().toString()), x.getType(), x.getName());
-                                s.format("\n%s%sreturn new %s(%s);", indent, indent, c.getName(), //
-                                        vars.stream() //
-                                                .map(y -> y.getName().toString()) //
-                                                .collect(Collectors.joining(", ")));
-                                s.format("\n%s}", indent);
-                            });
+                    writeWiths(s, indent, c, vars);
 
                     // hashCode
-                    s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
-                    s.format("\n%spublic int hashCode() {", indent);
-                    s.format("\n%s%sreturn %s.hash(%s);", indent, indent, resolve2(imports, Objects.class), //
-                            vars.stream() //
-                                    .map(y -> y.getName().toString()) //
-                                    .collect(Collectors.joining(", ")));
-                    s.format("\n%s}", indent);
+                    writeHashCode(s, imports, indent, vars);
 
                     // equals
-                    s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
-                    s.format("\n%spublic boolean equals(Object o) {", indent);
-                    s.format("\n%s%sif (o == null) {", indent, indent);
-                    s.format("\n%s%s%sreturn false;", indent, indent, indent);
-                    s.format("\n%s%s} else if (!(o instanceof %s)) {", indent, indent, c.getName());
-                    s.format("\n%s%s%sreturn false;", indent, indent, indent);
-                    s.format("\n%s%s} else {", indent, indent);
-                    s.format("\n%s%s%s%s other = (%s) o;", indent, indent, indent, c.getName(), c.getName());
-                    s.format("\n%s%s%sreturn", indent, indent, indent);
-                    String expression = vars.stream() ///
-                            .map(x -> String.format("%s.deepEquals(this.%s, other.%s)", //
-                                    resolve2(imports, Objects.class), x.getName(), x.getName())) //
-                            .collect(
-                                    Collectors.joining(String.format("\n%s%s%s%s&& ", indent, indent, indent, indent)));
-                    s.format("\n%s%s%s%s%s;", indent, indent, indent, indent, expression);
-                    s.format("\n%s%s}", indent, indent);
-                    s.format("\n%s}", indent);
+                    writeEquals(s, imports, indent, c, vars);
 
                     // builder
 
                     // toString
-                    // equals
-                    s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
-                    s.format("\n%spublic %s toString() {", indent, resolve2(imports, String.class));
-                    s.format("\n%s%s%s b = new %s();", indent, indent, resolve2(imports, StringBuilder.class),
-                            resolve2(imports, StringBuilder.class));
-                    s.format("\n%s%sb.append(\"%s[\");", indent, indent, c.getName());
-                    String ex = vars.stream() //
-                            .map(x -> String.format("\n%s%sb.append(\"%s=\" + this.%s);", indent, indent, x.getName(),
-                                    x.getName())) //
-                            .collect(Collectors.joining(String.format("\n%s%sb.append(\",\");", indent, indent)));
-                    s.format("%s", ex);
-                    s.format("\n%s%sb.append(\"]\");", indent, indent);
-                    s.format("\n%s%sreturn b.toString();", indent, indent);
-                    s.format("\n%s}", indent);
+                    writeToString(s, imports, indent, c, vars);
 
                     s.append("\n}");
                     break;
@@ -168,18 +98,119 @@ public final class BeanGenerator {
             }
         }
         // imports
-        {
-            String s2 = new String(bytes.toByteArray(), StandardCharsets.UTF_8);
-            List<Entry<String, String>> sorted = new ArrayList<Entry<String, String>>();
-            sorted.addAll(imports.entrySet());
-            Collections.sort(sorted, (a, b) -> a.getValue().compareTo(b.getValue()));
-            s2 = s2.replace("<IMPORTS>", sorted.stream() //
-                    .filter(x -> !x.getKey().contains(".")) //
-                    .filter(x -> !x.getValue().startsWith("java.lang.")) //
-                    .map(x -> "import " + x.getValue() + ";") //
-                    .collect(Collectors.joining("\n")));
-            System.out.println(s2);
+        System.out.println(insertImports(bytes, imports));
+    }
+
+    private static String insertImports(ByteArrayOutputStream bytes, Map<String, String> imports) {
+        String s2 = new String(bytes.toByteArray(), StandardCharsets.UTF_8);
+        List<Entry<String, String>> sorted = new ArrayList<Entry<String, String>>();
+        sorted.addAll(imports.entrySet());
+        Collections.sort(sorted, (a, b) -> a.getValue().compareTo(b.getValue()));
+        s2 = s2.replace("<IMPORTS>", sorted.stream() //
+                .filter(x -> !x.getKey().contains(".")) //
+                .filter(x -> !x.getValue().startsWith("java.lang.")) //
+                .map(x -> "import " + x.getValue() + ";") //
+                .collect(Collectors.joining("\n")));
+        return s2;
+    }
+
+    private static void writeToString(PrintStream s, Map<String, String> imports, String indent,
+            ClassOrInterfaceDeclaration c, List<VariableDeclarator> vars) {
+        s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
+        s.format("\n%spublic %s toString() {", indent, resolve2(imports, String.class));
+        s.format("\n%s%s%s b = new %s();", indent, indent, resolve2(imports, StringBuilder.class),
+                resolve2(imports, StringBuilder.class));
+        s.format("\n%s%sb.append(\"%s[\");", indent, indent, c.getName());
+        String ex = vars.stream() //
+                .map(x -> String.format("\n%s%sb.append(\"%s=\" + this.%s);", indent, indent, x.getName(), x.getName())) //
+                .collect(Collectors.joining(String.format("\n%s%sb.append(\",\");", indent, indent)));
+        s.format("%s", ex);
+        s.format("\n%s%sb.append(\"]\");", indent, indent);
+        s.format("\n%s%sreturn b.toString();", indent, indent);
+        s.format("\n%s}", indent);
+    }
+
+    private static void writeEquals(PrintStream s, Map<String, String> imports, String indent,
+            ClassOrInterfaceDeclaration c, List<VariableDeclarator> vars) {
+        s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
+        s.format("\n%spublic boolean equals(Object o) {", indent);
+        s.format("\n%s%sif (o == null) {", indent, indent);
+        s.format("\n%s%s%sreturn false;", indent, indent, indent);
+        s.format("\n%s%s} else if (!(o instanceof %s)) {", indent, indent, c.getName());
+        s.format("\n%s%s%sreturn false;", indent, indent, indent);
+        s.format("\n%s%s} else {", indent, indent);
+        s.format("\n%s%s%s%s other = (%s) o;", indent, indent, indent, c.getName(), c.getName());
+        s.format("\n%s%s%sreturn", indent, indent, indent);
+        String expression = vars.stream() ///
+                .map(x -> String.format("%s.deepEquals(this.%s, other.%s)", //
+                        resolve2(imports, Objects.class), x.getName(), x.getName())) //
+                .collect(Collectors.joining(String.format("\n%s%s%s%s&& ", indent, indent, indent, indent)));
+        s.format("\n%s%s%s%s%s;", indent, indent, indent, indent, expression);
+        s.format("\n%s%s}", indent, indent);
+        s.format("\n%s}", indent);
+    }
+
+    private static void writeHashCode(PrintStream s, Map<String, String> imports, String indent,
+            List<VariableDeclarator> vars) {
+        s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
+        s.format("\n%spublic int hashCode() {", indent);
+        s.format("\n%s%sreturn %s.hash(%s);", indent, indent, resolve2(imports, Objects.class), //
+                vars.stream() //
+                        .map(y -> y.getName().toString()) //
+                        .collect(Collectors.joining(", ")));
+        s.format("\n%s}", indent);
+    }
+
+    private static void writeWiths(PrintStream s, String indent, ClassOrInterfaceDeclaration c,
+            List<VariableDeclarator> vars) {
+        vars.stream() //
+                .forEach(x -> {
+                    s.format("\n\n%spublic %s with%s(%s %s) {", indent, c.getName(), capFirst(x.getName().toString()),
+                            x.getType(), x.getName());
+                    s.format("\n%s%sreturn new %s(%s);", indent, indent, c.getName(), //
+                            vars.stream() //
+                                    .map(y -> y.getName().toString()) //
+                                    .collect(Collectors.joining(", ")));
+                    s.format("\n%s}", indent);
+                });
+    }
+
+    private static void writeConstructor(PrintStream s, String indent, ClassOrInterfaceDeclaration c,
+            List<FieldDeclaration> fields, List<VariableDeclarator> vars) {
+        String typedParams = fields.stream() //
+                .map(x -> declaration(x)) //
+                .collect(Collectors.joining(", "));
+        s.format("\n\n%s%s(%s) {", indent, c.getName(), typedParams);
+        vars.stream() //
+                .forEach(x -> s.format("\n%s%sthis.%s = %s;", indent, indent, x.getName(), x.getName()));
+        s.format("\n%s}\n", indent);
+
+        // getters
+        vars.stream() //
+                .forEach(x -> {
+                    s.format("\n\n%spublic %s %s() {", indent, x.getType(), x.getName());
+                    s.format("\n%s%sreturn %s;", indent, indent, x.getName());
+                    s.format("\n%s}", indent);
+                });
+    }
+
+    private static void writeFields(PrintStream s, String indent, List<VariableDeclarator> vars) {
+        String flds = vars.stream() //
+                .map(x -> NL + indent + "private final " + x.getType() + " " + x.getName() + ";") //
+                .collect(Collectors.joining());
+        s.append(flds);
+    }
+
+    private static void writeClassDeclaration(PrintStream s, ClassOrInterfaceDeclaration c) {
+        s.format("\npublic class %s", c.getName());
+        if (c.getImplementedTypes() != null) {
+            s.format(" implements");
+            for (ClassOrInterfaceType iface : c.getImplementedTypes()) {
+                s.append(" " + iface);
+            }
         }
+        s.append(" {\n");
+        Preconditions.checkArgument(c.getExtendedTypes().size() == 0);
     }
 
     private static String resolve2(Map<String, String> imports, Class<?> cls) {
