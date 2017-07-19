@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.davidmoten.bean.ImmutableBeanGenerator;
 import com.github.davidmoten.bean.annotation.GenerateImmutable;
 import com.github.davidmoten.fsm.Util;
 import com.github.davidmoten.fsm.runtime.Action3;
@@ -38,39 +37,13 @@ public final class Generator<T> {
     private final StateMachineDefinition<T> machine;
     private final String clsName;
     private String clsSimpleName;
-    private final Class<T> fromCls;
 
     public Generator(StateMachineDefinition<T> machine, File directory, String pkg) {
         this.machine = machine;
-        this.fromCls = machine.cls();
-        this.clsName = getClassName(machine);
-        System.out.println("clsName=" + clsName);
+        this.clsName = machine.cls().getName();
         this.clsSimpleName = getSimpleName(clsName);
         this.directory = directory;
         this.pkg = pkg;
-    }
-
-    private static String getClassName(StateMachineDefinition<?> machine) {
-        String clsName = machine.cls().getName().replace("$", ".");
-        if (false && machine.cls().isAnnotationPresent(GenerateImmutable.class)) {
-            int i = clsName.lastIndexOf(".");
-            if (i == -1) {
-                return "immutable." + clsName;
-            } else {
-                return clsName.substring(0, i) + ".immutable" + clsName.substring(i);
-            }
-        } else {
-            return clsName;
-        }
-    }
-
-    private static String getPackage(String cls) {
-        int i = cls.lastIndexOf(".");
-        if (i == -1) {
-            return "";
-        } else {
-            return cls.substring(0, i);
-        }
     }
 
     private static String getSimpleName(String clsName) {
@@ -169,19 +142,12 @@ public final class Generator<T> {
     }
 
     public void generate() {
-        generateImmutableClass();
         generateStateMachine();
         System.out.println("generated " + stateMachineClassFile());
         generateBehaviourInterface();
         System.out.println("generated " + behaviourClassFile());
         generateBehaviourBase();
         System.out.println("generated " + behaviourBaseClassFile());
-    }
-
-    private void generateImmutableClass() {
-        if (fromCls.isAnnotationPresent(GenerateImmutable.class)) {
-            //BeanGenerator.generate(fromCls, getPackage(clsName), directory);
-        }
     }
 
     private Stream<State<T, ? extends Event<? super T>>> states() {
