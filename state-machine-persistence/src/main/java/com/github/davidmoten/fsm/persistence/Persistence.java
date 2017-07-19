@@ -1087,7 +1087,6 @@ public final class Persistence implements Entities {
             ps.setLong(5, rangeStart);
             ps.setLong(6, rangeEnd);
             ps.setInt(7, limit);
-            System.out.println(ps);
             List<EntityWithId<T>> list = new ArrayList<>();
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

@@ -13,7 +13,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 public class SerializerJson implements Serializer {
 
     private final ObjectMapper m = new ObjectMapper() //
-            .setVisibility(PropertyAccessor.FIELD, Visibility.PUBLIC_ONLY)
+            .setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
             .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS) //
             .registerModule(new Jdk8Module()) //
             .registerModule(new ParameterNamesModule());

@@ -45,7 +45,8 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
         // return CatalogProduct.create(c.catalogId(), c.productId(), c.name(),
         // c.description(),
         // c.quantity() + event.quantityDelta(), c.price(), c.tags());
-        return c.withQuantity(c.quantity() + event.quantityDelta());
+        CatalogProduct result = c.withQuantity(c.quantity() + event.quantityDelta());
+        return result;
     }
 
     @Override
