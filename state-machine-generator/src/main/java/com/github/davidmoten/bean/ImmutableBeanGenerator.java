@@ -256,10 +256,10 @@ public final class ImmutableBeanGenerator {
 
     private static void writeToString(PrintStream s, Map<String, String> imports, String indent,
             ClassOrInterfaceDeclaration c, List<VariableDeclarator> vars) {
-        s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
-        s.format("\n%spublic %s toString() {", indent, resolve2(imports, String.class));
-        s.format("\n%s%s%s b = new %s();", indent, indent, resolve2(imports, StringBuilder.class),
-                resolve2(imports, StringBuilder.class));
+        s.format("\n\n%s@%s", indent, resolve(imports, Override.class));
+        s.format("\n%spublic %s toString() {", indent, resolve(imports, String.class));
+        s.format("\n%s%s%s b = new %s();", indent, indent, resolve(imports, StringBuilder.class),
+                resolve(imports, StringBuilder.class));
         s.format("\n%s%sb.append(\"%s[\");", indent, indent, c.getName());
         String ex = vars.stream() //
                 .map(x -> String.format("\n%s%sb.append(\"%s=\" + this.%s);", indent, indent, x.getName(), x.getName())) //
@@ -272,7 +272,7 @@ public final class ImmutableBeanGenerator {
 
     private static void writeEquals(PrintStream s, Map<String, String> imports, String indent,
             ClassOrInterfaceDeclaration c, List<VariableDeclarator> vars) {
-        s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
+        s.format("\n\n%s@%s", indent, resolve(imports, Override.class));
         s.format("\n%spublic boolean equals(Object o) {", indent);
         s.format("\n%s%sif (o == null) {", indent, indent);
         s.format("\n%s%s%sreturn false;", indent, indent, indent);
@@ -286,7 +286,7 @@ public final class ImmutableBeanGenerator {
             s.format("\n%s%s%sreturn", indent, indent, indent);
             String expression = vars.stream() ///
                     .map(x -> String.format("%s.deepEquals(this.%s, other.%s)", //
-                            resolve2(imports, Objects.class), x.getName(), x.getName())) //
+                            resolve(imports, Objects.class), x.getName(), x.getName())) //
                     .collect(Collectors.joining(String.format("\n%s%s%s%s&& ", indent, indent, indent, indent)));
             s.format("\n%s%s%s%s%s;", indent, indent, indent, indent, expression);
         }
@@ -296,9 +296,9 @@ public final class ImmutableBeanGenerator {
 
     private static void writeHashCode(PrintStream s, Map<String, String> imports, String indent,
             List<VariableDeclarator> vars) {
-        s.format("\n\n%s@%s", indent, resolve2(imports, Override.class));
+        s.format("\n\n%s@%s", indent, resolve(imports, Override.class));
         s.format("\n%spublic int hashCode() {", indent);
-        s.format("\n%s%sreturn %s.hash(%s);", indent, indent, resolve2(imports, Objects.class), //
+        s.format("\n%s%sreturn %s.hash(%s);", indent, indent, resolve(imports, Objects.class), //
                 vars.stream() //
                         .map(y -> y.getName().toString()) //
                         .collect(Collectors.joining(", ")));
@@ -324,7 +324,7 @@ public final class ImmutableBeanGenerator {
         String typedParams = fields.stream() //
                 .map(x -> declaration(x, imports)) //
                 .collect(Collectors.joining(String.format(",\n%s  ", indent)));
-        s.format("\n\n%s@%s", indent, resolve2(imports, JsonCreator.class));
+        s.format("\n\n%s@%s", indent, resolve(imports, JsonCreator.class));
         s.format("\n%s%s(\n%s%s%s) {", indent, c.getName(), indent, "  ", typedParams);
         vars.stream() //
                 .forEach(x -> s.format("\n%s%sthis.%s = %s;", indent, indent, x.getName(), x.getName()));
@@ -370,11 +370,11 @@ public final class ImmutableBeanGenerator {
         Preconditions.checkArgument(c.getExtendedTypes().size() == 0);
     }
 
-    private static String resolve2(Map<String, String> imports, Class<?> cls) {
-        return resolve2(imports, cls.getName());
+    private static String resolve(Map<String, String> imports, Class<?> cls) {
+        return resolve(imports, cls.getName());
     }
 
-    private static String resolve2(Map<String, String> imports, String className) {
+    private static String resolve(Map<String, String> imports, String className) {
         String simple = simpleName(className);
         for (Entry<String, String> entry : imports.entrySet()) {
             if (entry.getValue().equals(className)) {
@@ -407,7 +407,7 @@ public final class ImmutableBeanGenerator {
 
     private static String declaration(FieldDeclaration f, Map<String, String> imports) {
         VariableDeclarator v = variableDeclarator(f);
-        return String.format("@%s(\"%s\") %s %s", resolve2(imports, JsonProperty.class), v.getName(), v.getType(),
+        return String.format("@%s(\"%s\") %s %s", resolve(imports, JsonProperty.class), v.getName(), v.getType(),
                 v.getName());
     }
 
@@ -416,32 +416,6 @@ public final class ImmutableBeanGenerator {
             return name.toUpperCase();
         } else {
             return name.substring(0, 1).toUpperCase() + name.substring(1);
-        }
-    }
-
-    public static String resolve(Map<Class<?>, String> map, Class<?> cls) {
-        Class<?> c;
-        if (cls.isArray()) {
-            c = cls.getComponentType();
-        } else {
-            c = cls;
-        }
-        final String name;
-        if (map.containsKey(c)) {
-            name = map.get(c);
-        } else {
-            if (map.values().contains(c.getSimpleName())) {
-                map.put(c, c.getName());
-                name = c.getName();
-            } else {
-                map.put(c, c.getSimpleName());
-                name = c.getSimpleName();
-            }
-        }
-        if (cls.isArray()) {
-            return name + "[]";
-        } else {
-            return name;
         }
     }
 

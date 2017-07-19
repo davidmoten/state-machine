@@ -48,6 +48,8 @@ public final class StateMachineDefinition<T> {
     }
 
     public <R extends Event<? super T>> State<T, R> createState(String name, Class<R> eventClass) {
+        Preconditions.checkArgument(!eventClass.isAnnotationPresent(GenerateImmutable.class),
+                "cannot base a state on an event that is annotated with @GenerateImmutable, use the generated immutable class instead");
         Preconditions.checkNotNull(name);
         if (name.equals("Initial")) {
             name = name.concat("_1");
