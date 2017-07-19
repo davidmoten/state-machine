@@ -52,8 +52,7 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
     @Override
     public CatalogProduct onEntry_ChangedProductDetails(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeProductDetails event, boolean replaying) {
-        return CatalogProduct.create(c.catalogId(), c.productId(), event.productName(), event.productDescription(),
-                c.quantity(), c.price(), event.tags());
+        return c.withName(event.productName()).withDescription(event.productDescription()).withTags(event.tags());
     }
 
 }

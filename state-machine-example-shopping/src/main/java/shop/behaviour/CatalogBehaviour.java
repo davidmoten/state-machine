@@ -18,7 +18,7 @@ public final class CatalogBehaviour extends CatalogBehaviourBase<String> {
 
     @Override
     public Catalog onEntry_Created(Signaller<Catalog, String> signaller, String id, Create event, boolean replaying) {
-        return Catalog.create(event.catalogId(), event.name());
+        return Catalog.catalogId(event.catalogId()).name(event.name());
     }
 
     @Override
