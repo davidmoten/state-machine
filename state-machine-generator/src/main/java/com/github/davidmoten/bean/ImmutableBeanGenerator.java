@@ -123,7 +123,7 @@ public final class ImmutableBeanGenerator {
                     writeConstructor(s, indent, c, fields, vars, imports);
 
                     // create
-                    writeCreateMethod(s, indent, c, vars);
+                    // writeCreateMethod(s, indent, c, vars);
 
                     // getters
                     writeGetters(s, indent, vars);
@@ -176,13 +176,13 @@ public final class ImmutableBeanGenerator {
 
             VariableDeclarator first = it.next();
             if (vars.size() == 1) {
-                s.format("\n\n%spublic static %s %s(%s %s) {", indent, c.getName(), first.getName(), first.getType(),
-                        first.getName());
+                s.format("\n\n%spublic static %s createWith%s(%s %s) {", indent, c.getName(),
+                        capFirst(first.getName().toString()), first.getType(), first.getName());
                 s.format("\n%s%sreturn new %s(%s);", indent, indent, c.getName(), first.getName());
                 s.format("\n%s}", indent);
             } else {
-                s.format("\n\n%spublic static Builder2 %s(%s %s) {", indent, first.getName(), first.getType(),
-                        first.getName());
+                s.format("\n\n%spublic static Builder2 createWith%s(%s %s) {", indent,
+                        capFirst(first.getName().toString()), first.getType(), first.getName());
                 s.format("\n%s%sBuilder b = new Builder();", indent, indent);
                 s.format("\n%s%sb.%s = %s;", indent, indent, first.getName(), first.getName());
                 s.format("\n%s%sreturn new Builder2(b);", indent, indent, first.getName());
@@ -245,12 +245,11 @@ public final class ImmutableBeanGenerator {
         List<Entry<String, String>> sorted = new ArrayList<Entry<String, String>>();
         sorted.addAll(imports.entrySet());
         Collections.sort(sorted, (a, b) -> a.getValue().compareTo(b.getValue()));
-        s2 = s2.replace("<IMPORTS>",
-                sorted.stream() //
-                        .filter(x -> !x.getKey().contains(".")) //
-                        .filter(x -> !x.getValue().startsWith("java.lang.")) //
-                        .map(x -> "import " + x.getValue() + ";") //
-                        .collect(Collectors.joining("\n")));
+        s2 = s2.replace("<IMPORTS>", sorted.stream() //
+                .filter(x -> !x.getKey().contains(".")) //
+                .filter(x -> !x.getValue().startsWith("java.lang.")) //
+                .map(x -> "import " + x.getValue() + ";") //
+                .collect(Collectors.joining("\n")));
         return s2;
     }
 

@@ -5,6 +5,6 @@ import com.github.davidmoten.fsm.example.shop.customer.Customer;
 import com.github.davidmoten.fsm.runtime.Event;
 
 @GenerateImmutable
-public class Timeout implements Event<Customer> {
+public class Timeout implements Event<Basket> {
 
 }

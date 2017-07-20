@@ -61,8 +61,9 @@ public final class StateMachine {
             e.printStackTrace();
         }
         p.initialize();
-        p.signal(Catalog.class, MAIN_CATALOG_ID, com.github.davidmoten.fsm.example.shop.catalog.immutable.Create
-                .create(MAIN_CATALOG_ID, "Online bike shop"));
+        p.signal(Catalog.class, MAIN_CATALOG_ID, com.github.davidmoten.fsm.example.shop.catalog.immutable.Create //
+                .createWithCatalogId(MAIN_CATALOG_ID) //
+                .name("Online bike shop"));
         InputStreamReader in = new InputStreamReader(StateMachine.class.getResourceAsStream("/products.txt"));
         try {
             for (CSVRecord record : CSVFormat.DEFAULT.parse(in)) {
@@ -75,9 +76,16 @@ public final class StateMachine {
                 int quantity = Integer.parseInt(record.get(5).trim());
                 p.signal(Product.class, //
                         productId, //
-                        Create.create(productId, name, description, tags));
+                        Create //
+                                .createWithProductId(productId) //
+                                .name(name) //
+                                .description(description) //
+                                .tags(tags));
                 p.signal(Catalog.class, //
-                        MAIN_CATALOG_ID, Change.create(productId, quantity, price));
+                        MAIN_CATALOG_ID, Change //
+                                .createWithProductId(productId) //
+                                .quantityDelta(quantity) //
+                                .price(price));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

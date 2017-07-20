@@ -5,7 +5,7 @@ import com.github.davidmoten.fsm.example.shop.customer.Customer;
 import com.github.davidmoten.fsm.runtime.Event;
 
 @GenerateImmutable
-public class PlaceOrder implements Event<Customer> {
+public class PlaceOrder implements Event<Basket> {
 
     String address;
     String phoneNumber;

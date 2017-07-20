@@ -5,6 +5,6 @@ import com.github.davidmoten.fsm.example.shop.customer.Customer;
 import com.github.davidmoten.fsm.runtime.Event;
 
 @GenerateImmutable
-public class Checkout implements Event<Customer>{
+public class Checkout implements Event<Basket>{
 
 }

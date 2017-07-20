@@ -18,7 +18,9 @@ public final class CatalogBehaviour extends CatalogBehaviourBase<String> {
 
     @Override
     public Catalog onEntry_Created(Signaller<Catalog, String> signaller, String id, Create event, boolean replaying) {
-        return Catalog.catalogId(event.catalogId()).name(event.name());
+        return Catalog //
+                .createWithCatalogId(event.catalogId()) //
+                .name(event.name());
     }
 
     @Override
@@ -27,9 +29,13 @@ public final class CatalogBehaviour extends CatalogBehaviourBase<String> {
         System.out.println("catalog changed quantity " + event.quantityDelta());
         String cpId = CatalogProduct.idFrom(catalog.catalogId(), event.productId());
         signaller.signal(CatalogProduct.class, cpId,
-                com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.Create.catalogId(id)
-                        .productId(event.productId()).quantity(0).price(event.price()));
-        signaller.signal(CatalogProduct.class, cpId, ChangeQuantity.quantityDelta(event.quantityDelta()));
+                com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.Create //
+                        .createWithCatalogId(id) //
+                        .productId(event.productId()) //
+                        .quantity(0) //
+                        .price(event.price()));
+        signaller.signal(CatalogProduct.class, cpId, ChangeQuantity //
+                .createWithQuantityDelta(event.quantityDelta()));
         return catalog;
     }
 

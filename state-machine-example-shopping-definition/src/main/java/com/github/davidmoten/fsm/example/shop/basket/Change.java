@@ -7,7 +7,7 @@ import com.github.davidmoten.fsm.example.shop.customer.Customer;
 import com.github.davidmoten.fsm.runtime.Event;
 
 @GenerateImmutable
-public class Change implements Event<Customer> {
+public class Change implements Event<Basket> {
 
     String productId;
     int quantity;

@@ -26,7 +26,7 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
         // lookup product within the transaction
         Optional<Product> product = Entities.get().get(Product.class, event.productId());
         if (product.isPresent()) {
-            return CatalogProduct.catalogId(event.catalogId()) //
+            return CatalogProduct.createWithCatalogId(event.catalogId()) //
                     .productId(event.productId()) //
                     .name(product.get().name()) //
                     .description(product.get().description()) //
@@ -49,7 +49,10 @@ public final class CatalogProductBehaviour extends CatalogProductBehaviourBase<S
     @Override
     public CatalogProduct onEntry_ChangedProductDetails(Signaller<CatalogProduct, String> signaller, CatalogProduct c,
             String id, ChangeProductDetails event, boolean replaying) {
-        return c.withName(event.productName()).withDescription(event.productDescription()).withTags(event.tags());
+        return c //
+                .withName(event.productName()) //
+                .withDescription(event.productDescription()) //
+                .withTags(event.tags());
     }
 
 }

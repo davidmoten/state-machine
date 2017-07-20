@@ -23,7 +23,11 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
 
     @Override
     public Product onEntry_Created(Signaller<Product, String> signaller, String id, Create event, boolean replaying) {
-        return Product.productId(event.productId()).name(event.name()).description(event.description()).tags(event.tags());
+        return Product //
+                .createWithProductId(event.productId()) //
+                .name(event.name()) //
+                .description(event.description()) //
+                .tags(event.tags());
     }
 
     @Override
@@ -39,10 +43,13 @@ public final class ProductBehaviour extends ProductBehaviourBase<String> {
             signaller.signal(CatalogProduct.class, //
                     cp.id, //
                     ChangeProductDetails //
-                            .productName(event.name()) //
+                            .createWithProductName(event.name()) //
                             .productDescription(event.description()) //
                             .tags(event.tags()));
         }
-        return Product.create(product.productId(), event.name(), event.description(), event.tags());
+        return Product //
+                .createWithProductId(product.productId()) //
+                .name(event.name()) //
+                .description(event.description()).tags(event.tags());
     }
 }

@@ -34,7 +34,7 @@ public class ShopTest {
 
     @Test
     public void testSerializeProduct() {
-        Product p = Product.create("a", "name", "description", Lists.newArrayList());
+        Product p = Product.createWithProductId("a").name("name").description("description").tags(Lists.newArrayList());
         byte[] s = Serializer.JSON.serialize(p);
         Serializer.JSON.deserialize(Product.class, s);
     }
@@ -60,12 +60,12 @@ public class ShopTest {
         p.create();
         p.initialize();
         p.signal(Product.class, "12", //
-                Create.create("12", "Castelli Senza Jacket", "Fleece lined windproof cycling jacket",
-                        Collections.emptyList()));
-        p.signal(Catalog.class, "1",
-                com.github.davidmoten.fsm.example.shop.catalog.immutable.Create.create("1", "Online bike shop"));
-        p.signal(Catalog.class, "1", Change.create("12", 3, new BigDecimal(141.30)));
-        p.signal(Catalog.class, "1", Change.create("12", 2, new BigDecimal(151.75)));
+                Create.createWithProductId("12").name("Castelli Senza Jacket")
+                        .description("Fleece lined windproof cycling jacket").tags(Collections.emptyList()));
+        p.signal(Catalog.class, "1", com.github.davidmoten.fsm.example.shop.catalog.immutable.Create
+                .createWithCatalogId("1").name("Online bike shop"));
+        p.signal(Catalog.class, "1", Change.createWithProductId("12").quantityDelta(3).price(new BigDecimal(141.30)));
+        p.signal(Catalog.class, "1", Change.createWithProductId("12").quantityDelta(2).price(new BigDecimal(151.75)));
 
         while (true) {
             Thread.sleep(100);
@@ -78,8 +78,8 @@ public class ShopTest {
             }
         }
         p.signal(Product.class, "12",
-                ChangeDetails.create("Castelli Senza 2 Jacket",
-                        "Fleece lined windproof cycling jacket with reflective highlights",
+                ChangeDetails.createWithName("Castelli Senza 2 Jacket").description(
+                        "Fleece lined windproof cycling jacket with reflective highlights").tags(
                         Lists.newArrayList("Clothing", "Cycling", "Windproof", "Jacket", "Castelli")));
         while (true) {
             Optional<CatalogProduct> cp = p.get(CatalogProduct.class, CatalogProduct.idFrom("1", "12"));
