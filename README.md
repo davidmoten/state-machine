@@ -257,9 +257,6 @@ Because the database structure is strongly abstracted you need to manage lookup 
 
 TODO: discuss range metrics and use with tags
 
-
- 
-
 ### Shopping example application
 
 The module *state-machine-example-shopping* (and its dependency *state-machine-example-shopping-definition*) contain a fully working web application with these features:
@@ -270,6 +267,14 @@ The module *state-machine-example-shopping* (and its dependency *state-machine-e
 * Data model generated as immutable classes with many utility methods which add ease and safety for programming state transition behaviour
 * all changes to data go through generated `StateMachine` instances
 
+To run the shopping webapp:
+
+```bash
+mvn clean install
+cd state-machine-example-shopping
+mvn spring-boot:run
+```
+Then go to [http://localhost:8080](http://localhost:8080).
 
 Highly scalable persistence
 --------------------------
