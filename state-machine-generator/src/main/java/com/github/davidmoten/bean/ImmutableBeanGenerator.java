@@ -36,6 +36,8 @@ public final class ImmutableBeanGenerator {
 
     private static final String NL = "\n";
 
+    private static final boolean GENERATE_CREATE_METHOD = false;
+
     public static void generate(String code, File generatedSource) {
         Generated g = generate(code);
         File file = new File(generatedSource, g.className().replace(".", File.separator) + ".java");
@@ -79,7 +81,9 @@ public final class ImmutableBeanGenerator {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintStream s = new PrintStream(bytes);
 
-        String newPkg = cu.getPackageDeclaration().map(p -> p.getName().toString()).orElse("") + ".immutable";
+        String newPkg = cu.getPackageDeclaration() //
+                .map(p -> p.getName().toString()) //
+                .orElse("") + ".immutable";
         s.format("package %s;\n\n", newPkg);
         s.format("<IMPORTS>\n");
         Map<String, String> imports;
@@ -106,15 +110,9 @@ public final class ImmutableBeanGenerator {
                     ClassOrInterfaceDeclaration c = (ClassOrInterfaceDeclaration) n;
                     writeClassDeclaration(s, c);
 
-                    List<FieldDeclaration> fields = c.getChildNodes() //
-                            .stream() //
-                            .filter(x -> x instanceof FieldDeclaration) //
-                            .map(x -> (FieldDeclaration) x) //
-                            .collect(Collectors.toList());
+                    List<FieldDeclaration> fields = getFields(c);
 
-                    List<VariableDeclarator> vars = fields.stream() //
-                            .map(x -> variableDeclarator(x)) //
-                            .collect(Collectors.toList());
+                    List<VariableDeclarator> vars = getVars(fields);
 
                     // fields
                     writeFields(s, indent, fields);
@@ -123,7 +121,7 @@ public final class ImmutableBeanGenerator {
                     writeConstructor(s, indent, c, fields, vars, imports);
 
                     // create
-                    // writeCreateMethod(s, indent, c, vars);
+                    writeCreateMethod(s, indent, c, vars);
 
                     // getters
                     writeGetters(s, indent, vars);
@@ -154,14 +152,33 @@ public final class ImmutableBeanGenerator {
             }
         }
         throw new RuntimeException("expected class structure not found");
+    }
 
+    private static List<VariableDeclarator> getVars(List<FieldDeclaration> fields) {
+        List<VariableDeclarator> vars = fields.stream() //
+                .map(x -> variableDeclarator(x)) //
+                .collect(Collectors.toList());
+        return vars;
+    }
+
+    private static List<FieldDeclaration> getFields(ClassOrInterfaceDeclaration c) {
+        List<FieldDeclaration> fields = c.getChildNodes() //
+                .stream() //
+                .filter(x -> x instanceof FieldDeclaration) //
+                .map(x -> (FieldDeclaration) x) //
+                .collect(Collectors.toList());
+        return fields;
     }
 
     private static void writeStaticMethods(PrintStream s, String indent, ClassOrInterfaceDeclaration c) {
         if (!c.getMethods().isEmpty()) {
-            c.getMethods().stream().filter(x -> x.isStatic()).forEach(x -> {
-                s.format("\n\n%s%s", indent, x.toString().replaceAll("\n", "\n" + indent));
-            });
+            c //
+                    .getMethods() //
+                    .stream() //
+                    .filter(x -> x.isStatic()) //
+                    .forEach(x -> {
+                        s.format("\n\n%s%s", indent, x.toString().replaceAll("\n", "\n" + indent));
+                    });
         }
     }
 
@@ -223,10 +240,16 @@ public final class ImmutableBeanGenerator {
 
     private static void writeCreateMethod(PrintStream s, String indent, ClassOrInterfaceDeclaration c,
             List<VariableDeclarator> vars) {
-        s.format("\n\n%spublic static %s create(%s) {", indent, c.getName(),
-                vars.stream().map(x -> x.getType() + " " + x.getName()).collect(Collectors.joining(", ")));
-        s.format("\n%s%sreturn new %s(%s);", indent, indent, c.getName(),
-                vars.stream().map(x -> x.getName().toString()).collect(Collectors.joining(", ")));
+        if (!GENERATE_CREATE_METHOD)
+            return;
+        s.format("\n\n%spublic static %s create(%s) {", indent, c.getName(), //
+                vars.stream() //
+                        .map(x -> x.getType() + " " + x.getName()) //
+                        .collect(Collectors.joining(", ")));
+        s.format("\n%s%sreturn new %s(%s);", indent, indent, c.getName(), //
+                vars.stream() //
+                        .map(x -> x.getName().toString()) //
+                        .collect(Collectors.joining(", ")));
         s.format("\n%s}", indent);
     }
 
