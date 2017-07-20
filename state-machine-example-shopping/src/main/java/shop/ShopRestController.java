@@ -18,8 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
+import com.github.davidmoten.fsm.example.shop.catalog.immutable.Catalog;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
 import com.github.davidmoten.fsm.persistence.Persistence.EntityWithId;
 import com.github.davidmoten.fsm.persistence.Property;
 

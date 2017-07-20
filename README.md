@@ -214,9 +214,31 @@ Relational Database Persistence
 --------------------------------
 The *state-machine-persistence* module provides everything you need to implement Event Sourcing with a relational database (RDB).
 
-Here's an example:
+When you use a relational database then the changes to a state machine due to a signal are surrounded by a database transaction. This means that if some failure occurs in the processing of that event then the state change does not happen and any signals arising from that change are not sent.
 
-TODO
+Here's an example using the `Persistence` class:
+
+```java
+Persistence p = Persistence //
+    .connectionFactory(connectionFactory) //
+    .behaviour(Account.class, new AccountBehaviour()) //
+    .build();
+// load all outstanding signals from the database    
+p.initialize();
+// send signals to the system
+p.signal(Account.class, "1", new Create());
+p.signal(Account.class, "1", new Deposit(BigDecimal.valueOf(100)));
+p.signal(Account.class, "1", new Transfer(BigDecimal.valueOf(12), "2"));
+```
+###Shopping example application
+
+The module *state-machine-example-shopping* (and its dependency *state-machine-example-shopping-definition*) contain a fully working web application with these features:
+
+* Spring Boot MVC web application
+* Rest API (not used by MVC but available anyway)
+* Uses an in-memory H2 database (disappears on shutdown)
+* Data model generated as immutable classes with many utility methods which add utility and safety for programming state transition behaviour
+* all changes to data go through generated `StateMachine` instances
 
 
 Highly scalable persistence
