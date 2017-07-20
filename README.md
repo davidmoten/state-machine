@@ -276,6 +276,8 @@ mvn spring-boot:run
 ```
 Then go to [http://localhost:8080](http://localhost:8080).
 
+You can also run this app in Eclipse or another IDE by importing the *state-machine-example-shopping* module as a Maven Project and running the Main class `shop.Application`.
+
 Highly scalable persistence
 --------------------------
 
