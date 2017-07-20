@@ -230,6 +230,36 @@ p.signal(Account.class, "1", new Create());
 p.signal(Account.class, "1", new Deposit(BigDecimal.valueOf(100)));
 p.signal(Account.class, "1", new Transfer(BigDecimal.valueOf(12), "2"));
 ```
+Note that when you use a `Persistence` class to route signals that you can do database lookups in your behaviour implementations using the `Entities` object that will be loaded with necessary context via `ThreadLocal`. Here's an example taken from the shopping example application ([CatalogProductBehaviour.java](src/main/java/shop/behaviour/CatalogProductBehaviour.java)):
+
+```java
+@Override
+public CatalogProduct onEntry_Created(Signaller<CatalogProduct, String> signaller, String id, Create event,
+        boolean replaying) {
+    // lookup product within the transaction
+    Optional<Product> product = Entities.get().get(Product.class, event.productId());
+    if (product.isPresent()) {
+        return CatalogProduct.createWithCatalogId(event.catalogId()) //
+                .productId(event.productId()) //
+                .name(product.get().name()) //
+                .description(product.get().description()) //
+                .quantity(event.quantity()) //
+                .price(event.price()) //
+                .tags(product.get().tags());
+    } else {
+        throw new RuntimeException("product not found " + event.productId());
+    }
+}
+```
+ 
+
+Because the database structure is strongly abstracted you need to manage lookup performance (outside of entity primary keys) via the use of *tags* on entities. All tags are indexed to enable fast queries. 
+
+TODO: discuss range metrics and use with tags
+
+
+ 
+
 ###Shopping example application
 
 The module *state-machine-example-shopping* (and its dependency *state-machine-example-shopping-definition*) contain a fully working web application with these features:
