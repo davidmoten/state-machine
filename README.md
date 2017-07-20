@@ -260,14 +260,14 @@ TODO: discuss range metrics and use with tags
 
  
 
-###Shopping example application
+### Shopping example application
 
 The module *state-machine-example-shopping* (and its dependency *state-machine-example-shopping-definition*) contain a fully working web application with these features:
 
 * Spring Boot MVC web application
 * Rest API (not used by MVC but available anyway)
 * Uses an in-memory H2 database (disappears on shutdown)
-* Data model generated as immutable classes with many utility methods which add utility and safety for programming state transition behaviour
+* Data model generated as immutable classes with many utility methods which add ease and safety for programming state transition behaviour
 * all changes to data go through generated `StateMachine` instances
 
 
