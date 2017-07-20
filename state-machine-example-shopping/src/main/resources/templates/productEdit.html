@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Product</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+    <h2 th:text="${product.name()}"/>
+	<form th:action="@{'/product/' + ${product.productId()} + '/save'}">
+	    Name:<br/>
+	    <input type="text" style="width:30em" name="name" th:value="${product.name()}"></input><br/>
+	    Description:<br/>
+	    <textarea style="width:30em;height:15em" name="description" th:text="${product.description()}"></textarea><br/>
+	    <input type="submit" value="Save"/><br/><br/>
+	</form>
+    <a href="/catalogs">Catalogs</a>
+</body>
+</html>

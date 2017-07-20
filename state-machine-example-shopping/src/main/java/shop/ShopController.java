@@ -1,5 +1,6 @@
 package shop;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.github.davidmoten.fsm.example.shop.catalog.immutable.Catalog;
 import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
+import com.github.davidmoten.fsm.example.shop.product.immutable.ChangeDetails;
 import com.github.davidmoten.fsm.example.shop.product.immutable.Product;
 import com.github.davidmoten.fsm.persistence.Property;
 
@@ -35,9 +37,33 @@ public class ShopController {
     }
 
     @RequestMapping("/product/{productId}")
-    public String products(@PathVariable("productId") String productId, Model model) {
+    public String product(@PathVariable("productId") String productId, Model model) {
         model.addAttribute("product", persistence.get() //
                 .get(Product.class, productId).get());
+        return "product";
+    }
+
+    @RequestMapping("/product/{productId}/edit")
+    public String editProduct(@PathVariable("productId") String productId, Model model) {
+        model.addAttribute("product", persistence.get() //
+                .get(Product.class, productId).get());
+        return "productEdit";
+    }
+
+    @RequestMapping("/product/{productId}/save")
+    public String saveProduct(@PathVariable("productId") String productId, //
+            @RequestParam("name") String name, @RequestParam("description") String description, Model model) {
+        persistence.get().signal(Product.class, productId, //
+                ChangeDetails //
+                        .createWithName(name) //
+                        .description(description) //
+                        .tags(Collections.emptyList()));
+        model.addAttribute("product", //
+                Product. //
+                        createWithProductId(productId) //
+                        .name(name) //
+                        .description(description) //
+                        .tags(Collections.emptyList()));
         return "product";
     }
 
