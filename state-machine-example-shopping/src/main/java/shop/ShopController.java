@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.github.davidmoten.fsm.example.shop.catalog.Catalog;
-import com.github.davidmoten.fsm.example.shop.catalogproduct.CatalogProduct;
-import com.github.davidmoten.fsm.example.shop.product.Product;
+import com.github.davidmoten.fsm.example.shop.catalog.immutable.Catalog;
+import com.github.davidmoten.fsm.example.shop.catalogproduct.immutable.CatalogProduct;
+import com.github.davidmoten.fsm.example.shop.product.immutable.Product;
 import com.github.davidmoten.fsm.persistence.Property;
 
 @Controller
@@ -22,7 +22,7 @@ public class ShopController {
     private PersistenceService persistence;
 
     @RequestMapping("/catalogs")
-    public String catalog(Model model) {
+    public String catalogs(Model model) {
         model.addAttribute("catalogs", persistence.get().get(Catalog.class));
         return "catalogs";
     }
@@ -46,10 +46,9 @@ public class ShopController {
             @RequestParam("value") String value, @RequestParam("rangeName") List<String> rangeNames,
             @RequestParam("start") int start, @RequestParam("end") int end, @RequestParam("limit") int limit,
             @RequestParam Optional<String> lastId, Model model) {
-        model.addAttribute("catalogProducts",
-                persistence.get() //
-                        .get(CatalogProduct.class, name, value, Property.combineNames(rangeNames), start, true, end,
-                                false, limit, lastId));
+        model.addAttribute("catalogProducts", persistence.get() //
+                .get(CatalogProduct.class, name, value, Property.combineNames(rangeNames), start, true, end, false,
+                        limit, lastId));
         return "catalogProducts";
     }
 
