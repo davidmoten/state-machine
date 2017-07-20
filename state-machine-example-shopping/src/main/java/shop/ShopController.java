@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.github.davidmoten.fsm.example.shop.catalog.immutable.Catalog;
@@ -50,7 +51,7 @@ public class ShopController {
         return "productEdit";
     }
 
-    @RequestMapping("/product/{productId}/save")
+    @RequestMapping(method=RequestMethod.POST, value="/product/{productId}/save")
     public String saveProduct(@PathVariable("productId") String productId, //
             @RequestParam("name") String name, @RequestParam("description") String description, Model model) {
         persistence.get().signal(Product.class, productId, //
@@ -58,6 +59,7 @@ public class ShopController {
                         .createWithName(name) //
                         .description(description) //
                         .tags(Collections.emptyList()));
+        // sending signal is async so don't do a lookup straight away
         model.addAttribute("product", //
                 Product. //
                         createWithProductId(productId) //

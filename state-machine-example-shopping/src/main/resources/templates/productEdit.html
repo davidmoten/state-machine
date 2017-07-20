@@ -6,7 +6,7 @@
 </head>
 <body>
     <h2 th:text="${product.name()}"/>
-	<form th:action="@{'/product/' + ${product.productId()} + '/save'}">
+	<form th:action="@{'/product/' + ${product.productId()} + '/save'}" method="POST">
 	    Name:<br/>
 	    <input type="text" style="width:30em" name="name" th:value="${product.name()}"></input><br/>
 	    Description:<br/>
