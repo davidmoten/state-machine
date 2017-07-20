@@ -78,9 +78,9 @@ public class ShopTest {
             }
         }
         p.signal(Product.class, "12",
-                ChangeDetails.createWithName("Castelli Senza 2 Jacket").description(
-                        "Fleece lined windproof cycling jacket with reflective highlights").tags(
-                        Lists.newArrayList("Clothing", "Cycling", "Windproof", "Jacket", "Castelli")));
+                ChangeDetails.createWithName("Castelli Senza 2 Jacket")
+                        .description("Fleece lined windproof cycling jacket with reflective highlights")
+                        .tags(Lists.newArrayList("Clothing", "Cycling", "Windproof", "Jacket", "Castelli")));
         while (true) {
             Optional<CatalogProduct> cp = p.get(CatalogProduct.class, CatalogProduct.idFrom("1", "12"));
             if (cp.get().name().equals("Castelli Senza 2 Jacket")) {
