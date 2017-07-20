@@ -25,7 +25,7 @@ create table entity (
   cls varchar(512) not null, 
   id varchar(255) not null,
   state varchar(255) not null,
-  bytes blob not null,
+  bytes blob,
   primary key(cls, id)
 );
 

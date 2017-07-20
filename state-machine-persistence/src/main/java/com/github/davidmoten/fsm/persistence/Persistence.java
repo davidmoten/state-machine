@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -173,9 +174,9 @@ public final class Persistence implements Entities {
         }
 
         /**
-         * This method designed for use with TestExecutor in unit tests. Best
-         * not to use this outside of unit tests because throwing shuts down the
-         * drain loop and no further signals will be processed.
+         * This method designed for use with TestExecutor in unit tests. Best not to use
+         * this outside of unit tests because throwing shuts down the drain loop and no
+         * further signals will be processed.
          */
         public Builder errorHandlerPrintStackTraceAndThrow() {
             return errorHandler(PRINT_STACK_TRACE_AND_THROW);
@@ -399,11 +400,18 @@ public final class Persistence implements Entities {
                     .apply(signal.signal.cls());
 
             // read entity
-            Optional<EntityAndState<Object>> entity = readEntity(con, (Class<Object>) signal.signal.cls(),
-                    signal.signal.id(), (EntityBehaviour<Object, String>) behaviour);
+            ReadResult<Object> readResult = readEntity(con, (Class<Object>) signal.signal.cls(), signal.signal.id(),
+                    (EntityBehaviour<Object, String>) behaviour);
 
             // initialize state machine
-            final EntityStateMachine<?, String> esm = getStateMachine(signal, behaviour, entity);
+            final EntityStateMachine<?, String> esm;
+
+            if (!readResult.replayRequired) {
+                esm = getStateMachine(signal, behaviour, readResult.entityState);
+            } else {
+                //TODO write replay code
+                throw new UnsupportedOperationException("unexpected");
+            }
 
             // append signal to signal_store (optional)
             if (storeSignals) {
@@ -647,19 +655,35 @@ public final class Persistence implements Entities {
         }
     }
 
-    private <T> Optional<EntityAndState<T>> readEntity(Connection con, Class<T> cls, String id,
-            EntityBehaviour<T, String> behaviour) throws SQLException {
+    private static final class ReadResult<T> {
+        final boolean replayRequired;
+        final Optional<EntityAndState<T>> entityState;
+
+        ReadResult(boolean replayRequired, Optional<EntityAndState<T>> entityState) {
+            this.replayRequired = replayRequired;
+            this.entityState = entityState;
+        }
+
+    }
+
+    private <T> ReadResult<T> readEntity(Connection con, Class<T> cls, String id, EntityBehaviour<T, String> behaviour)
+            throws SQLException {
         try (PreparedStatement ps = con.prepareStatement(sql.readEntityAndState())) {
             ps.setString(1, cls.getName());
             ps.setString(2, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
-                    return Optional.empty();
+                    return new ReadResult<T>(false, Optional.empty());
                 } else {
-                    byte[] bytes = readAll(rs.getBlob("bytes").getBinaryStream());
-                    T entity = (T) entitySerializer.deserialize(cls, bytes);
-                    EntityState<T> state = behaviour.from(rs.getString("state"));
-                    return Optional.of(EntityAndState.create(entity, state));
+                    Blob blob = rs.getBlob("bytes");
+                    if (blob != null) {
+                        byte[] bytes = readAll(blob.getBinaryStream());
+                        T entity = (T) entitySerializer.deserialize(cls, bytes);
+                        EntityState<T> state = behaviour.from(rs.getString("state"));
+                        return new ReadResult<T>(false, Optional.of(EntityAndState.create(entity, state)));
+                    } else {
+                        return new ReadResult<T>(true, Optional.empty());
+                    }
                 }
             }
         }
@@ -793,7 +817,7 @@ public final class Persistence implements Entities {
 
     public void replay(Class<?> cls, String id) {
         try (Connection con = createConnection()) {
-            return;
+            throw new UnsupportedOperationException("not implemented yet");
         } catch (SQLException e) {
             throw new SQLRuntimeException(e);
         }
