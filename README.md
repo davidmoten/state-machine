@@ -127,7 +127,7 @@ so that I can automate the regeneration of the diagram from the command line lik
 mvn clean install && yed state-machine/state-machine-test/target/state-machine-docs/com.github.davidmoten.fsm.example.microwave.Microwave.graphml
 ```
 
-I hit `Alt-Shift-U` to do the layout and then export the diagram as I please (**File - Export**).
+Hit `Alt-Shift-U` to do the layout. A dialog appears called *Directed Orthogonal Layout*. A favourite setting is to change **Labelling - Edge Labelling** to *Integrated*. Then export the diagram as you please (**File - Export**).
 
 Behaviour
 ---------------
