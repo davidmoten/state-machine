@@ -251,7 +251,8 @@ public CatalogProduct onEntry_Created(Signaller<CatalogProduct, String> signalle
     }
 }
 ```
- 
+
+Note that in the above example the *replaying* option is not supported. In theory when replaying no interaction with external services should occur and the `Entities` service is one such. To support Event Sourcing with replay any interaction with an external service would be made via asynchronous signals so that the return value from the service is recorded in the Signal Store.
 
 Because the database structure is strongly abstracted you need to manage lookup performance (outside of entity primary keys) via the use of *tags* on entities. All tags are indexed to enable fast queries. 
 
