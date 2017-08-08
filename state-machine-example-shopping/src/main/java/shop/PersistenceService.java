@@ -1,12 +1,14 @@
 package shop;
 
-import java.util.UUID;
+import java.io.File;
+import java.io.IOException;
 
 import javax.sql.DataSource;
 
 import org.h2.Driver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import com.github.davidmoten.fsm.persistence.Persistence;
@@ -14,26 +16,34 @@ import com.github.davidmoten.fsm.persistence.Persistence;
 @Service
 public class PersistenceService {
 
-    private final Persistence persistence;
+	private static final Logger log = LoggerFactory.getLogger(PersistenceService.class);
 
-    public PersistenceService() {
-        this.persistence = StateMachine.createPersistence( //
-                () -> dataSource().getConnection());
-        StateMachine.setup(persistence);
-    }
+	private final Persistence persistence;
 
-    public Persistence get() {
-        return persistence;
-    }
+	public PersistenceService() {
+		DataSource dataSource = createDataSource();
+		this.persistence = StateMachine.createPersistence( //
+				() -> dataSource.getConnection());
+		StateMachine.setup(persistence);
+	}
 
-    private static final String id = UUID.randomUUID().toString().replaceAll("-", "");
+	public Persistence get() {
+		return persistence;
+	}
 
-    @Bean
-    public DataSource dataSource() {
-        return DataSourceBuilder //
-                .create() //
-                .url("jdbc:h2:mem:" + "testing" + id) //
-                .driverClassName(Driver.class.getName()) //
-                .build();
-    }
+	private static DataSource createDataSource() {
+		log.info("creating data source");
+		try {
+			// create a new file based db in target on every startup
+			File file = File.createTempFile("test", "db", new File("target"));
+			return DataSourceBuilder //
+					.create() //
+					.url("jdbc:h2:file:" + file.getAbsolutePath()) //
+					.driverClassName(Driver.class.getName()) //
+					.build();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+	}
 }
