@@ -409,7 +409,7 @@ public final class Persistence implements Entities {
             if (!readResult.replayRequired) {
                 esm = getStateMachine(signal, behaviour, readResult.entityState);
             } else {
-                //TODO write replay code
+                // TODO write replay code
                 throw new UnsupportedOperationException("unexpected");
             }
 
