@@ -50,7 +50,7 @@ public final class Processor<Id> {
     private final Flowable<Signal<?, Id>> signals;
     private final Function<GroupedFlowable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Flowable<EntityStateMachine<?, Id>>> entityTransform;
     private final FlowableTransformer<Signal<?, Id>, Signal<?, Id>> preGroupBy;
-    private final Function<Consumer<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
+    private final Function<Consumer<Object>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
     private final Clock signallerClock;
     private final Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction;
     private final Consumer<? super EntityStateMachine<?, Id>> postTransitionAction;
@@ -67,7 +67,7 @@ public final class Processor<Id> {
             Flowable<Signal<?, Id>> signals,
             Function<GroupedFlowable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Flowable<EntityStateMachine<?, Id>>> entityTransform,
             FlowableTransformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
-            Function<Consumer<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory,
+            Function<Consumer<Object>, Map<ClassId<?, Id>, Object>> mapFactory,
             Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction,
             Consumer<? super EntityStateMachine<?, Id>> postTransitionAction) {
         Preconditions.checkNotNull(behaviourFactory);
@@ -116,7 +116,7 @@ public final class Processor<Id> {
         private Flowable<Signal<?, Id>> signals = Flowable.empty();
         private Function<GroupedFlowable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Flowable<EntityStateMachine<?, Id>>> entityTransform = g -> g;
         private FlowableTransformer<Signal<?, Id>, Signal<?, Id>> preGroupBy = x -> x;
-        private Function<Consumer<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
+        private Function<Consumer<Object>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
         private Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction = (
                 x, y, z) -> {
         };
@@ -166,7 +166,7 @@ public final class Processor<Id> {
         }
 
         public Builder<Id> mapFactory(
-                Function<Consumer<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory) {
+                Function<Consumer<Object>, Map<ClassId<?, Id>, Object>> mapFactory) {
             this.mapFactory = mapFactory;
             return this;
         }
@@ -209,10 +209,8 @@ public final class Processor<Id> {
                     .compose(preGroupBy);
             Flowable<GroupedFlowable<ClassId<?, Id>, Signal<?, Id>>> o;
             if (mapFactory != null) {
-                throw new UnsupportedOperationException(
-                        "cannot use mapFactory in RxJava2, author will need to get Flowable.groupBy API supplemented in RxJava2");
-                // o1 = o0.groupBy(signal -> new ClassId(signal.cls(),
-                // signal.id()), x -> x, mapFactory);
+                o = o0.groupBy(signal -> new ClassId(signal.cls(),
+                 signal.id()), x -> x, true, 16, mapFactory);
             } else {
                 o = o0.groupBy(signal -> new ClassId(signal.cls(), signal.id()),
                         Functions.identity());
