@@ -58,6 +58,29 @@ public final class StateMachineDefinition<T> {
         states.add(state);
         return state;
     }
+    
+    public StateBuilder createState(String name) {
+         return new StateBuilder(name);
+    }
+    
+    public final class StateBuilder {
+        
+        final String name;
+
+        StateBuilder(String name) {
+            this.name = name;
+        }
+        
+        /**
+         * Sets the event type used to transition <i>to</i> this state.
+         * 
+         * @param cls the type of event
+         * @return the {@code State}
+         */
+        public <R extends Event<? super T>> State<T, R> event(Class<R> cls) {
+            return createState(name, cls);
+        }
+    }
 
     public <R extends Event<? super T>, S extends Event<? super T>> StateMachineDefinition<T> addTransition(
             State<T, R> state, State<T, S> other) {
