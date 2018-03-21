@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.github.davidmoten</groupId>
         <artifactId>state-machine-parent</artifactId>
-        <version>0.2.3-SNAPSHOT</version>
+        <version>0.2.3</version>
     </parent>
     <artifactId>state-machine-persistence</artifactId>
     <name>${project.artifactId}</name>
