@@ -21,7 +21,6 @@ import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.guavamini.Preconditions;
 import com.github.davidmoten.rx.Actions;
 import com.github.davidmoten.rx.Functions;
-import com.github.davidmoten.rx.Transformers;
 
 import rx.Observable;
 import rx.Observable.Transformer;
@@ -48,7 +47,7 @@ public final class Processor<Id> {
     private final Observable<Signal<?, Id>> signals;
     private final Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform;
     private final Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy;
-    private final Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
+    private final Func1<Action1<Object>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
     private final Clock signallerClock;
     private final Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction;
     private final Action1<? super EntityStateMachine<?, Id>> postTransitionAction;
@@ -65,7 +64,7 @@ public final class Processor<Id> {
             Observable<Signal<?, Id>> signals,
             Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform,
             Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
-            Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory,
+            Func1<Action1<Object>, Map<ClassId<?, Id>, Object>> mapFactory,
             Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction,
             Action1<? super EntityStateMachine<?, Id>> postTransitionAction) {
         Preconditions.checkNotNull(behaviourFactory);
@@ -114,7 +113,7 @@ public final class Processor<Id> {
         private Observable<Signal<?, Id>> signals = Observable.empty();
         private Func1<GroupedObservable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Observable<EntityStateMachine<?, Id>>> entityTransform = g -> g;
         private Transformer<Signal<?, Id>, Signal<?, Id>> preGroupBy = x -> x;
-        private Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
+        private Func1<Action1<Object>, Map<ClassId<?, Id>, Object>> mapFactory; // nullable
         private Action3<? super EntityStateMachine<?, Id>, ? super Event<?>, ? super EntityState<?>> preTransitionAction = Actions
                 .doNothing3();
         private Action1<? super EntityStateMachine<?, Id>> postTransitionAction = Actions
@@ -162,7 +161,7 @@ public final class Processor<Id> {
         }
 
         public Builder<Id> mapFactory(
-                Func1<Action1<ClassId<?, Id>>, Map<ClassId<?, Id>, Object>> mapFactory) {
+                Func1<Action1<Object>, Map<ClassId<?, Id>, Object>> mapFactory) {
             this.mapFactory = mapFactory;
             return this;
         }
@@ -205,7 +204,7 @@ public final class Processor<Id> {
                     .compose(preGroupBy);
             Observable<GroupedObservable<ClassId<?, Id>, Signal<?, Id>>> o1;
             if (mapFactory != null) {
-                o1 = o0.groupBy(signal -> new ClassId(signal.cls(), signal.id()), x -> x,
+                o1 = o0.groupBy(signal -> new ClassId(signal.cls(), signal.id()), x -> x, 16, true,
                         mapFactory);
             } else {
                 o1 = o0.groupBy(signal -> new ClassId(signal.cls(), signal.id()), x -> x);
