@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.github.davidmoten</groupId>
 		<artifactId>state-machine-parent</artifactId>
-		<version>0.1.5-SNAPSHOT</version>
+		<version>0.2.4-SNAPSHOT</version>
 	</parent>
 	<artifactId>state-machine-test</artifactId>
 	<name>${project.artifactId}</name>
@@ -27,7 +27,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>io.reactivex</groupId>
+			<groupId>io.reactivex.rxjava2</groupId>
 			<artifactId>rxjava</artifactId>
 			<version>${rxjava.version}</version>
 		</dependency>
@@ -48,13 +48,19 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${compiler.plugin.version}</version>
 				<configuration>
 					<source>${maven.compiler.target}</source>
 					<target>${maven.compiler.target}</target>
@@ -92,7 +98,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>1.10</version>
+				<version>${build.helper.version}</version>
 				<executions>
 					<execution>
 						<id>add-source</id>

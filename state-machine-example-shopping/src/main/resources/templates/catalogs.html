@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Catalogs</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+    <h2>Catalogs</h2>
+    <table>
+	     <tr th:each="catalog : ${catalogs}">
+	        <td th:text="${catalog.id}">1</td>
+	        <td><a th:href="'/catalog/'+ @{${catalog.id} + '/products'}" th:text="${catalog.entity.name()}">Name</a></td>
+	    </tr>
+    </table>
+</body>
+</html>

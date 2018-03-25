@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.github.davidmoten</groupId>
         <artifactId>state-machine-parent</artifactId>
-        <version>0.1.5-SNAPSHOT</version>
+        <version>0.2.4-SNAPSHOT</version>
     </parent>
     <artifactId>state-machine-runtime</artifactId>
     <name>${project.artifactId}</name>
@@ -20,15 +20,9 @@
         </dependency>
 
         <dependency>
-            <groupId>io.reactivex</groupId>
+            <groupId>io.reactivex.rxjava2</groupId>
             <artifactId>rxjava</artifactId>
             <version>${rxjava.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.davidmoten</groupId>
-            <artifactId>rxjava-extras</artifactId>
-            <version>0.8.0.5</version>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -47,7 +41,6 @@
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${compiler.plugin.version}</version>
                 <configuration>
                     <source>${maven.compiler.target}</source>
                     <target>${maven.compiler.target}</target>

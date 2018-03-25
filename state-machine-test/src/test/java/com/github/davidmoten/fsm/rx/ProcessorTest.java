@@ -25,9 +25,9 @@ import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.rx.ClassId;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 
-import rx.observers.TestSubscriber;
-import rx.schedulers.Schedulers;
-import rx.schedulers.TestScheduler;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.schedulers.TestScheduler;
+import io.reactivex.subscribers.TestSubscriber;
 
 public class ProcessorTest {
 
@@ -40,14 +40,14 @@ public class ProcessorTest {
 
         // do some tests with the processor
         TestSubscriber<EntityStateMachine<?, String>> ts = TestSubscriber.create();
-        processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
+        processor.flowable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
 
         ClassId<Microwave, String> microwave = ClassId.create(Microwave.class, "1");
 
         // button is pressed
         processor.signal(microwave, new ButtonPressed());
         ts.assertValueCount(1);
-        assertEquals(MicrowaveStateMachine.State.COOKING, ts.getOnNextEvents().get(0).state());
+        assertEquals(MicrowaveStateMachine.State.COOKING, ts.values().get(0).state());
         signalScheduler.advanceTimeBy(29, TimeUnit.SECONDS);
         ts.assertValueCount(1);
 
@@ -57,7 +57,7 @@ public class ProcessorTest {
         ts.assertNoErrors();
         ts.assertValueCount(2);
         {
-            List<EntityStateMachine<?, String>> list = ts.getOnNextEvents();
+            List<EntityStateMachine<?, String>> list = ts.values();
             assertEquals(MicrowaveStateMachine.State.COOKING, list.get(0).state());
             assertEquals(MicrowaveStateMachine.State.COOKING_COMPLETE, list.get(1).state());
         }
@@ -65,14 +65,14 @@ public class ProcessorTest {
         // open the door
         processor.signal(microwave, new DoorOpened());
         ts.assertValueCount(3);
-        assertEquals(MicrowaveStateMachine.State.DOOR_OPEN, ts.getOnNextEvents().get(2).state());
+        assertEquals(MicrowaveStateMachine.State.DOOR_OPEN, ts.values().get(2).state());
 
         // press the button (will not start cooking)
         processor.signal(microwave, new ButtonPressed());
         {
             // should not be a transition
             ts.assertValueCount(4);
-            List<EntityStateMachine<?, String>> list = ts.getOnNextEvents();
+            List<EntityStateMachine<?, String>> list = ts.values();
             assertEquals(MicrowaveStateMachine.State.DOOR_OPEN, list.get(3).state());
             assertFalse(list.get(3).transitionOccurred());
         }
@@ -92,14 +92,14 @@ public class ProcessorTest {
 
         // do some tests with the processor
         TestSubscriber<EntityStateMachine<?, String>> ts = TestSubscriber.create();
-        processor.observable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
+        processor.flowable().doOnNext(m -> System.out.println(m.state())).subscribe(ts);
 
         ClassId<Microwave, String> microwave = ClassId.create(Microwave.class, "1");
 
         // button is pressed
         processor.signal(microwave, new ButtonPressed());
         ts.assertValueCount(1);
-        assertEquals(MicrowaveStateMachine.State.COOKING, ts.getOnNextEvents().get(0).state());
+        assertEquals(MicrowaveStateMachine.State.COOKING, ts.values().get(0).state());
         // advance by less time than the timeout
         signalScheduler.advanceTimeBy(10, TimeUnit.SECONDS);
         ts.assertValueCount(1);
@@ -123,7 +123,7 @@ public class ProcessorTest {
         // build a processor
         Processor<String> processor = Processor //
                 .behaviour(Microwave.class, behaviour) //
-                .processingScheduler(Schedulers.immediate()) //
+                .processingScheduler(Schedulers.trampoline()) //
                 .signalScheduler(signalScheduler) //
                 .preTransition((m, event, state) -> System.out.println("[preTransition] "
                         + event.getClass().getSimpleName() + ": " + m.state() + " -> " + state)) //

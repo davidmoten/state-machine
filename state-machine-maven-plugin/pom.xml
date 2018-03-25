@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.github.davidmoten</groupId>
         <artifactId>state-machine-parent</artifactId>
-        <version>0.1.5-SNAPSHOT</version>
+        <version>0.2.4-SNAPSHOT</version>
     </parent>
     <artifactId>state-machine-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
@@ -30,12 +30,32 @@
             <artifactId>state-machine-generator</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.davidmoten</groupId>
+            <artifactId>state-machine-annotations</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.9.11</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${compiler.plugin.version}</version>
                 <configuration>
                     <source>${maven.compiler.target}</source>
                     <target>${maven.compiler.target}</target>
@@ -45,27 +65,28 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
                 <version>3.4</version>
-				<executions>
-					<execution>
-						<id>default-descriptor</id>
-						<goals>
-							<goal>descriptor</goal>
-						</goals>
-						<phase>process-classes</phase>
-					</execution>
-					<execution>
-						<id>help-descriptor</id>
-						<goals>
-							<goal>helpmojo</goal>
-						</goals>
-						<phase>process-classes</phase>
-					</execution>
-				</executions>
+                <executions>
+                    <execution>
+                        <id>default-descriptor</id>
+                        <goals>
+                            <goal>descriptor</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                    </execution>
+                    <execution>
+                        <id>help-descriptor</id>
+                        <goals>
+                            <goal>helpmojo</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                <!--This plugin's configuration is used to store Eclipse 
+                    m2e settings only. It has no influence on the Maven build itself. -->
                 <plugin>
                     <groupId>org.eclipse.m2e</groupId>
                     <artifactId>lifecycle-mapping</artifactId>
@@ -80,6 +101,7 @@
                                         <versionRange>[3.4,)</versionRange>
                                         <goals>
                                             <goal>helpmojo</goal>
+                                            <goal>descriptor</goal>
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>

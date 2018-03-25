@@ -2,7 +2,6 @@ state-machine
 ==============
 <a href="https://travis-ci.org/davidmoten/state-machine"><img src="https://travis-ci.org/davidmoten/state-machine.svg"/></a><br/>
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.davidmoten/state-machine-runtime/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/com.github.davidmoten/state-machine-runtime)<br/>
-<!--[![Dependency Status](https://gemnasium.com/com.github.davidmoten/state-machine.svg)](https://gemnasium.com/com.github.davidmoten/state-machine)-->
 
 Generates java classes to handle state transitions based on a state machine defined with type safety in java. Supports 
 immutability (though is not opinionated in the sense that if you want to mutate your objects you can).
@@ -12,7 +11,8 @@ immutability (though is not opinionated in the sense that if you want to mutate 
 to state diagrams (one Event type for each State)
 * Maven plugin
 * Not coupled to a storage mechanism (both a feature and a non-feature!)
-* optional reactive API using [RxJava](https://github.com/ReactiveX/RxJava) (very useful for asynchronous coordination and for extensions like storage if desired)
+* optional reactive API using [RxJava 2](https://github.com/ReactiveX/RxJava) (very useful for asynchronous coordination and for extensions like storage if desired)
+* optional relational database persistence module 
 
 Status: *beta*
 
@@ -114,13 +114,20 @@ In the example below the documentation is a pseudo-code description of the *entr
 Here's a more complex one:
 
 <img src="src/docs/complex-state-diagram.png?raw=true" />
-On my linux machine I have a command line alias for *yEd*: `alias yed='java -jar /opt/yed/current/yed.jar'` so that I can automate the regeneration of the diagram from the command line like this:
+
+On my linux machine I have a command line alias for *yEd* 
+
+```bash
+alias yed='java -jar /opt/yed/current/yed.jar'
+``` 
+
+so that I can automate the regeneration of the diagram from the command line like this:
 
 ```bash
 mvn clean install && yed state-machine/state-machine-test/target/state-machine-docs/com.github.davidmoten.fsm.example.microwave.Microwave.graphml
 ```
 
-I hit `Alt-Shift-U` to do the layout and then export the diagram as I please (**File - Export**).
+Hit `Alt-Shift-U` to do the layout. A dialog appears called *Directed Orthogonal Layout*. A favourite setting is to change **Labelling - Edge Labelling** to *Integrated*. Then export the diagram as you please (**File - Export**).
 
 Behaviour
 ---------------
@@ -181,19 +188,21 @@ If you don't need rx support then add an exclude to your maven dependency.
 
 Processing signals in parallel demands that entities are thread-safe. Immutability is recommended for this case.
 
-[ProcessorTest.java](state-machine-test/src/test/java/com/github/davidmoten/fsm/rx/ProcessorTest.java) demonstrates usage of an Rx processor for a state machine (or set of state machines).
+[StreamingTest.java](state-machine-test/src/test/java/com/github/davidmoten/fsm/rx/StreamingTest.java) demonstrates usage of an Rx processor for a state machine (or set of state machines).
 
 Persistence
 ---------------
 For a system to recover properly from failure all signals and state changes should be persisted to media that survives process restarts.
 
-Having had scaling problems with a system that persisted every signal and state change to a database was one of the motivations to develop this project. 
+If signal queues and entity state and optionally signal stores are all kept in a single relational database that supports transactions then *exactly once* messaging can be guaranteed. For a reaonably sized system without the need to scale massively this is the recommended approach. 
 
-A popular strategy for dealing with this issue is to use [Event Sourcing](http://martinfowler.com/eaaDev/EventSourcing.html) and [CQRS](http://martinfowler.com/bliki/CQRS.html). 
+If you can relax the consistency requirements of your system then you can use *eventually consistent* storage with the consequence that the system is now *at least once* in terms of message processing. If you can deal sensibly with multiple deliveries of the same message then you can introduce non-RDB systems for storage that may scale easier than RDB.
+
+A popular architectural pattern for handling persistence is to use [Event Sourcing](http://martinfowler.com/eaaDev/EventSourcing.html) and [CQRS](http://martinfowler.com/bliki/CQRS.html). 
 
 Event Sourcing and CQRS and Guaranteed Delivery
 ----------------------------------------
-The term *Event Sourcing* might be better described as *Signal Sourcing* when one thinks of a system of state machines rathen than a single state machine.
+The term *Event Sourcing* might be better described as *Signal Sourcing* when one thinks of a system of state machines rather than a single state machine.
 
 Incoming signals to a system are placed on a *Command Queue* and then processed. The diagram below indicates the path taken on restart of a system. 
 For each domain object state machines need to be refreshed from the *Event Source* (which we are calling a *Signal Store*).
@@ -201,17 +210,90 @@ For each domain object state machines need to be refreshed from the *Event Sourc
 <br/>
 <img src="src/docs/collaboration-diagram.png?raw=true" />
 
-A scalable implementation of this architecture might use:
+Relational Database Persistence
+--------------------------------
+The *state-machine-persistence* module provides everything you need to implement Event Sourcing with a relational database (RDB).
+
+When you use a relational database then the changes to a state machine due to a signal are surrounded by a database transaction. This means that if some failure occurs in the processing of that event then the state change does not happen and any signals arising from that change are not sent.
+
+Here's an example using the `Persistence` class:
+
+```java
+Persistence p = Persistence //
+    .connectionFactory(connectionFactory) //
+    .behaviour(Account.class, new AccountBehaviour()) //
+    .build();
+// load all outstanding signals from the database    
+p.initialize();
+// send signals to the system
+p.signal(Account.class, "1", new Create());
+p.signal(Account.class, "1", new Deposit(BigDecimal.valueOf(100)));
+p.signal(Account.class, "1", new Transfer(BigDecimal.valueOf(12), "2"));
+```
+Note that when you use a `Persistence` class to route signals that you can do database lookups in your behaviour implementations using the `Entities` object that will be loaded with necessary context via `ThreadLocal`. Here's an example taken from the shopping example application ([CatalogProductBehaviour.java](src/main/java/shop/behaviour/CatalogProductBehaviour.java)):
+
+```java
+@Override
+public CatalogProduct onEntry_Created(Signaller<CatalogProduct, String> signaller, String id, Create event,
+        boolean replaying) {
+    // lookup product within the transaction
+    Optional<Product> product = Entities.get().get(Product.class, event.productId());
+    if (product.isPresent()) {
+        return CatalogProduct.createWithCatalogId(event.catalogId()) //
+                .productId(event.productId()) //
+                .name(product.get().name()) //
+                .description(product.get().description()) //
+                .quantity(event.quantity()) //
+                .price(event.price()) //
+                .tags(product.get().tags());
+    } else {
+        throw new RuntimeException("product not found " + event.productId());
+    }
+}
+```
+
+Note that in the above example the *replaying* option is not supported. In theory when replaying no interaction with external services should occur and the `Entities` service is one such. To support Event Sourcing with replay any interaction with an external service would be made via asynchronous signals so that the return value from the service is recorded in the Signal Store.
+
+Because the database structure is strongly abstracted you need to manage lookup performance (outside of entity primary keys) via the use of *tags* on entities. All tags are indexed to enable fast queries. 
+
+TODO: discuss range metrics and use with tags
+
+### Shopping example application
+
+The module *state-machine-example-shopping* (and its dependency *state-machine-example-shopping-definition*) contain a fully working web application with these features:
+
+* Spring Boot MVC web application
+* Rest API (not used by MVC but available anyway)
+* Uses an in-memory H2 database (disappears on shutdown)
+* Data model generated as immutable classes with many utility methods which add ease and safety for programming state transition behaviour
+* all changes to data go through generated `StateMachine` instances
+
+To run the shopping webapp:
+
+```bash
+mvn clean install
+cd state-machine-example-shopping
+mvn spring-boot:run
+```
+Then go to [http://localhost:8080](http://localhost:8080).
+
+You can also run this app in Eclipse or another IDE by importing the *state-machine-example-shopping* module as a Maven Project and running the Main class `shop.Application`.
+
+Highly scalable persistence
+--------------------------
+
+A scalable implementation of an Event Sourcing + CQRS architecture might use:
 
 * AWS SQS for the *Command Queue*
 * Apache Kafka for the *Signal Store*
 
 To leverage the performance benefits of eventual consistency the state machines must be designed so
-that *at least once* delivery of events does not break business logic. Not every problem will be suited to this but many scenarios can be solved this way. Remember to consider:
+that *at least once* processing of events does not break business logic. Not every problem will be suited to this but many scenarios can be solved this way. Remember to consider:
 
 * code defensively in expectation of more-than-once events
 * consider probabilities of more-than-once delivery to state machines with critical roles 
-* consider using consistent write/reads to the Signal Store for state machines with critical roles
+* consider using consistent write/reads to the data stores for state machines with critical roles
+* partition parts of the system to use RDB so that they are fully transaction controlled and *exactly once* message processing
 
 A basic implementation of the architecture might use:
 

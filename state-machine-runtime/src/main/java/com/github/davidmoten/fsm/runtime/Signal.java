@@ -2,6 +2,8 @@ package com.github.davidmoten.fsm.runtime;
 
 import java.util.Optional;
 
+import com.github.davidmoten.fsm.runtime.rx.ClassId;
+
 public final class Signal<T, Id> {
 
     private final Class<T> cls;
@@ -28,6 +30,15 @@ public final class Signal<T, Id> {
     public static <T, Id> Signal<T, Id> create(Class<T> cls, Id id, Event<? super T> event,
             Optional<Long> time) {
         return new Signal<T, Id>(cls, id, event, time);
+    }
+
+    public static <T, Id> Signal<T, Id> create(ClassId<T, Id> c, Event<? super T> event,
+            Optional<Long> time) {
+        return new Signal<T, Id>(c.cls(), c.id(), event, time);
+    }
+
+    public static <T, Id> Signal<T, Id> create(ClassId<T, Id> c, Event<? super T> event) {
+        return new Signal<T, Id>(c.cls(), c.id(), event, Optional.empty());
     }
 
     public Class<T> cls() {
