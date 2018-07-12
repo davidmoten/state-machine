@@ -169,15 +169,7 @@ public final class StateMachineDefinition<T> {
     }
 
     public String graphml(Function<GraphNode, NodeOptions> options, boolean includeDocumentation) {
-        List<GraphNode> nodes = states.stream().map(state -> new GraphNode(state)).collect(Collectors.toList());
-        Map<String, GraphNode> map = nodes.stream()
-                .collect(Collectors.toMap(node -> node.state().name(), node -> node));
-        List<GraphEdge> edges = transitions.stream().map(t -> {
-            GraphNode from = map.get(t.from().name());
-            GraphNode to = map.get(t.to().name());
-            return new GraphEdge(from, to, t.to().eventClass().getSimpleName());
-        }).collect(Collectors.toList());
-        Graph graph = new Graph(nodes, edges);
+        final Graph graph = this.getGraph();
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintWriter out = new PrintWriter(bytes);
         new GraphmlWriter().printGraphml(out, graph, options, includeDocumentation);
@@ -186,6 +178,22 @@ public final class StateMachineDefinition<T> {
 
     public boolean hasCreationTransition() {
         return transitions().stream().filter(t -> t.from().isCreationDestination()).findAny().isPresent();
+    }
+
+    /**
+     * Get the Graph representation of this state machine definition
+     * @return A Graph generated from this StateMachineDefinition
+     */
+    public final Graph getGraph() {
+        List<GraphNode> nodes = states.stream().map(GraphNode::new).collect(Collectors.toList());
+        Map<String, GraphNode> map = nodes.stream()
+            .collect(Collectors.toMap(node -> node.state().name(), node -> node));
+        List<GraphEdge> edges = transitions.stream().map(t -> {
+            GraphNode from = map.get(t.from().name());
+            GraphNode to = map.get(t.to().name());
+            return new GraphEdge(from, to, t.to().eventClass().getSimpleName());
+        }).collect(Collectors.toList());
+        return new Graph(nodes, edges);
     }
 
 }
