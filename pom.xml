@@ -9,7 +9,7 @@
         <version>0.1</version>
     </parent>
     <artifactId>state-machine-parent</artifactId>
-    <version>0.2.13</version>
+    <version>0.2.14-SNAPSHOT</version>
     <name>${project.artifactId}</name>
     <packaging>pom</packaging>
 
@@ -77,7 +77,7 @@
         <connection>scm:git:https://github.com/davidmoten/state-machine.git</connection>
         <developerConnection>scm:git:https://github.com/davidmoten/state-machine.git</developerConnection>
         <url>scm:git:https://github.com:davidmoten/state-machine.git</url>
-        <tag>0.2.13</tag>
+        <tag>0.1.1</tag>
     </scm>
 
     <modules>
