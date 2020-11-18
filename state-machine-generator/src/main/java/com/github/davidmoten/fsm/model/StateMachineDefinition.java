@@ -19,6 +19,7 @@ import com.github.davidmoten.bean.annotation.GenerateImmutable;
 import com.github.davidmoten.fsm.graph.Graph;
 import com.github.davidmoten.fsm.graph.GraphEdge;
 import com.github.davidmoten.fsm.graph.GraphNode;
+import com.github.davidmoten.fsm.graph.PlantUmlWriter;
 import com.github.davidmoten.fsm.graph.GraphmlWriter;
 import com.github.davidmoten.fsm.graph.NodeOptions;
 import com.github.davidmoten.fsm.runtime.Event;
@@ -169,6 +170,15 @@ public final class StateMachineDefinition<T> {
     }
 
     public String graphml(Function<GraphNode, NodeOptions> options, boolean includeDocumentation) {
+        Graph graph = createGraph();
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (PrintWriter out = new PrintWriter(bytes)) {
+            new GraphmlWriter().printGraphml(out, graph, options, includeDocumentation);
+        }
+        return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    private Graph createGraph() {
         List<GraphNode> nodes = states.stream().map(state -> new GraphNode(state)).collect(Collectors.toList());
         Map<String, GraphNode> map = nodes.stream()
                 .collect(Collectors.toMap(node -> node.state().name(), node -> node));
@@ -177,10 +187,15 @@ public final class StateMachineDefinition<T> {
             GraphNode to = map.get(t.to().name());
             return new GraphEdge(from, to, t.to().eventClass().getSimpleName());
         }).collect(Collectors.toList());
-        Graph graph = new Graph(nodes, edges);
+        return new Graph(nodes, edges);
+    }
+    
+    public String plantuml(Function<GraphNode, NodeOptions> options, boolean includeDocumentation) {
+        Graph graph = createGraph();
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        PrintWriter out = new PrintWriter(bytes);
-        new GraphmlWriter().printGraphml(out, graph, options, includeDocumentation);
+        try (PrintWriter out = new PrintWriter(bytes)) {
+            new PlantUmlWriter().print(out, graph, options, includeDocumentation);
+        }
         return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
     }
 
