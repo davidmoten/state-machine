@@ -18,7 +18,7 @@ public final class PlantUmlWriter {
                     .stream() //
                     .filter(x -> !x.state().isInitial()) //
                     .forEach(x -> {
-                        Arrays.stream(x.state().documentation().orElse("").replaceAll("<.+>","").split("\n")) //
+                        Arrays.stream(x.state().documentation().orElse("").replaceAll("<[^>]+>","").split("\n")) //
                                 .map(y -> y.trim()) //
                                 .map(y -> name(x.state().name()) + ":" + y) //
                                 .forEach(out::println);
