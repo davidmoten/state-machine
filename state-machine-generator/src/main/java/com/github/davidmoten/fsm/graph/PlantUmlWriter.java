@@ -2,9 +2,7 @@ package com.github.davidmoten.fsm.graph;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public final class PlantUmlWriter {
 
@@ -20,9 +18,9 @@ public final class PlantUmlWriter {
                     .stream() //
                     .filter(x -> !x.state().isInitial()) //
                     .forEach(x -> {
-                        Arrays.stream(x.state().documentation().orElse("").split("\n")) //
+                        Arrays.stream(x.state().documentation().orElse("").replaceAll("<.+>","").split("\n")) //
                                 .map(y -> y.trim()) //
-                                .map(y -> x.state().name() + ":" + y) //
+                                .map(y -> name(x.state().name()) + ":" + y) //
                                 .forEach(out::println);
                     });
         }
@@ -32,10 +30,10 @@ public final class PlantUmlWriter {
                 .stream() //
                 .forEach(x -> {
                     if (x.getFrom().state().isInitial()) {
-                        out.println("[*] --> " + x.getTo().state().name() + " : "
+                        out.println("[*] --> " + name(x.getTo().state().name()) + " : "
                                 + x.getTo().state().eventClass().getSimpleName());
                     } else {
-                        out.println(x.getFrom().state().name() + " --> " + x.getTo().state().name()
+                        out.println(name(x.getFrom().state().name()) + " --> " + name(x.getTo().state().name())
                                 + " : " + x.getTo().state().eventClass().getSimpleName());
                     }
                 });
@@ -43,6 +41,10 @@ public final class PlantUmlWriter {
         out.println();
         out.println("@enduml");
 
+    }
+    
+    private static String name(String name) {
+        return name.replaceAll(" ", "_");
     }
 
 }
