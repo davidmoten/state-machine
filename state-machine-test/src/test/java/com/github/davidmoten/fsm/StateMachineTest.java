@@ -45,5 +45,5 @@ public class StateMachineTest {
         assertEquals(m.state(), MicrowaveStateMachine.State.COOKING_INTERRUPTED);
         assertEquals(MicrowaveStateMachine.State.COOKING, m.previousState().get());
     }
-
+    
 }

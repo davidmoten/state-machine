@@ -55,6 +55,10 @@ public class GeneratorMojo extends AbstractMojo {
             generateGraphml(machine, true);
             // without docs
             generateGraphml(machine, false);
+            // with docs
+            generatePlantUml(machine, true);
+            // without docs
+            generatePlantUml(machine, false);
             generateHtml(machine);
         }
         getLog().info("generated classes in " + outputDirectory + " with package " + packageName);
@@ -87,6 +91,18 @@ public class GeneratorMojo extends AbstractMojo {
             throw new RuntimeException(e);
         }
         getLog().info("generated graphml file for import to yed (for instance): " + gml);
+    }
+    
+    private void generatePlantUml(StateMachineDefinition<?> machine, boolean includeDocumentation) {
+        diagramsDirectory.mkdirs();
+        File uml = new File(diagramsDirectory, machine.cls().getCanonicalName().replace("$", ".")
+                + (includeDocumentation ? "-with-docs" : "") + ".plantuml");
+        try (PrintWriter out = new PrintWriter(uml)) {
+            out.println(machine.plantuml(node -> NodeOptions.defaultInstance(), includeDocumentation));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        getLog().info("generated plantUml file: " + uml);
     }
 
     private String value(StateMachineDefinition<?> machine, String key, String defaultValue) {
