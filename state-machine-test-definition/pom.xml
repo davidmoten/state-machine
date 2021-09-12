@@ -39,7 +39,7 @@
         <dependency>
             <groupId>com.github.davidmoten</groupId>
             <artifactId>junit-extras</artifactId>
-            <version>0.3</version>
+            <version>${junit.extras.version}</version>
             <scope>test</scope>
         </dependency>
 
