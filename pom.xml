@@ -25,6 +25,7 @@
         <guava.mini.version>0.1.3</guava.mini.version>
         <junit.version>4.13.2</junit.version>
         <junit.extras.version>0.4</junit.extras.version>
+        <h2.version>1.4.200</h2.version>
 
         <cobertura.version>2.7</cobertura.version>
         <checkstyle.version>2.16</checkstyle.version>

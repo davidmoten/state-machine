@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -300,7 +301,7 @@ public final class Persistence implements Entities {
         if (!signal.time().isPresent()) {
             try ( //
                     Connection con = createConnection();
-                    PreparedStatement ps = con.prepareStatement(sql.addToSignalQueue())) {
+                    PreparedStatement ps = con.prepareStatement(sql.addToSignalQueue(), Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, signal.cls().getName());
                 ps.setString(2, signal.id());
                 ps.setString(3, signal.event().getClass().getName());
@@ -704,7 +705,7 @@ public final class Persistence implements Entities {
     private List<NumberedSignal<?, ?>> insertSignalsToOther(Connection con, Serializer eventSerializer,
             Collection<Signal<?, String>> signalsToOther) throws SQLException {
         List<NumberedSignal<?, ?>> list = new ArrayList<>();
-        try (PreparedStatement ps = con.prepareStatement(sql.addToSignalQueue())) {
+        try (PreparedStatement ps = con.prepareStatement(sql.addToSignalQueue(), Statement.RETURN_GENERATED_KEYS)) {
             for (Signal<?, ?> signal : signalsToOther) {
                 if (!signal.time().isPresent()) {
                     Signal<?, String> sig = (Signal<?, String>) signal;
@@ -730,7 +731,7 @@ public final class Persistence implements Entities {
         List<NumberedSignal<?, ?>> list = new ArrayList<NumberedSignal<?, ?>>();
         try ( //
                 PreparedStatement del = con.prepareStatement(sql.deleteDelayedSignal());
-                PreparedStatement ps = con.prepareStatement(sql.addDelayedSignal())) {
+                PreparedStatement ps = con.prepareStatement(sql.addDelayedSignal(), Statement.RETURN_GENERATED_KEYS)) {
 
             for (Signal<?, ?> signal : signalsToOther) {
                 if (signal.time().isPresent()) {
