@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.davidmoten.bean.annotation.GenerateImmutable;
 import com.github.davidmoten.guavamini.Preconditions;
 import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.Node;
@@ -77,11 +78,13 @@ public final class ImmutableBeanGenerator {
     }
 
     public static Generated generate(String code) {
-        CompilationUnit cu = JavaParser.parse(code);
+        ParseResult<CompilationUnit> pr = new JavaParser().parse(code);
+        CompilationUnit cu = pr.getResult().get();
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         PrintStream s = new PrintStream(bytes);
 
-        String newPkg = cu.getPackageDeclaration() //
+        String newPkg = cu //
+                .getPackageDeclaration() //
                 .map(p -> p.getName().toString()) //
                 .orElse("") + ".immutable";
         s.format("package %s;\n\n", newPkg);

@@ -47,7 +47,7 @@
 		<dependency>
 			<groupId>com.github.javaparser</groupId>
 			<artifactId>javaparser-core</artifactId>
-			<version>3.2.10</version>
+			<version>3.23.0</version>
 		</dependency>
 
 		<!-- Test Dependencies -->
