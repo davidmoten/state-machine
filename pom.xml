@@ -27,21 +27,9 @@
         <junit.extras.version>0.4</junit.extras.version>
         <h2.version>1.4.200</h2.version>
 
-        <cobertura.version>2.7</cobertura.version>
-        <checkstyle.version>2.16</checkstyle.version>
-        <findbugs.version>2.5.4</findbugs.version>
-        <javadoc.version>2.10.3</javadoc.version>
-        <pmd.version>3.5</pmd.version>
-        <jdepend.version>2.0</jdepend.version>
-        <javancss.version>2.1</javancss.version>
-        <project.info.version>2.4</project.info.version>
-        <jxr.version>2.5</jxr.version>
-        <taglist.version>2.4</taglist.version>
-        <m3.site.version>3.4</m3.site.version>
-        <changelog.version>2.2</changelog.version>
-        <coverage.reports.dir>${project.build.directory}/target/coverage-reports</coverage.reports.dir>
+
         <jackson.version>2.12.5</jackson.version>
-        <build.helper.version>3.0.0</build.helper.version>
+        <build.helper.version>3.2.0</build.helper.version>
     </properties>
 
     <licenses>
