@@ -7,7 +7,7 @@ Generates java classes to handle state transitions based on a state machine defi
 immutability (though is not opinionated in the sense that if you want to mutate your objects you can).
 
 * Concise API using method chaining
-* leverages the simplicity of the Exectuable UML approach
+* leverages the simplicity of the Executable UML approach
 to state diagrams (one Event type for each State)
 * Maven plugin
 * Not coupled to a storage mechanism (both a feature and a non-feature!)
