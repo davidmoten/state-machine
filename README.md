@@ -1,6 +1,6 @@
 state-machine
 ==============
-<a href="https://travis-ci.org/davidmoten/state-machine"><img src="https://travis-ci.org/davidmoten/state-machine.svg"/></a><br/>
+<a href="https://github.com/davidmoten/state-machine/actions/workflows/ci.yml"><img src="https://github.com/davidmoten/state-machine/actions/workflows/ci.yml/badge.svg"/></a><br/>
 [![codecov](https://codecov.io/gh/davidmoten/state-machine/branch/master/graph/badge.svg)](https://codecov.io/gh/davidmoten/state-machine)<br/>
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.davidmoten/state-machine-runtime/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/com.github.davidmoten/state-machine-runtime)<br/>
 
