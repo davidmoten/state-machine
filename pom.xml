@@ -29,7 +29,7 @@
 
 
         <jackson.version>2.13.1</jackson.version>
-        <build.helper.version>3.2.0</build.helper.version>
+        <build.helper.version>3.3.0</build.helper.version>
     </properties>
 
     <licenses>
