@@ -66,14 +66,14 @@ public interface Sql {
     }
 
     default String insertEntityProperty() {
-        return "insert into entity_property(cls, id, name, value) values(?,?,?,?)";
+        return "insert into entity_property(cls, id, name, \"value\") values(?,?,?,?)";
     }
 
     default String readEntitiesByProperty() {
         return "select id, bytes from entity\n"//
                 + "where id in (\n" //
                 + "select id from entity_property\n" //
-                + "where cls=? and name=? and value=?" //
+                + "where cls=? and name=? and \"value\"=?" //
                 + ")";
     }
 
@@ -81,7 +81,7 @@ public interface Sql {
         return "select id, bytes from entity\n"//
                 + "where id in (\n" //
                 + "select id from entity_prop_range_int\n" //
-                + "where cls=? and name=? and value=?\n" //
+                + "where cls=? and name=? and \"value\"=?\n" //
                 + "and range_name=?\n" //
                 + "and range_value" + (startInclusive ? ">=" : ">") + "?\n"//
                 + "and range_value" + (endInclusive ? "<=" : "<") + "?\n"//
@@ -95,7 +95,7 @@ public interface Sql {
     }
 
     default String insertEntityRangeProperty() {
-        return "insert into entity_prop_range_int(cls, id, name, value, range_name, range_value) values(?,?,?,?,?,?)";
+        return "insert into entity_prop_range_int(cls, id, name, \"value\", range_name, range_value) values(?,?,?,?,?,?)";
     }
 
 }
