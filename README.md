@@ -294,7 +294,7 @@ that *at least once* processing of events does not break business logic. Not eve
 * code defensively in expectation of more-than-once events
 * consider probabilities of more-than-once delivery to state machines with critical roles 
 * consider using consistent write/reads to the data stores for state machines with critical roles
-* partition parts of the system to use RDB so that they are fully transaction controlled and *exactly once* message processing
+* partition parts of the system to use RDB so that they are accessed transactionally to support *exactly once* message processing
 
 A basic implementation of the architecture might use:
 
