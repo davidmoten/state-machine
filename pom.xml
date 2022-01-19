@@ -20,12 +20,12 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.target>1.8</maven.compiler.target>
         <deploy.plugin.version>2.8.2</deploy.plugin.version>
-        <compiler.plugin.version>3.8.1</compiler.plugin.version>
+        <compiler.plugin.version>3.9.0</compiler.plugin.version>
         <rxjava.version>2.2.21</rxjava.version>
         <guava.mini.version>0.1.4</guava.mini.version>
         <junit.version>4.13.2</junit.version>
         <junit.extras.version>0.4</junit.extras.version>
-        <h2.version>1.4.200</h2.version>
+        <h2.version>2.1.210</h2.version>
 
 
         <jackson.version>2.13.1</jackson.version>
