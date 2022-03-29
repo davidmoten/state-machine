@@ -64,8 +64,7 @@ public final class StateMachine {
         p.signal(Catalog.class, MAIN_CATALOG_ID, com.github.davidmoten.fsm.example.shop.catalog.immutable.Create //
                 .createWithCatalogId(MAIN_CATALOG_ID) //
                 .name("Online bike shop"));
-        InputStreamReader in = new InputStreamReader(StateMachine.class.getResourceAsStream("/products.txt"));
-        try {
+        try (InputStreamReader in = new InputStreamReader(StateMachine.class.getResourceAsStream("/products.txt"))) {
             for (CSVRecord record : CSVFormat.DEFAULT.parse(in)) {
                 String productId = record.get(0).trim();
                 String name = record.get(1).trim();
@@ -91,5 +90,4 @@ public final class StateMachine {
             throw new RuntimeException(e);
         }
     }
-
 }
