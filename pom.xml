@@ -28,7 +28,7 @@
         <h2.version>2.1.214</h2.version>
 
 
-        <jackson.version>2.13.4</jackson.version>
+        <jackson.version>2.14.0</jackson.version>
         <build.helper.version>3.3.0</build.helper.version>
     </properties>
 
