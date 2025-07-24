@@ -11,9 +11,9 @@ immutability (though is not opinionated in the sense that if you want to mutate 
 * leverages the simplicity of the Executable UML approach
 to state diagrams (one Event type for each State)
 * Maven plugin
-* Not coupled to a storage mechanism (both a feature and a non-feature!)
-* optional reactive API using [RxJava 2](https://github.com/ReactiveX/RxJava) (very useful for asynchronous coordination and for extensions like storage if desired)
+* Not coupled to a storage mechanism
 * optional relational database persistence module 
+* optional reactive API using [RxJava 2](https://github.com/ReactiveX/RxJava) (very useful for asynchronous coordination and for extensions like storage if desired)
 
 Status: *beta*
 
