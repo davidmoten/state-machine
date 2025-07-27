@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.github.davidmoten.fsm.runtime.EntityBehaviour;
 
-import io.reactivex.functions.Function;
+import io.reactivex.rxjava3.functions.Function;
 
 public class StateMachineFactory<Id> implements Function<Class<?>, EntityBehaviour<?, Id>> {
 
@@ -63,7 +63,7 @@ public class StateMachineFactory<Id> implements Function<Class<?>, EntityBehavio
     }
 
     @Override
-    public EntityBehaviour<?, Id> apply(Class<?> cls) throws Exception {
+    public EntityBehaviour<?, Id> apply(Class<?> cls) throws Throwable {
         Function<Class<?>, EntityBehaviour<?, Id>> f = map.get(cls);
         if (f != null) {
             return f.apply(cls);

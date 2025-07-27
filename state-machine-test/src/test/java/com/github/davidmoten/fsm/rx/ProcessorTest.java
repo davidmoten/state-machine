@@ -25,9 +25,9 @@ import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.rx.ClassId;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.schedulers.TestScheduler;
-import io.reactivex.subscribers.TestSubscriber;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.schedulers.TestScheduler;
+import io.reactivex.rxjava3.subscribers.TestSubscriber;
 
 public class ProcessorTest {
 
@@ -80,7 +80,7 @@ public class ProcessorTest {
         // stop the subscription
         processor.onCompleted();
 
-        ts.awaitTerminalEvent();
+        ts.await();
     }
 
     @Test

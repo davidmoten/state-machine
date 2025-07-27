@@ -2,7 +2,7 @@ package com.github.davidmoten.fsm.runtime;
 
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Scheduler;
+import io.reactivex.rxjava3.core.Scheduler;
 
 public interface Clock {
 
