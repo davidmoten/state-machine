@@ -1,12 +1,13 @@
 package com.github.davidmoten.fsm.runtime.rx;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -24,20 +25,21 @@ import com.github.davidmoten.fsm.runtime.Search;
 import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.guavamini.Preconditions;
 
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Emitter;
-import io.reactivex.Flowable;
-import io.reactivex.FlowableTransformer;
-import io.reactivex.Scheduler;
-import io.reactivex.Scheduler.Worker;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.flowables.GroupedFlowable;
-import io.reactivex.functions.BiConsumer;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.internal.functions.Functions;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
+import io.reactivex.rxjava3.core.BackpressureStrategy;
+import io.reactivex.rxjava3.core.Emitter;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.FlowableTransformer;
+import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.core.Scheduler.Worker;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.flowables.GroupedFlowable;
+import io.reactivex.rxjava3.functions.BiConsumer;
+import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.functions.Supplier;
+import io.reactivex.rxjava3.internal.functions.Functions;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.PublishSubject;
 
 public final class Processor<Id> {
 
@@ -62,9 +64,8 @@ public final class Processor<Id> {
         }
     };
 
-    private Processor(Function<Class<?>, EntityBehaviour<?, Id>> behaviourFactory,
-            Scheduler processingScheduler, Scheduler signalScheduler,
-            Flowable<Signal<?, Id>> signals,
+    private Processor(Function<Class<?>, EntityBehaviour<?, Id>> behaviourFactory, Scheduler processingScheduler,
+            Scheduler signalScheduler, Flowable<Signal<?, Id>> signals,
             Function<GroupedFlowable<ClassId<?, Id>, EntityStateMachine<?, Id>>, Flowable<EntityStateMachine<?, Id>>> entityTransform,
             FlowableTransformer<Signal<?, Id>, Signal<?, Id>> preGroupBy,
             Function<Consumer<Object>, Map<ClassId<?, Id>, Object>> mapFactory,
@@ -91,8 +92,7 @@ public final class Processor<Id> {
         this.postTransitionAction = postTransitionAction;
     }
 
-    public static <Id> Builder<Id> behaviourFactory(
-            Function<Class<?>, EntityBehaviour<?, Id>> behaviourFactory) {
+    public static <Id> Builder<Id> behaviourFactory(Function<Class<?>, EntityBehaviour<?, Id>> behaviourFactory) {
         return new Builder<Id>().behaviourFactory(behaviourFactory);
     }
 
@@ -132,8 +132,7 @@ public final class Processor<Id> {
             return this;
         }
 
-        public Builder<Id> behaviourFactory(
-                Function<Class<?>, EntityBehaviour<?, Id>> behaviourFactory) {
+        public Builder<Id> behaviourFactory(Function<Class<?>, EntityBehaviour<?, Id>> behaviourFactory) {
             this.behaviourFactory = behaviourFactory;
             return this;
         }
@@ -159,14 +158,12 @@ public final class Processor<Id> {
             return this;
         }
 
-        public Builder<Id> preGroupBy(
-                FlowableTransformer<Signal<?, Id>, Signal<?, Id>> preGroupBy) {
+        public Builder<Id> preGroupBy(FlowableTransformer<Signal<?, Id>, Signal<?, Id>> preGroupBy) {
             this.preGroupBy = preGroupBy;
             return this;
         }
 
-        public Builder<Id> mapFactory(
-                Function<Consumer<Object>, Map<ClassId<?, Id>, Object>> mapFactory) {
+        public Builder<Id> mapFactory(Function<Consumer<Object>, Map<ClassId<?, Id>, Object>> mapFactory) {
             this.mapFactory = mapFactory;
             return this;
         }
@@ -190,9 +187,8 @@ public final class Processor<Id> {
             if (!behaviours.isEmpty()) {
                 behaviourFactory = cls -> behaviours.get(cls);
             }
-            return new Processor<Id>(behaviourFactory, processingScheduler, signalScheduler,
-                    signals, entityTransform, preGroupBy, mapFactory, preTransitionAction,
-                    postTransitionAction);
+            return new Processor<Id>(behaviourFactory, processingScheduler, signalScheduler, signals, entityTransform,
+                    preGroupBy, mapFactory, preTransitionAction, postTransitionAction);
         }
 
     }
@@ -201,29 +197,25 @@ public final class Processor<Id> {
     public Flowable<EntityStateMachine<?, Id>> flowable() {
         return Flowable.defer(() -> {
             Worker worker = signalScheduler.createWorker();
-            Flowable<Signal<?, Id>> o0 = subject //
+            Flowable<Signal<?, Id>> a = subject //
                     .toSerialized() //
                     .toFlowable(BackpressureStrategy.BUFFER) //
                     .mergeWith(signals) //
                     .doOnCancel(() -> worker.dispose()) //
                     .compose(preGroupBy);
-            Flowable<GroupedFlowable<ClassId<?, Id>, Signal<?, Id>>> o;
+            Flowable<GroupedFlowable<ClassId<?, Id>, Signal<?, Id>>> b;
             if (mapFactory != null) {
-                o = o0.groupBy(signal -> new ClassId(signal.cls(),
-                 signal.id()), x -> x, true, 16, mapFactory);
+                b = a.groupBy(signal -> new ClassId(signal.cls(), signal.id()), x -> x, true, Integer.MAX_VALUE, mapFactory);
             } else {
-                o = o0.groupBy(signal -> new ClassId(signal.cls(), signal.id()),
-                        Functions.identity());
+                b = a.groupBy(signal -> new ClassId(signal.cls(), signal.id()), Functions.identity());
             }
-            return o.flatMap(g -> {
+            return b.flatMap(g -> {
                 Flowable<EntityStateMachine<?, Id>> obs = g //
+                        .observeOn(processingScheduler)
                         .flatMap(processSignalsToSelfAndSendSignalsToOthers(worker, g.getKey())) //
-                        .doOnNext(m -> stateMachines.put(g.getKey(), m)) //
-                        .subscribeOn(processingScheduler); //
+                        .doOnNext(m -> stateMachines.put(g.getKey(), m));
 
-                Flowable<EntityStateMachine<?, Id>> res = entityTransform
-                        .apply(grouped(g.getKey(), obs));
-                return res;
+                return entityTransform.apply(grouped(g.getKey(), obs));
             });
         });
     }
@@ -240,7 +232,7 @@ public final class Processor<Id> {
     private Function<? super Signal<?, Id>, Flowable<EntityStateMachine<?, Id>>> processSignalsToSelfAndSendSignalsToOthers(
             Worker worker, ClassId<?, Id> classId) {
         return signal -> process(classId, signal.event(), worker) //
-                .toList() //
+                .toList() // ensure complet
                 .toFlowable().flatMapIterable(Functions.identity());
     }
 
@@ -249,9 +241,7 @@ public final class Processor<Id> {
         final Deque<Signal<?, Id>> signalsToOther = new ArrayDeque<>();
     }
 
-    private Flowable<EntityStateMachine<?, Id>> process(ClassId<?, Id> classId, Event<?> event,
-            Worker worker) {
-
+    private Flowable<EntityStateMachine<?, Id>> process(ClassId<?, Id> classId, Event<?> event, Worker worker) {
         EntityStateMachine<?, Id> machine = getStateMachine(classId.cls(), classId.id());
         TransitionHandler handler = new TransitionHandler(classId, event, worker, machine);
         return Flowable.generate(handler, handler);
@@ -259,13 +249,13 @@ public final class Processor<Id> {
 
     /**
      * Combines the state creation and transition operations into the one class.
-     * Implements the transition rules of an Executable UML state machine in
-     * that for an entry procedure all signals to self are emitted before
-     * signals to others. Signals to self are actioned synchronously but signals
-     * to others may be actioned asynchronously.
+     * Implements the transition rules of an Executable UML state machine in that
+     * for an entry procedure all signals to self are emitted before signals to
+     * others. Signals to self are actioned synchronously but signals to others may
+     * be actioned asynchronously.
      */
-    private final class TransitionHandler implements Callable<Signals<Id>>,
-            BiConsumer<Signals<Id>, Emitter<EntityStateMachine<?, Id>>> {
+    private final class TransitionHandler
+            implements Supplier<Signals<Id>>, BiConsumer<Signals<Id>, Emitter<EntityStateMachine<?, Id>>> {
 
         // note has access to surrounding classes' state because is not
         // static
@@ -277,8 +267,7 @@ public final class Processor<Id> {
         // mutable
         EntityStateMachine<?, Id> machine;
 
-        TransitionHandler(ClassId<?, Id> classId, Event<?> event, Worker worker,
-                EntityStateMachine<?, Id> machine) {
+        TransitionHandler(ClassId<?, Id> classId, Event<?> event, Worker worker, EntityStateMachine<?, Id> machine) {
             this.classId = classId;
             this.event = event;
             this.worker = worker;
@@ -286,7 +275,7 @@ public final class Processor<Id> {
         }
 
         @Override
-        public Signals<Id> call() throws Exception {
+        public Signals<Id> get() throws Exception {
             // generate initial state
             Signals<Id> signals = new Signals<>();
             signals.signalsToSelf.offerFirst(event);
@@ -294,8 +283,7 @@ public final class Processor<Id> {
         }
 
         @Override
-        public void accept(Signals<Id> signals, Emitter<EntityStateMachine<?, Id>> observer)
-                throws Exception {
+        public void accept(Signals<Id> signals, Emitter<EntityStateMachine<?, Id>> observer) throws Throwable {
             @SuppressWarnings("unchecked")
             Event<Object> event = (Event<Object>) signals.signalsToSelf.pollLast();
             if (event != null) {
@@ -309,7 +297,7 @@ public final class Processor<Id> {
         @SuppressWarnings("unchecked")
         private <T> void applySignalToSelf(Signals<Id> signals,
                 Emitter<? super EntityStateMachine<?, Id>> observer, Event<T> event)
-                        throws Exception {
+                        throws Throwable {
             // run the entry procedure if a transition occurs
             // and record signals to self and to others
             machine = machine.signal((Event<Object>) event);
@@ -349,29 +337,27 @@ public final class Processor<Id> {
             @SuppressWarnings("unchecked")
             CancelTimedSignal<Id> s = ((CancelTimedSignal<Id>) signal.event());
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            Disposable sub = subscriptions
-                    .remove(new ClassIdPair<Id>(new ClassId(s.fromClass(), s.fromId()),
-                            new ClassId(signal.cls(), signal.id())));
+            Disposable sub = subscriptions.remove(new ClassIdPair<Id>(new ClassId(s.fromClass(), s.fromId()),
+                    new ClassId(signal.cls(), signal.id())));
             if (sub != null) {
                 sub.dispose();
             }
         }
 
-        private void scheduleSignal(ClassId<?, Id> from, Worker worker, Signal<?, Id> signal,
-                Signal<?, Id> s, long delayMs) {
+        private void scheduleSignal(ClassId<?, Id> from, Worker worker, Signal<?, Id> signal, Signal<?, Id> s,
+                long delayMs) {
             // record pairwise signal so we can cancel it if
             // desired
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            ClassIdPair<Id> idPair = new ClassIdPair<Id>(from,
-                    new ClassId(signal.cls(), signal.id()));
+            ClassIdPair<Id> idPair = new ClassIdPair<Id>(from, new ClassId(signal.cls(), signal.id()));
             long t1 = signalScheduler.now(TimeUnit.MILLISECONDS);
             Disposable subscription = worker.schedule(() -> {
                 subject.onNext(s.now());
-            } , delayMs, TimeUnit.MILLISECONDS);
+            }, delayMs, TimeUnit.MILLISECONDS);
             long t2 = signalScheduler.now(TimeUnit.MILLISECONDS);
             worker.schedule(() -> {
                 subscriptions.remove(idPair);
-            } , delayMs - (t2 - t1), TimeUnit.MILLISECONDS);
+            }, delayMs - (t2 - t1), TimeUnit.MILLISECONDS);
             Disposable previous = subscriptions.put(idPair, subscription);
             if (previous != null) {
                 previous.dispose();
@@ -390,8 +376,8 @@ public final class Processor<Id> {
                                 .withSearch(search) //
                                 .withClock(signallerClock) //
                                 .withPreTransition(preTransitionAction);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    } catch (Throwable e) {
+                        return rethrow(e);
                     }
                 });
     }
@@ -427,8 +413,8 @@ public final class Processor<Id> {
 
     public void cancelSignal(Class<?> fromClass, Id fromId, Class<?> toClass, Id toId) {
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        Disposable subscription = subscriptions.remove(
-                new ClassIdPair<Id>(new ClassId(fromClass, fromId), new ClassId(toClass, toId)));
+        Disposable subscription = subscriptions
+                .remove(new ClassIdPair<Id>(new ClassId(fromClass, fromId), new ClassId(toClass, toId)));
         if (subscription != null) {
             subscription.dispose();
         }
@@ -442,4 +428,16 @@ public final class Processor<Id> {
         cancelSignalToSelf(cid.cls(), cid.id());
     }
 
+    private static <T> T rethrow(Throwable t) {
+        if (t instanceof RuntimeException) {
+            throw (RuntimeException) t;
+        } else if (t instanceof Error) {
+            throw (Error) t;
+        } else if (t instanceof IOException) {
+            throw new UncheckedIOException((IOException) t);
+        } else {
+            throw new RuntimeException(t);
+        }
+    }
+    
 }

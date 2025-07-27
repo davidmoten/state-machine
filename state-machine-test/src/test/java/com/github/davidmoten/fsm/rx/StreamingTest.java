@@ -19,10 +19,13 @@ import com.github.davidmoten.fsm.runtime.Signal;
 import com.github.davidmoten.fsm.runtime.Signaller;
 import com.github.davidmoten.fsm.runtime.rx.Processor;
 
-import io.reactivex.Flowable;
-import io.reactivex.Scheduler;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subscribers.TestSubscriber;
+import io.reactivex.rxjava3.core.BackpressureStrategy;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Scheduler;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
+import io.reactivex.rxjava3.subscribers.TestSubscriber;
 
 public class StreamingTest {
 
@@ -96,7 +99,7 @@ public class StreamingTest {
         MicrowaveBehaviour<String> behaviour = createMicrowaveBehaviour();
 
         // build a processor
-        Processor<String> processor = Processor //
+        return Processor //
                 .behaviour(Microwave.class, behaviour) //
                 .processingScheduler(scheduler) //
                 .signalScheduler(scheduler) //
@@ -105,7 +108,6 @@ public class StreamingTest {
                         + event.getClass().getSimpleName() + ": " + m.state() + " -> " + state)) //
                 .postTransition(m -> System.out.println("[postTransition] " + m.state())) //
                 .build();
-        return processor;
     }
 
     private static MicrowaveBehaviourBase<String> createMicrowaveBehaviour() {
@@ -126,5 +128,4 @@ public class StreamingTest {
 
         };
     }
-
 }
