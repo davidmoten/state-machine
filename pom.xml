@@ -25,7 +25,7 @@
         <guava.mini.version>0.1.7</guava.mini.version>
         <junit.version>4.13.2</junit.version>
         <junit.extras.version>0.4</junit.extras.version>
-        <h2.version>2.2.224</h2.version>
+        <h2.version>2.4.240</h2.version>
 
 
         <jackson.version>2.19.2</jackson.version>
